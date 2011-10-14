@@ -1,0 +1,189 @@
+LLF
+Copyright (C) 1997, 1998, Iliano Cervesato, Frank Pfenning, and Carsten
+			  Schuermann
+
+Authors: Frank Pfenning
+	 Iliano Cervesato
+	 Carsten Schuermann
+	 Jeff Polakow
+
+LLF is an implementation of
+ - the LLF linear logical framework, including type reconstruction
+ - the LLF constraint linear logic programming language
+
+
+======================================================================
+Files:
+ NOTES --- remarks and todo list, most recent notes are at the top
+ README --- this file, including some instructions for compilation
+ TAGS --- tags file, for use in Emacs
+ TEST/ --- test files, try  use "TEST/all.sml";
+ sources.cm --- enables  CM.make ();
+ load.sml --- enables  use "load.sml"; (* especially for MLWorks *)
+ bin/ --- utility scripts
+ java/ --- postprocessing Java modules
+======================================================================
+Standard ML, Revision of 1997:
+
+If it is not installed already, please check
+
+ SML of New Jersey [free]
+    http://cm.bell-labs.com/cm/cs/what/smlnj/index.html
+    (version 110 or higher)
+
+ MLWorks [commercial, "personal version" free]
+    http://www.harlequin.com/products/ads/ml/
+--------------------
+Loading LLF:
+
+Connect to LLF root directory
+Start SML/NJ 110 or MLWorks
+
+  CM.make ();  (* in SML/NJ 110, sml-cm *)
+
+OR
+
+  use "load.sml";  (* in SML/NJ 110, sml or MLWorks *)
+
+
+To define configuration <example>
+
+  use "examples/<example>/config.sml";  (* define configuration *)
+
+To load files and start top-level for queries (note that you have to
+replace `-' (dash) by `_' (underscore) in the name of the <example> in
+order to conform to the lexical conventions of ML).
+
+  LLF.readConfig <example>
+  LLF.top ();
+
+To compile files and read queries (see below for format)
+
+  LLF.compileConfig <example>
+  LLF.readFile "examples/<example>/examples.quy";
+--------------------------------------------------
+Current Examples (see examples/README for information)
+  ccc
+  church-rosser
+  compile
+  cut-elim
+  lp
+  lp-horn (meta-theory only)
+  mini-ml
+  polylam
+  prop-calc
+  units
+
+--------------------
+Query Format for Files:
+
+  %query <expected> <try> A.
+
+where <expected> is the expected number of answers or * (for infinity),
+and <try> is the bound on the number of tries or * (for infinity),
+and A is the goal type.
+
+Formats M : A or c = M : A are currently not supported for queries.
+--------------------
+Flags (with defaults):
+
+Global.chatter := 3;
+   (* chatter levels:
+      0 = nothing,
+      1 = files,
+      2 = number of query solutions,
+      3 = entries in external form,
+      4 = entries in internal form,
+      5 = debugging I,
+      6 = debugging II
+   *)
+TpRecon.doubleCheck := false;  (* re-check entries after reconstruction *)
+
+(* for external format printing *)
+EPrint.printDepth := NONE; (* SOME(d): replace level n expressions by '%%' *)
+EPrint.printLength := NONE; (* SOME(l): replace lists longer than l by '...' *)
+
+(* for internal format printing *)
+IPrint.printDepth := NONE; (* SOME(d): replace level n expressions by '%%' *)
+IPrint.printLength := NONE; (* SOME(l): replace lists longer than l by '...' *)
+
+Formatter.Indent := 3;  (* number of spaces for indentation level *)
+Formatter.PageWidth := 80;  (* default page width for formatting *)
+(* see formatter/formatter.sig for more *)
+--------------------
+Timing:
+
+  Timers.show ();   (* show internal timers and reset *)
+
+  Timers.reset ();  (* reset internal timers *)
+  Timers.check ();  (* check internal timers, but do not reset *)
+
+Currently, the timing information for the solver includes the time taken
+by the success continuation.  This is non-trivial if the success
+continuation prints the answer substitution, but negligible otherwise.
+--------------------
+Generate the file load.sml for MLWorks or SML w/o the Compilation Manager
+with
+
+  CM.mkusefile "load.sml";  (* for core and meta-prover *)
+  CM.mkusefile' ("meta.cm", "load-meta.sml");  (* for core *)
+  CM.mkusefile' ("core.cm", "load-core.sml");  (* for meta-prover *)
+
+Make sure the current working directory is the root file of the
+implementation.
+
+To run MLWorks, use Andrew SparcStation (telnet sun4.andrew) and invoke
+
+  /afs/andrew/scs/cs/mlworks/ultra/bin/mlworks-basis
+
+possibly using -tty option.
+--------------------
+Create TAGS file with
+
+  bin/tag-twelf
+--------------------
+In SMLofNJ:
+
+  SMLofNJ.Internals.GC.messages
+
+  Compiler.Control.Print.printDepth := 100; (* default: 5 *)
+  Compiler.Control.Print.printLength := 80; (* default: 12 *)
+  Compiler.Control.Print.signatures := 1;   (* default: 2 *)
+  Compiler.Control.Print.linewidth  := 79;
+  Compiler.Control.Print.stringDepth  := 200; (* default: 70 *)
+
+  OS.FileSys.chDir "directory";
+  OS.FileSys.getDir ();
+--------------------
+Profiling (under MLWorks):
+
+In each examples directory there is a file config.sml, defining a
+configuration with the name of the example (where hyphens are replaced
+by underscore).   Typical session:
+
+  use "examples/church-rosser/config.sml";
+  LLF.readConfig church_rosser;
+
+For the last expression, hit the "Profile" button in the interactive
+system.  Also, don't forget to set Preferences>Compilers> so that
+profiling is enabled BEFORE using "load.sml";
+--------------------
+For "release":
+
+(* Compiler.Control.indexing := true; *) (* doesn't work right now *)
+
+  bin/clean
+  bin/clean-cm
+  bin/tag-twelf
+  cd ..
+  tar -cvf llf.tar llf
+  gzip llf.tar
+
+--------------------
+Installation:
+
+  gunzip llf.tar.gz
+  tar -xvf llf.tar
+  cd llf
+  sml-cm  (* requires version 110! *)
+  CM.make ();
