@@ -1,0 +1,111 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic"
+% formalization - rules.
+% Backward approach
+% Date: 22 July  1998
+% Author: Iliano Cervesato
+
+% Transitions of the train
+
+rcc_train_cross-safe : rrc
+			o- train safe
+			o- (train crossing -o rrc).
+rcc_train_app-cross : rrc
+		       o- train crossing
+		       o- lbTimer b off
+		       o- time T
+		       o- sub T valB B
+		       o- (     train appr
+			     -o lbTimer b (at B)
+			     -o time T
+			     -o rrc).
+rrc_train_safe-app : rrc
+		      o- runs (s N)
+		      o- train appr
+		      o- ubTimer d (at D)
+		      o- lbTimer b (at B)
+		      o- time T
+		      o- leq T B
+		      o- (     runs N
+			    -o train safe
+			    -o ubTimer d off
+			    -o lbTimer b off
+			    -o time T
+			    -o rrc).
+% Transitions of the signal
+
+rrc_signal_lower-raise : rrc
+			  o- train safe
+			  o- signal raise
+			  o- (train safe -o signal lower -o rrc).
+rrc_signal_*-lower : rrc
+			  o- signal lower
+			  o- ubTimer d off
+			  o- ubTimer g (at G)
+			  o- time T
+			  o- sub T valD D
+			  o- (     signal raise & signal lower
+				-o ubTimer d (at D)
+				-o ubTimer g off
+				-o time T
+				-o rrc).
+
+% Transitions of the gate
+
+rrc_gate_?down-mvup : rrc
+			o- signal raise
+			o- gate movingUp
+			o- (     signal raise
+			      -o (gate movingDown & gate down)
+			      -o rrc).
+rrc_gate_mvup-up : rrc
+		    o- gate up
+		    o- (gate movingUp -o rrc).
+rrc_gate_mvdown-down : rrc
+			o- gate down
+			o- ubTimer l off
+			o- time T
+			o- sub T valL L
+			o- (     gate movingDown
+			      -o ubTimer l (at L)
+			      -o time T
+			      -o rrc).
+rrc_gate_*-mvdown : rrc
+		     o- gate movingDown
+		     o- ubTimer g off
+		     o- ubTimer l (at L)
+		     o- time T
+		     o- sub T valG G
+		     o- (     gate up   & gate movingDown  &
+			      gate down & gate movingUp
+			   -o ubTimer g (at G)
+			   -o ubTimer l off
+			   -o time T
+			   -o rrc).
+
+% Progress of time
+%{
+rrc_time_d : rrc
+	      o- ubTimer d (at D)
+	      o- time (s T)
+	      o- leq D T
+	      o- (     ubTimer d (at D)
+		    -o time T
+		    -o rrc).
+rrc_time_g : rrc
+	      o- ubTimer g (at G)
+	      o- time (s T)
+	      o- leq G T
+	      o- (     ubTimer g (at G)
+		    -o time T
+		    -o rrc).
+rrc_time_l : rrc
+	      o- ubTimer l (at L)
+	      o- time (s T)
+	      o- leq L T
+	      o- (     ubTimer l (at L)
+		    -o time T
+		    -o rrc).
+}%
+% I am not sure the last 3 rules are correct, but they do not play any role
+% in the tests that proved the inappropriateness of this representation

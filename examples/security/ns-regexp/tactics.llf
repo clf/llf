@@ -1,0 +1,60 @@
+tactic : type.
+tactical : type.
+
+
+# : tactic -> tactical.			%prefix 15 #
+
+- : tactical -> tactical -> tactical.	%infix right 10 -
++ : tactical -> tactical -> tactical.	%infix right 5 +
+** : tactical -> tactical.		%postfix 12 **
+<= : tactical -> nat -> tactical.	%infix none 12 <=
+<! : tactical -> nat -> tactical.	%infix none 12 <!
+== : tactical -> nat -> tactical.	%infix none 12 ==
+? : tactical -> tactical -> tactical.	%infix right 7 ?
+tt : tactical.
+abort : tactical.
+
+tactRun : type.
+
+-- : tactic -> tactRun -> tactRun.	%infix right 10 --
+! : tactRun.
+
+
+unfoldTactical : tactical -> tactRun -> type.
+unfold : tactical -> tactRun -> tactRun -> type.
+
+ut : unfoldTactical T R
+      <- unfold T R !.
+
+u_- : unfold (T1 - T2) R R''
+	<- unfold T1 R R'
+	<- unfold T2 R' R''.
+
+u_# : unfold (# T) (T -- R) R.
+
+u_+l : unfold (T1 + T2) R R'
+	   <- unfold T1 R R'.
+u_+r : unfold (T1 + T2) R R'
+	   <- unfold T2 R R'.
+
+u_**0 : unfold (T **) R R.
+u_**n : unfold (T **) R R'
+	    <- unfold (T - T **) R R'.
+
+u_<=z : unfold (T <= z) R R.
+u_<=s1 : unfold (T <= (s N)) R R.
+u_<=s2 : unfold (T <= (s N)) R R'
+	    <- unfold (T - (T <= N)) R R'.
+
+u_<! : unfold (T <! (s N)) R R'
+	    <- unfold (T - (T <= N)) R R'.
+
+u_==z : unfold (T == z) R R.
+u_==s : unfold (T == (s N)) R R'
+	 <- unfold (T - (T == N)) R R'.
+
+u_? : unfold (T1 ? T2) R R'
+	  <- unfold (T1 - T2 + T2 - T1) R R'.
+
+u_tt : unfold tt R R.
+u_abort : unfold abort ! R.

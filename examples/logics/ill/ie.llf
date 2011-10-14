@@ -1,0 +1,80 @@
+%%% Introduction and elimination forms
+%%% Author: Frank Pfenning
+
+in : nd A -> type.          %name in I
+el : nd A -> type.	    %name el E
+
+%%% Multiplicatives
+
+% A -o B
+lolliIN : in (lolliI ^ D)
+	   o- ({u:nd A} el u -o in (D ^ u)).
+lolliEL : el (lolliE ^ D ^ E)
+	   o- el D
+	   o- in E.
+
+% A * B
+tensorIN : in (tensorI ^ D1 ^ D2)
+	    o- in D1
+	    o- in D2.
+tensorEL : in (tensorE ^ D ^ E)
+	    o- el D
+	    o- ({u:nd A} {v:nd B} el u -o el v -o in (E ^ u ^ v)).
+
+% 1
+oneIN : in (oneI).
+oneEL : in (oneE ^ D ^ E)
+	 o- el D
+	 o- in E.
+
+%%% Additives
+
+% A & B
+withIN : in (withI ^ (D1, D2))
+	  o- in D1 & in D2.
+withEL1 : el (withE1 ^ D1)
+	   o- el D1.
+withEL2 : el (withE2 ^ D2)
+	   o- el D2.
+
+% T
+topIN : in (topI ^ ())
+	 o- <T>.
+% no topEL
+
+% A + B
+plusIN1 : in (plusI1 ^ D1)
+	   o- in D1.
+plusIN2 : in (plusI2 ^ D2)
+	   o- in D2.
+plusEL : in (plusE ^ D ^ (E1, E2))
+	  o- el D
+	  o- ({u:nd A} el u -o in (E1 ^ u))
+	     & ({v:nd B} el v -o in (E2 ^ v)).
+
+% 0 
+% no zeroIN
+zeroEL : in (zeroE ^ D ^ ())
+	  o- el D
+	  o- <T>.
+
+%%% Exponentials
+
+% A -> B
+impIN : in (impI ^ D)
+	 o- ({u:nd A} el u -> in (D u)).
+impEL : el (impE ^ D E)
+	 o- el D
+	 <- in E.
+
+% ! A
+bangIN : in (bangI D)
+	  <- in D.
+bangEL : in (bangE ^ D ^ E)
+	  o- el D
+	  o- ({u:nd A} el u -> in (E u)).
+
+%%% Coercions
+
+el2in : in D o- el D.
+in2el : el D o- in D.

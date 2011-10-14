@@ -1,0 +1,25 @@
+%%% Operational semantics for subset of x86 assembly
+%%% Example: Iterative coding of factorial
+%%% Author: Mark Plesko <mp5f@cs.cmu.edu>
+
+%%% Summation example (eax' = eax + sum{1..r1}, r1'=0)
+%%% Usually eax=0
+% Not used here
+prog1: prog 1 (add eax r1).
+prog2: prog 2 (dec r1).
+prog3: prog 3 (jne ~2).
+prog4: prog 4 (ret).
+
+%%% Factorial (eax' = eax * r1!, r1'=0)
+% Usually eax = 1
+prog5: prog 5 (mul r1).
+prog6: prog 6 (dec r1).
+prog7: prog 7 (jne ~2).
+prog8: prog 8 (ret).
+
+%%% Testing
+
+prog9: prog 9 (movi eax 1).
+prog10: prog 10 (movi r1 15).
+prog11: prog 11 (call ~6).
+prog12: prog 12 (end).

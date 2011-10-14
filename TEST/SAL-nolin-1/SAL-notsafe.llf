@@ -1,0 +1,178 @@
+%%% Instruction declarations
+
+instr	: type.
+%name instr I.
+
+annot	: exp -> exp -> exp -> exp -> spec -> spec -> rlist -> instr.
+	%%% Fn #, start, finish, arg, pre, post, CS
+mov	: rname -> rname -> instr.
+init	: rname -> exp -> instr.
+arith	: rname -> rname -> rname -> instr.
+jmp	: exp -> instr.
+condCOP	: rname -> exp -> instr.
+compRA	: exp -> instr.
+memr	: rname -> rname -> instr.
+memw	: rname -> rname -> instr.
+advsp	: exp -> instr.
+str	: rname -> exp -> instr.
+stw	: exp -> rname -> instr.
+call	: exp -> instr.
+ret	: instr.
+
+end	: instr.			%%% temporary?
+eop	: exp -> exp -> exp -> type.
+cop	: exp -> exp -> type.
+
+%%% Execution declarations
+exec	: instr -> exp -> exp -> type.
+run	: exp -> exp -> type.
+runnext	: exp -> exp -> type.
+prog	: exp -> instr -> type.
+
+%%% Updating delcarations
+upr1	: rname -> exp -> exp -> exp -> type.
+upm1	: exp -> exp -> exp -> exp -> type.
+memcopy	: exp -> exp -> exp -> exp -> exp -> type.
+memrep	: exp -> exp -> exp -> exp -> exp -> type.
+
+%%% Other helper declarations
+execEOP : rname -> exp -> exp -> exp -> exp -> type.
+execjmp	: exp -> exp -> exp -> type.
+execcondCOP : exp -> exp -> exp -> exp -> type.
+execstr	: rname -> exp -> exp -> exp -> exp -> type.
+execstw	: exp -> exp -> exp -> exp -> exp -> type.
+execcall : exp -> exp -> exp -> exp -> exp -> type.
+execcall* : exp -> exp -> exp -> type.
+execret	: exp -> exp -> exp -> type.
+
+%%% General variable usage
+% D = depth : exp
+% F = function : exp
+% I = instruction : exp
+% M = memory location : exp
+% R = register : rname
+% V = value : exp
+% X = instruction position : exp
+
+%%% Program execution
+% For now, state.llf specifies the termination
+% conditions (if desired, otherwise just o- <T>)
+%run1 : run X
+%	<- prog X end o- <T>.
+run2 : run X OUTPUT
+	<- prog X I
+	o- exec I X OUTPUT.
+
+runnext1 : runnext X OUTPUT <- binc X X2 o- run X2 OUTPUT.
+
+%%% Updating state
+upr1a : upr1 R V X OUTPUT
+	o- depth D
+	o- depregs D RS
+	o- (depth D -o depregs D (upd R V RS) -o runnext X OUTPUT).
+upm1a : upm1 M V X OUTPUT
+	o- depth D
+	o- mem D M V2
+	o- (depth D -o mem D M V -o runnext X OUTPUT).
+memcopy1 : memcopy D D2 I X OUTPUT <- beq I 0 1 o- run X OUTPUT.
+memcopy2 : memcopy D D2 I X OUTPUT <- ble 1 I <- bdec I I2
+	o- mdlook D I V & (mem D2 I V -o memcopy D D2 I2 X OUTPUT).
+memrep1 : memrep D D2 I X OUTPUT <- beq I 0 1 o- run X OUTPUT.
+memrep2 : memrep D D2 I X OUTPUT <- ble 1 I <- bdec I I2
+
+	o- mem D I V o- mem D2 I V2
+	o- (mem D2 I V -o memrep D D2 I2 X OUTPUT).
+
+%%% Instructions
+
+exannot : exec (annot _ _ _ _ _ _ _) X OUTPUT o- runnext X OUTPUT.
+exmov : exec (mov R1 R2) X OUTPUT
+	o- rlook R2 V2 & upr1 R1 V2 X OUTPUT.
+exinit : exec (init R V) X OUTPUT
+	o- upr1 R V X OUTPUT.
+exarith : exec (arith R R1 R2) X OUTPUT
+	o- rlook R1 V1 & rlook R2 V2		% & safeEOP V1 V2
+		& execEOP R V1 V2 X OUTPUT.
+exjmp : exec (jmp V) X OUTPUT o- execjmp V X OUTPUT.
+excondCOP : exec (condCOP R V) X OUTPUT
+	o- rlook R VR 				% & safeCOP VR
+		& execcondCOP VR V X OUTPUT.
+excompRA : exec (compRA V) X OUTPUT
+	o- depth D o- fun D F
+	<- bplus X V X2
+%	<- prog LOOK (annot F ST FIN ARG PRE POST CS)
+%	<- ble ST X2 <- ble X2 FIN
+	o- (depth D -o fun D F -o upr1 ra X2 X OUTPUT).
+exmemr : exec (memr R1 R2) X OUTPUT
+	o- rlook R2 M 				% & safeRd M
+		& mlook M V & upr1 R1 V X OUTPUT.
+exmemw : exec (memw R1 R2) X OUTPUT
+	o- rlook R1 M & rlook R2 V 		% & safeWr M V
+		& upm1 M V X OUTPUT.
+exadvsp : exec (advsp V) X OUTPUT
+	o- depth D
+	o- sp D V2 <- bplus V V2 V3
+%	o- stack V3 1 &
+	o- (depth D -o sp D V3 -o runnext X OUTPUT).
+exstr : exec (str R V) X OUTPUT
+	o- slook M & execstr R M V X OUTPUT.
+exstw : exec (stw V R) X OUTPUT
+	o- rlook R VR & slook M & execstw M V VR X OUTPUT.
+excall : exec (call F) Xcurr OUTPUT
+	<- max MAX o- slook M & execcall M MAX Xcurr F OUTPUT.
+exret : exec ret X OUTPUT
+	o- depth D <- bdec D D2 o- fun D F
+	<- prog X2 (annot F _ _ ARG _ POST CS)
+	o- 					% satspec POST &
+		sdlook D SP & sdlook D2 SP
+%		& cscheck D D2 (ra ; CS)
+%		& memcheck D D2 SP ARG
+		& execret D D2 OUTPUT.
+
+%%% Instruction helpers
+
+execEOP1 : execEOP R V1 V2 X OUTPUT <- eop V1 V2 V3
+	o- upr1 R V3 X OUTPUT.
+execjmp1 : execjmp V X OUTPUT <- bplus V X X2
+	o- run X2 OUTPUT.
+execstr1 : execstr R M V X OUTPUT
+	<- bplus M V M2
+%	o- stack M2 1 &
+	o- mlook M2 V2 & upr1 R V2 X OUTPUT.
+execstw1 : execstw M V VR X OUTPUT
+	<- bplus M V M2
+%	o- stack M2 1 &
+	o- upm1 M2 VR X OUTPUT.
+execcondCOP1 : execcondCOP VR V X OUTPUT <- cop VR 1
+	o- execjmp V X OUTPUT.
+execcondCOP2 : execcondCOP VR V X OUTPUT <- cop VR 0
+	o- runnext X OUTPUT.
+% execcall1 where stack Mnew 0 left out in unsafe version
+execcall2 : execcall M MAX _ F OUTPUT
+	<- bplus M MAX Mnew <- prog X (annot F ST _ _ PRE _ _)
+	o- % stack Mnew 1 & 			% & satspec PRE
+		 execcall* F ST OUTPUT.
+execcall*1 : execcall* F ST OUTPUT <- maxmem MAXMEM o- depth D <- binc D D2
+        o- depregs D RS o- sdlook D SP
+        & (depregs D RS -o depregs D2 RS -o sp D2 SP -o depth D2
+	     -o fun D2 F -o memcopy D D2 MAXMEM ST OUTPUT).
+execret1 : execret D D2 OUTPUT <- maxmem MAXMEM
+	o- depregs D DRS o- depregs D2 D2RS
+	o- sp D SP o- sp D2 SP
+        <- sel ra DRS RA
+        o- (depregs D2 DRS -o sp D2 SP -o depth D2
+	      -o memrep D D2 MAXMEM RA OUTPUT).
+
+% Operations
+
+eop1 : eop V1 V2 TF <- bplus V1 V2 TF.
+cop1 : cop V TF <- beq V 0 TF.
+
+% Safety
+
+safeEOP1 : safeEOP V1 V2 o- <T>.
+safeCOP1 : safeCOP V o- <T>.
+safeRd1 : safeRd M o- <T>.
+safeWr1 : safeWr M V o- <T>.
+stack1 : stack M 1 o- <T>.
+

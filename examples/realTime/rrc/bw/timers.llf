@@ -1,0 +1,24 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic",
+% timers.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+
+timerValue : type.
+at : nat -> timerValue.
+off : timerValue.
+
+tLT : timerValue -> timerValue -> type.
+tLT_off : tLT (at N) off.
+tLT_at : tLT (at N) (at M)
+	  <- lt N M.
+
+tLEQ : timerValue -> timerValue -> type.
+tLEQ_eq : tLEQ V V.
+tLEQ_lt : tLEQ V1 V2
+	   <- tLT V1 V2.
+
+timerName : type.
+ubTimer : timerName -> timerValue -> type.    %name ubTimer Ub
+lbTimer : timerName -> timerValue -> type.    %name lbTimer Lb

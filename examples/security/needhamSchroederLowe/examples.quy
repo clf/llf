@@ -1,0 +1,13 @@
+% Needham-Schroeder Public Key Protocol (short version -- no server)
+% Author: Iliano Cervesato
+% Date: 28 May 1999
+
+
+%query 2 *
+noattack -o run 1.
+
+%query 0 *
+attack nsA alice -o run 1.
+
+%query 0 *
+attack nsB bob -o run 1.

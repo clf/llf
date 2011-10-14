@@ -1,0 +1,5 @@
+The configuration file is:
+config-SAL-notsafe.sml
+Do the query
+?- wrapper 5 5 10.
+and upon asking for a second solution, an exception will be raised.

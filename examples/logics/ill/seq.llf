@@ -1,0 +1,71 @@
+%%% Sequent calculus for intuitionistic linear logic.
+%%% Author: Frank Pfenning
+
+left  : o -> type.	    %name left L
+right : o -> type.	    %name right R
+
+%%% Initial sequents
+init : (left A -o right A).
+
+%%% Cuts
+cut : right A
+       -o (left A -o right C)
+       -o right C.
+
+cut! : right A
+	-> (left A -> right C)
+	-o right C.
+
+%%% Multiplicatives
+
+% A -o B
+lolliR : (left A -o right B) -o right (lolli A B).
+lolliL : right A
+	  -o (left B -o right C)
+	  -o (left (lolli A B) -o right C).
+
+% A * B
+tensorR : right A -o right B -o right (tensor A B).
+tensorL : (left A -o left B -o right C)
+	   -o (left (tensor A B) -o right C).
+
+% 1
+oneR : right (one).
+oneL : (right C)
+	-o (left (one) -o right C).
+
+%%% Additives
+
+% A & B
+withR : right A & right B -o right (with A B).
+withL1 : (left A -o right C)
+	  -o (left (with A B) -o right C).
+withL2 : (left B -o right C)
+	  -o (left (with A B) -o right C).
+
+% T
+topR : <T> -o right (top).
+% no topL
+
+% A + B
+plusR1 : right A -o right (plus A B).
+plusR2 : right B -o right (plus A B).
+plusL : (left A -o right C) & (left B -o right C)
+	-o (left (plus A B) -o right C).
+
+% 0
+% no zeroR
+zeroL : <T> -o (left (zero) -o right C).
+
+%%% Exponentials
+
+% A -> B
+impR : (left A -> right C) -o right (imp A C).
+impL : right A
+	-> (left B -> right C)
+        -o (left (imp A B) -o right C).
+
+% ! A
+bangR : right A -> right (bang A).
+bangL : (left A -> right C)
+	 -o (left (bang A) -o right C).

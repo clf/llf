@@ -1,0 +1,152 @@
+%%% Blocks planning problem
+%%% Author: Frank Pfenning
+
+% 3 Blocks
+block : type.
+a : block.
+b : block.
+c : block.
+%name block B.
+
+% Representation predicates
+on : block -> block -> type.		% on x y -- x is on y
+tb : block -> type.			% tb x -- x is on table
+clear : block -> type.			% clear x -- top of x is clear
+empty : type.				% empty -- robot hand is empty
+holds : block -> type.			% holds x -- robot hand holds x
+%name on O.
+%name tb O.
+%name clear C.
+%name empty E.
+%name holds H.
+
+% Legal moves
+% If  D1 |- M : move
+%     ...
+%     D0 |- M' : move
+% then we can reach state D1 from D0.
+% M' encodes the moves.
+move : type.
+%name move M.
+
+pick : move
+	o- on X Y
+	o- clear X
+	o- empty
+	o- (clear Y -o holds X -o move).
+
+picktb : move
+	  o- tb X
+	  o- clear X
+	  o- empty
+	  o- (holds X -o move).
+
+put : move
+       o- clear Y
+       o- holds X
+       o- (on X Y -o clear X -o empty -o move).
+
+puttb : move
+	 o- holds X
+	 o- (tb X -o clear X -o empty -o move).
+
+% Setting up initial and final situation
+win : type.
+%name win W.
+
+winm : win
+	o- (tb a -o on b a -o clear b	% b on a on table
+	      -o tb c -o clear c	% c on table
+	      -o empty			% hand empty
+	      -o (move o- on a b o- <T>) % win if a on b, everything else unrestricted
+	      -o move).
+
+% ex1: pick up b, put b on table, pick up a, put a on b
+ex1 : win
+  = winm ^ ([oa^tb a] [oba^on b a] [cb^clear b]
+	      [oc^tb c] [cc^clear c]
+	      [e^empty]
+	      [success^move o- on a b o- <T>]
+	      pick ^ ([ca^clear a] [hx^holds b]
+			puttb ^ ([ob^tb b] [cb^clear b] [e^empty]
+				   picktb ^ ([ha^holds a]
+					       put ^ ([oab^on a b] [ca^clear a] [e^empty]
+							success ^ () ^ oab)
+					       ^ ha ^ cb)
+				   ^ e ^ ca ^ oa)
+			^ hx)
+	      ^ e ^ cb ^ oba).
+
+% ex2: pick up b, put b on c, pick up a, put a on b
+ex2 : win
+  = winm ^ ([oa^tb a] [oba^on b a] [cb^clear b]
+	      [oc^tb c] [cc^clear c]
+	      [e^empty]
+	      [success^move o- on a b o- <T>]
+	      pick ^ ([ca^clear a] [hx^holds b]
+			put ^ ([obc^on b c] [cb^clear b] [e^empty]
+				 picktb ^ ([ha^holds a]
+					     put ^ ([oab^on a b] [ca^clear a] [e^empty]
+						      success ^ () ^ oab)
+					     ^ ha ^ cb)
+				 ^ e ^ ca ^ oa)
+			^ hx ^ cc)
+	      ^ e ^ cb ^ oba).
+
+
+% A derivation is safe, if block b is never put on the table.
+
+safe : block -> type.
+%name safe S.
+
+sfa : safe a.
+% b is not safe.
+sfc : safe c.
+
+okm : move -> type.
+%name okm K.
+
+okpick : okm (pick ^ M ^ E ^ C ^ O)
+	  <- ({cy:clear Y} {hx:holds X} okm (M ^ cy ^ hx)).
+okpicktb : okm (picktb ^ M ^ E ^ C ^ O)
+	    <- ({hx:holds X} okm (M ^ hx)).
+okput : okm (put ^ M ^ H ^ C)
+	 <- ({oxy:on X Y} {cx:clear X} {e:empty} okm (M ^ oxy ^ cx ^ e)).
+okputtb : okm (puttb ^ M ^ H)
+	   <- safe X
+	   <- ({ox:tb X} {cx:clear X} {e:empty} okm (M ^ ox ^ cx ^ e)).
+
+ok : win -> type.
+%name ok K.
+
+okw : ok (winm ^ M)
+       <- ({oa:tb a} {oba:on b a} {cb:clear b}
+	     {ob:tb c} {cc:clear c}
+	     {e:empty}
+	     {success:<T> -o on a b -o move}
+	     ({OAB:on a b} okm (success ^ () ^ OAB))
+	     -> okm (M ^ oa ^ oba ^ cb ^ ob ^ cc ^ e ^ success)).
+
+% see file blocks.quy:
+% ok ex1 fails
+% ok ex2 succeeds
+
+% A macro operator: swap a tower of size 2, hand starts and ends empty
+% This is a derived rule of inference.
+swap : move
+	o- empty
+	o- clear Y
+	o- on Y X
+	o- tb X
+	o- (tb Y -o on X Y -o clear X -o empty -o move)
+ = [m^tb Y -o on X Y -o clear X -o empty -o move]
+   [ox^tb X] [oyx^on Y X] [cy^clear Y] [e^empty]
+    pick ^ ([cx^clear X] [hy^holds Y]
+	      puttb ^ ([oy^tb Y] [cy^clear Y] [e^empty]
+			 picktb ^ ([hx^holds X]
+				     put ^ ([oxy^on X Y] [cx^clear X] [e^empty]
+					      m ^ oy ^ oxy ^ cx ^ e)
+				     ^ hx ^ cy)
+			 ^ e ^ cx ^ ox)
+	      ^ hy)
+    ^ e ^ cy ^ oyx.

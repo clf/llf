@@ -1,0 +1,260 @@
+
+core.cm,0
+
+EXAMPLES.sml,0
+
+load-core.sml,0
+
+main.sml,0
+
+formatter/sources.cm,0
+
+frontend/sources.cm,0
+
+global/sources.cm,0
+
+index/sources.cm,0
+
+lambda/sources.cm,0
+
+lex/sources.cm,0
+
+modes/sources.cm,0
+
+names/sources.cm,0
+
+opsem/sources.cm,0
+
+order/sources.cm,0
+
+paths/sources.cm,0
+
+print/sources.cm,0
+
+stream/sources.cm,0
+
+table/sources.cm,0
+
+timing/sources.cm,0
+
+typecheck/sources.cm,0
+
+formatter/formatter.sig,0
+
+frontend/extmodes.sig,0
+
+frontend/extsyn.sig,0
+
+frontend/frontend.sig,0
+
+frontend/lexer.sig,0
+
+frontend/lexsynext.sig,0
+
+frontend/parse-entry.sig,0
+
+frontend/parse-fixity.sig,0
+
+frontend/parse-lex.sig,0
+
+frontend/parse-mode.sig,0
+
+frontend/parse-term.sig,0
+
+frontend/parser.sig,0
+
+frontend/parsing.sig,0
+
+frontend/timers.sig,0
+
+frontend/vars.sig,0
+
+global/global.sig,0
+
+index/index.sig,0
+
+lambda/abstract.sig,0
+
+lambda/constraints.sig,0
+
+lambda/conv.sig,0
+
+lambda/intsyn.sig,0
+
+lambda/normalize.sig,0
+
+lambda/pattern.sig,0
+
+lambda/tools.sig,0
+
+lambda/trail.sig,0
+
+lambda/unify.sig,0
+
+lambda/whnf.sig,0
+
+lex/lex.sig,0
+
+lex/lexprint.sig,0
+
+lex/lexsyn.sig,0
+
+modes/modeprint.sig,0
+
+modes/modes.sig,0
+
+names/names.sig,0
+
+opsem/absmachine.sig,0
+
+opsem/compile.sig,0
+
+opsem/compsyn.sig,0
+
+opsem/cprint.sig,0
+
+order/order.sig,0
+
+paths/origins.sig,0
+
+paths/paths.sig,0
+
+print/clause-print.sig,0
+
+print/print.sig,0
+
+table/table.sig,0
+
+typecheck/lincheck.sig,0
+
+typecheck/strict.sig,0
+
+typecheck/typecheck.sig,0
+
+formatter/formatter.fun,0
+
+frontend/evars.fun,0
+
+frontend/extmodes.fun,0
+
+frontend/frontend.fun,0
+
+frontend/fvars.fun,0
+
+frontend/lexer.fun,0
+
+frontend/lexrecon.fun,0
+
+frontend/moderecon.fun,0
+
+frontend/parse-entry.fun,0
+
+frontend/parse-fixity.fun,0
+
+frontend/parse-lex.fun,0
+
+frontend/parse-mode.fun,0
+
+frontend/parse-term.fun,0
+
+frontend/parser.fun,0
+
+frontend/parsing.fun,0
+
+frontend/timers.fun,0
+
+frontend/tprecon.fun,0
+
+index/index.fun,0
+
+lambda/abstract.fun,0
+
+lambda/constraints.fun,0
+
+lambda/conv.fun,0
+
+lambda/intsyn.fun,0
+
+lambda/normalize.fun,0
+
+lambda/notrail.fun,0
+
+lambda/pattern.fun,0
+
+lambda/tools.fun,0
+
+lambda/trail.fun,0
+
+lambda/unify.fun,0
+
+lambda/whnf.fun,0
+
+lex/lex.fun,0
+
+lex/lexprint.fun,0
+
+lex/lexsyn.fun,0
+
+modes/modeprint.fun,0
+
+modes/modes.fun,0
+
+names/names.fun,0
+
+opsem/absmachine.fun,0
+
+opsem/compile.fun,0
+
+opsem/compsyn.fun,0
+
+opsem/cprint.fun,0
+
+order/order.fun,0
+
+paths/origins.fun,0
+
+paths/paths.fun,0
+
+print/clause-print.fun,0
+
+print/print.fun,0
+
+typecheck/lincheck.fun,0
+
+typecheck/strict.fun,0
+
+typecheck/typecheck.fun,0
+
+formatter/formatter.sml,0
+
+frontend/frontend.sml,0
+
+global/global.sml,0
+
+index/index.sml,0
+
+lambda/lambda.sml,0
+
+lex/lex.sml,0
+
+modes/modes.sml,0
+
+names/names.sml,0
+
+opsem/opsem.sml,0
+
+order/order.sml,0
+
+paths/paths.sml,0
+
+print/print.sml,0
+
+stream/stream.sml,0
+
+table/hash.sml,0
+
+table/redblack.sml,0
+
+timing/timing.sml,0
+
+typecheck/typecheck.sml,0

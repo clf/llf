@@ -1,0 +1,22 @@
+This directory contains the LLF specification of the linear spine calculus
+described in:
+
+  Iliano Cervesato and  Frank Pfenning: "A Linear Spine Calculus",
+  Technical Report CMU-CS-97-125, Department of Computer Science,
+  Carnegie Mellon University, Pittsburgh, PA, April 1997.
+
+This specification comprises the following files:
+
+README		This file
+types.llf	Language of formulas/types
+ext.llf		Linear lambda-calculus over these types (external language)
+long.llf	Linear lambda-calculus in long form (long external language)
+int.llf		Linear spine calculus over those types (internal language)
+long2int.llf	Translation from long external to internal
+int2ext.llf	Translation from internal to external
+ext2long.llf	Translation from external to long external
+long-norm.llf	Normalization for the long external language
+int-eq.llf	Beta-equality for the internal languate
+ext-eq.llf	Beta-eta-equality for the external language
+
+examples.quy	Example queries

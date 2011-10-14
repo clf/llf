@@ -1,0 +1,25 @@
+br_done : break nothing M
+	   o- build M.
+br_key : break (Kn andKey K) M
+	  o- (knowsKey K -o break Kn M).
+br_atm : break (Kn andMsg (@ M')) M
+	  o- (knowsMsg M' -o break Kn M).
+br_* : break (Kn andMsg (M'1 * M'2)) M
+	o- count (s N)
+	o- (count N -o break (Kn andMsg M'1 andMsg M'2) M).
+br_dec : break (Kn andMsg (crypt M' K)) M
+	  o- count (s N)
+	  o- readKey K
+	   & (count N -o break (Kn andMsg M') M).
+
+
+comp : build (M1 * M2)
+	o- count (s N)
+	o- (count N -o build M1)
+	 & (count N -o build M2).
+encrypt : build (crypt M K)
+	   o- count (s N)
+	   o- readKey K
+	   & (count N -o build M).
+bridge : build (@ M)
+	  o- readMsg M.

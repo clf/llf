@@ -1,0 +1,45 @@
+%%% Compilation of hereditary Harrop formulas, completeness proof
+%%% Author: Iliano Cervesato
+%%% Date: 26 Nov. 1997
+
+uComplete : gRun G -> cmpGoal A G -> unid A -> type.
+iComplete : cgRun (C P) -> cmpClause A C -> immd A P -> type.
+cComplete : cClause C -> cmpClause A C -> clause A -> type.
+
+% Note: The completeness proof is exactly like the soundness proof, but
+% with the arguments reversed.  A trivial meta-meta-theorem can be proved.
+
+uComplete_atom : uComplete (rg_atom S L) cg_atom (u_atom I C)
+		  <- cComplete L F C
+		  <- iComplete S F I.
+
+uComplete_true : uComplete rg_true cg_true u_true.
+
+uComplete_and  : uComplete (rg_and R1 R2) (cg_and E1 E2) (u_and U1 U2)
+		  <- uComplete R1 E1 U1
+		  <- uComplete R2 E2 U2.
+
+uComplete_imp  : uComplete (rg_imp [l](R l)) (cg_imp E F) (u_imp [k](U k))
+		  <- (cComplete L F K -> uComplete (R L) E (U K)).
+
+uComplete_all  : uComplete (rg_all [x] (R x)) (cg_all [x] (E x))
+                           (u_all [x] (U x))
+		  <- {x:i} (uComplete (R x) (E x) (U x)).
+
+
+iComplete_eq   : iComplete rcg_eq cc_atom i_atom.
+
+% No iComplete_false
+
+iComplete_or1  : iComplete (rcg_or1 S) (cc_and F2 F1) (i_and1 I)
+		  <- iComplete S F1 I.
+
+iComplete_or2  : iComplete (rcg_or2 S) (cc_and F2 F1) (i_and2 I)
+		  <- iComplete S F2 I.
+
+iComplete_and  : iComplete (rcg_and R S) (cc_imp E F) (i_imp U I)
+		  <- uComplete R E U
+		  <- iComplete S F I.
+
+iComplete_some : iComplete (rcg_some T S) (cc_all [x] (F x)) (i_all T I)
+		  <- iComplete S (F T) I.

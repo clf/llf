@@ -1,0 +1,76 @@
+%%% Curry-style linear lambda-calculus
+%%% Author: Iliano Cervesato
+
+
+%% HOAS
+
+a1 : tp1.
+b1 : tp1.
+c1 : tp1.
+
+type1 : tp1
+ = (a1 arrow1 b1) arrow1 (b1 arrow1 c1) arrow1 (a1 arrow1 c1).
+
+term1 : tm1
+ = lam1 [f : tm1]			% a1 arrow1 b1
+   lam1 [g : tm1]			% b1 arrow1 c1
+   lam1 [x : tm1]			% a1
+   (app1 g (app1 f x)).
+
+%query 1 1
+of1 term1 type1.
+
+f1 : tm1.
+g1 : tm1.
+
+%query 1 1
+eval1 f1 f1 -> eval1 g1 g1 -> eval1 (app1 (app1 term1 f1) g1) V1.
+
+
+
+%% LHOAS
+
+a2 : tp2.
+b2 : tp2.
+c2 : tp2.
+
+type2 : tp2
+ = (a2 arrow2 b2) arrow2 (b2 arrow2 c2) arrow2 (a2 arrow2 c2).
+
+term2 : tm2
+ = lam2 ^ [f ^ tm2]			% a2 arrow2 b2
+   lam2 ^ [g ^ tm2]			% b2 arrow2 c2
+   lam2 ^ [x ^ tm2]			% a2
+   (app2 ^ g ^ (app2 ^ f ^ x)).
+
+%query 1 1
+of2 term2 type2.
+
+f2 : tm2.
+g2 : tm2.
+
+%query 1 1
+eval2 f2 f2 -> eval2 g2 g2 -> eval2 (app2 ^ (app2 ^ term2 ^ f2) ^ g2) V2.
+
+
+
+%% TLHOAS
+
+a3 : tp3.
+b3 : tp3.
+c3 : tp3.
+
+type3 : tp3
+ = (a3 arrow3 b3) arrow3 (b3 arrow3 c3) arrow3 (a3 arrow3 c3).
+
+term3 : tm3 type3
+ = lam3 ^ [f ^ tm3 (a3 arrow3 b3)]
+   lam3 ^ [g ^ tm3 (b3 arrow3 c3)]
+   lam3 ^ [x ^ tm3 a3]
+   (app3 ^ g ^ (app3 ^ f ^ x)).
+
+f3 : tm3 (a3 arrow3 b3).
+g3 : tm3 (b3 arrow3 c3).
+
+%query 1 1
+eval3 f3 f3 -> eval3 g3 g3 -> eval3 (app3 ^ (app3 ^ term3 ^ f3) ^ g3) V3.

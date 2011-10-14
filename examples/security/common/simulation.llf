@@ -1,0 +1,84 @@
+% Specification of communication protocols
+% Representation of protocols
+% Date: 10 August 1998
+% Author: Iliano Cervesato
+
+
+principals : type.
++ : principal -> principals -> principals. %infix right 5 +
+end : principals.
+
+prepare : protocol -> principals -> type.
+prepareRoles : roles -> type.
+prepareStep : principal -> step -> roles -> type.
+
+knowsKey' : principal -> key -> type.
+private : principal -> msg -> type.
+nonce' : nonce -> msg.
+step' : principal -> step -> type.
+
+noMoreRoles : roles.
+
+simulate : type.
+communication : principal -> message -> type.
+
+prep_agent : prepare (agent P) (A + As)
+	      o- prepare (P A) As.
+prep_initKey : prepare (initKey K P) As
+		o- prepare (P K) As.
+prep_security-protocol : prepare (security-protocol P) _
+			  o- prepareRoles P.
+prepRoles : prepareRoles ((role A S) andalso Rs)
+	     o- prepareStep A S Rs.
+prepLastRole : prepareRoles (role A S)
+		o- prepareSteps A S noMoreRoles.
+prep_end : prepareRoles noMoreRoles
+	    o- simulate.
+
+prepStep_knowsKey : prepareStep A (knowsKey K S) Rs
+		     o- (knowsKey' A K -> prepareStep A S Rs).
+prepStep_nonce : prepareStep A (fresh S) Rs
+		  o- ({Na:nonce}private A (nonce' Na)
+			 -o prepareStep A (S Na) Rs).
+prepStep_; : prepareStep A (S1 ; S2) Rs
+	      o- (step' A S1 -o prepareStep A S2 Rs).
+prepStep_==> : prepareStep A (Tri ==> Act) Rs
+		o- (step' A (Tri ==> Act) -o prepareRoles Rs).
+
+simul_anytime : simulate
+		 o- step' A (Trigger ==> Action)
+		 o- match A Trigger
+		 o- perform A Action.
+simul_end : simulate.
+
+match_anytime : match A anytime.
+match_on : match A (on T)
+	    o- communication A M
+	    o- checkTrigger A T M.
+
+chk_name : checkTrigger A (@ (name B)) Msg
+	    o- checkName B Msg.
+chk_nonce: checkTrigger A ($ Na) Msg
+	    o- checkNonce A Na Msg.
+chk_* : checkTrigger A (M1' * M2') Msg
+	 o- checkComp Msg Msg1 Msg2
+	 o- checkTrigger A M1 Msg1
+	 o- checkTrigger A M2 Msg2.
+chk_crypt : checkTrigger A (crypt M K) Msg
+	     o- decrypt A K Msg Msg'
+	     o- checkTrigger A M Msg'.
+
+chk_name : checkName B (@ (name B)).
+
+chk_nonce : checkNonce A Na ($ Na)
+	     o- private A (nonce' Na).
+
+chk_comp : checkComp (M1 * M2) M1 M2.
+
+chk_key : decrypt A (symKey A B) (crypt M (symKey A B)) M
+	   o- knowsKey' A (symKey A B).
+
+perform_check : perform A check
+		 o- simulate.
+perform_send : perform A (send M)
+		o- (communication A M -o simulate).

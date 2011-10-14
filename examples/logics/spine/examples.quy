@@ -1,0 +1,89 @@
+%%% Experiments with the linear spine calculus -- Examples.
+%%% Author: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+%query 1 1
+tcan (base A => base A) (lam ^ [x:tm (base A)] x) N.
+
+%query 1 1
+tcan (base A =o base A) (llam ^ [x^tm (base A)] x) N.
+
+%query 1 1
+tcan B (llam ^ [x^tm (base A => base A)] x) N.
+
+%query 1 1
+tcan _ (fst ^ (pair ^ (llam ^ [x^tm 1] x, lam ^ [y:tm (base A)] y))) N.
+
+%query 1 1
+eq (llam ^ [x^tm (base A => base A)] x)
+   (llam ^ [x^tm (base A => base A)] lam ^ [y:tm (base A)] app ^ x y)
+   U1 U2.
+
+%query 1 1
+eq (llam ^ [z^tm (base A)] lapp ^ (app ^ (lam ^ [x:tm (base A =o base A)] x)
+				         (llam ^ [y^tm (base A)] y))
+                                ^ z)
+   (llam ^ [w^tm (base A)] w)
+   U1 U2.
+
+%query 1 1
+eq (fst ^ (pair ^ (lam ^ [w:tm 1] (unit ^ ()), llam ^ [z^tm (base A)] z)))
+   (lam ^ [w:tm 1] w)
+   U1 U2.
+
+%query 1 1
+tcan (base A * base B =o base B * base A)
+     (fst ^ (pair ^ (llam ^ [w^tm (base A * base B)]
+		            pair ^ (snd ^ w, fst ^ w),
+		     lam ^ [z:tm (base A)] z)))
+     N.
+
+%{
+% should fail
+%query 1 1
+eq (fst ^ (pair ^ (llam ^ [w^tm (base A * base A)]
+		          pair ^ (snd ^w, fst ^ w),
+		   lam ^ [z:tm (base A)] z)))
+   (llam ^ [w^tm (base A * base A)] w)
+   U1 U2.
+}%
+
+%query 1 1
+eq (fst ^ (pair ^ (llam ^ [w^tm (base A * base A)]
+		          pair ^ (snd ^ w, fst ^ w),
+		   lam ^ [z:tm (base A)] z)))
+   (([swap] (llam ^ [w^tm (base A * base A)] lapp ^ swap ^ w))
+      (llam ^ [p^tm (C * D)] pair ^ (snd ^ p, fst ^ p)))
+   U1 U2.
+
+%query 1 1
+eq (fst ^ (pair ^ (llam ^ [w^tm (base A * base A)]
+		          pair ^ (snd ^ w, fst ^ w),
+		   lam ^ [z:tm (base A)] z)))
+   (([swap] (llam ^ [w^tm (base A * base A)]
+	            (lapp ^ swap ^ (lapp ^ swap ^ (lapp ^ swap ^ w)))))
+     (llam ^ [p^tm (C * D)] pair ^ (snd ^ p, fst ^ p)))
+   U1 U2.
+
+%{
+% should fail
+%query 1 1
+eq (fst ^ (pair ^ (llam ^ [w^tm (base A * base A)]
+		          pair ^ (snd ^ w, fst ^ w),
+		   lam ^ [z:tm (base A)] z)))
+   (([swap] (llam ^ [w^tm (base A * base A)]
+	      (lapp ^ swap ^ (lapp ^ swap ^ w))))
+      (llam ^ [p^tm (C * D)] pair ^ (snd ^ p, fst ^ p)))
+   U1 U2.
+}%
+
+
+%%% normalization on long terms.
+
+%query 1 1
+normalize
+   (([swap] (llam ^ [w^tm (base A * base A)]
+	      (lapp ^ swap ^ w)))
+      (llam ^ [p^tm (C * D)] pair ^ (snd ^ p, fst ^ p)))
+   N.
+

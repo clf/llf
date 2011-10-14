@@ -1,0 +1,8 @@
+%%% Blocks planning problem
+%%% Author: Frank Pfenning
+
+%query 0 *
+ok ex1.
+
+%query 1 *
+ok ex2.

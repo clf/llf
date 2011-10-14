@@ -1,0 +1,36 @@
+Declarations of Lexical Termination Order
+Author: Carsten Schuermann
+
+----------------------------------------------------------------------
+Syntax for lex pragma L
+
+Examples for lex pragma
+
+%lex {D} vs D _.
+
+%lex {D} tps D _ _.
+
+%lex {N1, N2} 
+	(even N1 _)  
+	(odd N2 _). 
+			      (* even calls odd,  N2 <= N1
+				 even calls even  N1 < N1
+				 odd calls odd    N2 < N2
+				 odd calls even   N1 < N2 *)
+
+For complete induction: State properties of the type family first:
+
+%<= {C} {C'} csd C _ C'
+
+%< {C} {C'} csd C _ C'
+
+%lex {C} csd C _ _
+
+
+
+%<= {A B C} {A' B' C'} p A B C _ _ A' B' C'.
+
+
+Tail example:
+
+%<= {L} {Out} tail L In Out.

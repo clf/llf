@@ -1,0 +1,7 @@
+%%% The Mahjongg, socks version
+%%% Author: Iliano Cervesato
+
+%% Find the first 5 solutions
+
+%query 64 5
+play.

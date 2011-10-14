@@ -1,0 +1,74 @@
+% Specification of communication protocols
+% Representation of protocols
+% Date: 10 August 1998
+% Author: Iliano Cervesato
+
+
+% Principals, messages, keys, etc.
+
+principal : type.
+atmMsg : type.
+msg : type.
+key : type.
+nonce : type.
+
+
+% Atomic messages constructors
+
+name : principal -> atmMsg.
+
+
+% Message constructors
+
+@ : atmMsg -> msg.			%prefix 11 @
+* : msg -> msg -> msg.			%infix left 10 *
+crypt : msg -> key -> msg.
+$ : nonce -> msg.			%prefix 11 $
+
+
+% Keys constructors
+
+symKey : principal -> principal -> key.
+
+
+% Left-hand side of steps
+
+trigger : type.
+on : msg -> principal -> trigger.
+anytime : trigger.
+
+
+% Right-hand side of steps
+
+action : type.
+send : msg -> principal -> action.
+check : action.
+
+
+% Communication steps
+
+step : type.
+steps : type.
+==> : trigger -> action -> step.	%infix none 4 ==>
+stop : steps.
+; : step -> steps -> steps.		%infix right 3 ;
+fresh : (nonce -> steps) -> steps.
+receiver : (principal -> steps) -> steps.
+knowsKey : key -> steps -> steps.
+knowsMsg : msg -> steps -> steps.
+
+
+% Roles
+
+roles : type.
+role : principal -> steps -> roles.
+andAlso : roles -> roles -> roles.	%infix right 1 andAlso
+
+
+% Protocols
+
+protocol : type.
+security-protocol : roles -> protocol.
+agent : (principal -> protocol) -> protocol.
+initKey : key -> (key -> protocol) -> protocol.
+initMsg : msg -> (msg -> protocol) -> protocol.

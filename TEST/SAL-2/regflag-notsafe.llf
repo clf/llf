@@ -1,0 +1,72 @@
+depth	: exp -> type.
+dlook	: exp -> type.
+dlook1 : dlook D o- depth D o- <T>.	% Use with &
+
+%%% Registers.
+
+rname	: type.			%name rname R.
+ra	: rname.
+r1	: rname.
+r2	: rname.
+r3	: rname.
+r4	: rname.
+
+rlist	: type.			%name rlist RL.
+noregs	: rlist.
+;	: rname -> rlist -> rlist.	%infix right 50 ;
+
+% exp defined elsewhere, currently binary.llf
+reg	: exp -> rname -> exp -> type.
+  % depth, register, value
+
+rlook	: rname -> exp -> type.
+rlook1 : rlook R V o- depth D o- reg D R V o- <T>.% Use with &
+
+rdlook	: exp -> rname -> exp -> type.
+rdlook1 : rdlook D R V o- reg D R V o- <T>.	% Use with &
+
+% Stack pointer
+sp	: exp -> exp -> type.		%name sp S.
+  % depth, value
+slook	: exp -> type.
+slook1 : slook V o- depth D o- sp D V o- <T>.
+sdlook : exp -> exp -> type.
+sdlook1 : sdlook D V o- sp D V o- <T>.
+
+%%% Memory.
+
+mem	: exp -> exp -> exp -> type.		%name mem M.
+
+mlook	: exp -> exp -> type.
+mlook1 : mlook E V o- depth D o- mem D E V o- <T>.	% Use with &
+mdlook	: exp -> exp -> exp -> type.
+mdlook1 : mdlook D E V o- mem D E V o- <T>.
+
+maxmem	: exp -> type.
+
+%%% Current function trail
+
+fun	: exp -> exp -> type.			%name fun F.
+  % depth, fun #
+funlook : exp -> type.
+funlook1 : funlook F o- depth D o- fun D F o- <T>.	% Use &
+
+%%% Safety
+safeEOP	: exp -> exp -> type.
+safeCOP : exp -> type.
+safeRd	: exp -> type.
+safeWr	: exp -> exp -> type.
+max	: exp -> type.
+stack	: exp -> exp -> type.
+ cscheck	: exp -> exp -> rlist -> type.
+ memcheck: exp -> exp -> exp -> exp -> type.
+ memcheck*: exp -> exp -> exp -> type.
+
+spec	: type.			%name spec SP.
+nospec	: spec.
+add	: exp -> spec.
+arr	: exp -> exp -> spec.
+>=	: exp -> spec.
+?	: spec -> spec -> spec.		%infix none 50 ?
+
+ satspec	: spec -> type.

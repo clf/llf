@@ -1,0 +1,10 @@
+Tue Aug  5 15:18:57 EDT 1997
+
+index.fun: Possible optimization
+
+targetTypeW, targetType and targetTypeDec need
+not to mention the subsitution because we can 
+prove:
+
+If G' |- V : type 
+then forall G |- s1, s2 : G':  t (V [s1]) = t (V [s2])

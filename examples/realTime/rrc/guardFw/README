@@ -1,0 +1,21 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic".
+% Guarded forward chaining.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+Guarded forward chaining:
+
++ almost direct transcription of the specifications (extra type families
+  are needed)
++ separates the data that a rule changes from the contour information that
+  remains inaltered.
+
+- not very efficient (mainly because of the resource management model that
+  is adopted in the implementation of LLF)
+- final values are hidden (unless we instrument the main routine with
+  variables to get them; this can however be done systematically)
+
+Performance (measured in number of calls to the GC)
+* success (1,2,3,4) : 8 (avg)
+* failure (1,1,1,4) : 6 (avg)

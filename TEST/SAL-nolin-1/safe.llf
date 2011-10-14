@@ -1,0 +1,204 @@
+okwrap : wrapper M F X -> type.
+okgo : go M F X -> type.
+okbuildgo : buildgo M L X -> type.
+
+okupr1 : upr1 R V X X2 -> type.
+okupm1 : upm1 M V X X2 -> type.
+okmemcopy : memcopy D D2 I X X2 -> type.
+okmemrep : memrep D D2 I X X2 -> type.
+
+okrun : run L X -> type.
+okrunnext : runnext L X -> type.
+okexec : exec I X X2 -> type.
+
+okexecEOP : execEOP R V1 V2 X X2 -> type.
+okexecjmp : execjmp V X X2 -> type.
+okexecstr : execstr R M V X X2 -> type.
+okexecstw : execstw M V VR X X2 -> type.
+okexeccondCOP : execcondCOP Vr V X X2 -> type.
+okexeccall : execcall M MAX X F X2 -> type.
+okexeccall* : execcall* F ST X2 -> type.
+okexecret : execret D D2 X2 -> type.
+
+% "Configurable part"
+check : exp -> exp -> type.
+nocheck : exp -> exp -> type.
+
+checkBackJmps : check 0 0.
+checkFnCalls: check 1 0.
+checkMaxValue : check 2 0.
+
+nocheckall : nocheck V 1 <- check V 0.
+
+% % %
+
+okwrap1 : okwrap (wrap1 ^ W)
+	o- (depregs 1 (upd ra unk (upd r1 unk (upd r2 unk (upd r3 unk
+             (upd r4 unk none))))) -o depth 1 -o 
+	      ({RS:depregs 1 (upd ra unk (upd r1 unk (upd r2 unk (upd r3 unk
+		 (upd r4 unk none)))))}
+		 okgo (W ^ RS ^ D))).
+okgo1 : okgo (go1 ^ LAM B ^ B2 PR)
+	 o- ({M:maxmem MAX} {S:sp 1 SPS} {FN:fun 1 F}
+	       maxmem MAX -> fun 1 F -o sp 1 SPS -o okbuildgo (LAM M ^ S ^ FN)).
+okbuildgo1 : okbuildgo (buildgo1 ^ R)
+	o- okrun R.
+okbuildgo2 : {BD:bdec MEM _} okbuildgo (buildgo2 ^ LAM BD BQ)
+	      o- (mem 1 MEM unk -o
+		    ({M:mem 1 MEM unk} okbuildgo (LAM ^ M))).
+
+okupr1aCheck : {LAM:depth D -o depregs D (upd R V RSOLD) -o runnext _ _}
+	{OLD:depregs D RSOLD} okupr1 (upr1a ^ LAM ^ OLD ^ _)
+	<- check 2 1
+	<- ble V 32
+	o- depregs D RSOLD
+	o- (depregs D (upd R V RSOLD) -o
+	      ({DRN:depregs D (upd R V RSOLD)} okrunnext (LAM ^ D2 ^ DRN))).
+okupr1aNoCheck : {LAM:depth D -o depregs D (upd R V RSOLD) -o runnext _ _}
+	{OLD:depregs D RSOLD} okupr1 (upr1a ^ LAM ^ OLD ^ _)
+	<- nocheck 2 1
+	o- depregs D RSOLD
+	o- (depregs D (upd R V RSOLD) -o
+	      ({DRN:depregs D (upd R V RSOLD)} okrunnext (LAM ^ D2 ^ DRN))).
+okupm1a : {LAM:depth D -o mem D M V -o runnext _ _}
+	   {M2:mem D M V2} okupm1 (upm1a ^ LAM ^ M2 ^ D2)
+	   o- mem D M V2
+	   o- (mem D M V -o ({MEM:mem D M V} okrunnext (LAM ^ D2 ^ MEM))).
+okmemcopy1 : okmemcopy (memcopy1 ^ R B)
+	      o- okrun R.
+okmemcopy2 : {LAM:mem D2 I _ -o memcopy D D2 _ _ _}
+	      okmemcopy (memcopy2 ^ (MD, LAM) BD BL)
+	      o- mdlook D I V
+	      & (mem D2 I V -o 
+		   ({M:mem D2 I V} okmemcopy (LAM ^ M))). 
+okmemrep1 : okmemrep (memrep1 ^ R B)
+	     o- okrun R.
+okmemrep2 : {LAM:mem D2 I _ -o memrep D D2 _ _ _}
+	     okmemrep (memrep2 ^ LAM ^ M2 ^ M BD BL)
+	     o- mem D I V o- mem D2 I _
+	     o- (mem D2 I V -o ({MNEW:mem D2 I V} okmemrep (LAM ^ MNEW))).
+
+okrun2 : okrun (run2 ^ E P)
+	  o- okexec E.
+okrunterm : okrun (term _ ^ _ ^ _ ^ _ _ ^ _)
+	     o- depregs 1 _
+	     o- depth 1 o- fun 1 _
+	     o- consumemem o- <T>.
+okrunnext1 : okrunnext (runnext1 ^ R B)
+	      o- okrun R.
+
+okexdebugtiming : okexec E o- <T>.
+okexannot : okexec (exannot ^ R)
+	       o- okrunnext R.
+okexmov : okexec (exmov ^ (R, U))
+	   o- okupr1 U.
+okexinit : okexec (exinit ^ R)
+	    o- okupr1 R.
+okexarith : {R1:rlook _ V1} {R2:rlook _ V2} okexec (exarith ^ (R1, R2, E))
+	   o- safeEOP V1 V2   % safety: safeEOP check  
+	   & okexecEOP E.
+okexjmp : okexec (exjmp ^ E)
+	o- okexecjmp E.
+okexcondCOP : {R:rlook _ VR} okexec (excondCOP ^ (R, E))
+	       o- safeCOP VR     % safety: safeCOP check
+	       & okexeccondCOP E.
+okexcompRA : {F:fun _ FN} {B:bplus _ _ X2} okexec (excompRA ^ LAM B ^ F ^ D)
+	      <- prog _ (annot FN ST FIN _ _ _ _)   % safety: FN exists
+%	      <- bplus X V X2
+	      <- ble ST X2 <- ble X2 FIN   % safety
+	      o- okupr1 (LAM ^ D ^ F).
+okexmemr : {M:mlook MEM _} okexec (exmemr ^ (R, M, U))
+	    o- safeRd MEM      % safety: safeRd check
+	    & okupr1 U.
+okexmemw : {U:upm1 M V _ _} okexec (exmemw ^ (R1, R2, U))
+	    o- safeWr M V      % safety: safeWr check
+	    & okupm1 U.
+okexadvsp : {B:bplus _ SPOLD SPNEW} okexec (exadvsp ^ LAM B ^ SP ^ D)
+	     o- sp DNEW SPOLD
+	     o- stack V 1   % safety: stack check
+	     & ({SPP:sp DNEW SPNEW} sp DNEW SPNEW -o
+		   okrunnext (LAM ^ D ^ SPP)).
+okexstr : okexec (exstr ^ (S, E))
+	o- okexecstr E.
+okexstw : okexec (exstw ^ (R, S, E))
+	o- okexecstw E.
+okexcall : okexec (excall ^ (S, E) M)
+            <- nocheck 1 1
+	    o- okexeccall E.
+okexret : {BD:bdec DP DP2} okexec (exret ^ (SD1, SD2, E) P ^ F BD ^ D)
+	   o- fun DP FUN
+	   <- prog X2 (annot FUN _ _ ARG _ POST CS)
+	   o- satspec POST
+	      & sdlook DP SP
+	      & sdlook DP2 SP
+	      & cscheck DP DP2 (ra ; CS)
+	      & memcheck DP DP2 SP ARG
+	      & okexecret E.
+
+okexecEOP1 : okexecEOP (execEOP1 ^ U E)
+	o- okupr1 U.
+okexecjmp1nocheck : okexecjmp (execjmp1 ^ R B)
+	<- nocheck 0 1
+	o- okrun R.
+okexecjmp1check : {B:bplus V _ _} okexecjmp (execjmp1 ^ R B)
+	<- check 0 1
+	<- ble 1 V
+	o- okrun R.
+okexecstr1 : {B:bplus _ _ MEM} okexecstr (execstr1 ^ (M, U) B)
+	      o- stack MEM 1     % safety: stack check
+	      & okupr1 U.
+okexecstw1 : {B:bplus _ _ MEM} okexecstw (execstw1 ^ U B)
+	      o- stack MEM 1    % safety: stack check
+	      & okupm1 U.
+okexeccondCOP1 : okexeccondCOP (execcondCOP1 ^ E C)
+	o- okexecjmp E.
+okexecconfCOP2 : okexeccondCOP (execcondCOP2 ^ R C)
+	o- okrunnext R.
+% no okexeccall1 in unsafe version
+okexeccall2 : {P:prog _ (annot F _ _ _ _ _ _)}
+	       {B:bplus _ _ Mnew} okexeccall (execcall2 ^ E P B)
+	       <- prog _ (annot F _ _ _ PRE _ _)
+	       o- (stack Mnew 1 & satspec PRE
+	       & okexeccall* E).
+okexeccall*1 : {LAM:depregs _ _ -o depregs _ _
+		      -o sp _ _ -o depth _ -o fun _ FUN
+		      -o memcopy _ _ _ _ _}
+		okexeccall* (execcall*1 ^ (SO, LAM) ^ _
+			      B ^ DEP M)
+		o- depth D <- binc D D2
+		o- depregs D RS o- sdlook D SP
+		& ({DRO:depregs D RS} {DRN:depregs D2 RS} {S:sp D2 SP}
+		      {DP:depth D2} {F:fun D2 FUN}
+		     depregs D RS -o depregs D2 RS -o sp D2 SP
+		     -o depth D2 -o fun D2 FUN -o
+		     okmemcopy (LAM ^ DRO ^ DRN ^ S ^ DP ^ F)).
+okexecret1 : okexecret (execret1 ^ LAM _ ^ _ ^ _ ^ _ ^ _ _)
+	o- depth D
+	<- bdec D D2
+	o- depregs D RS o- depregs D2 RS2
+	o- sp D SP o- sp D2 SP
+	o- (depregs D2 RS -o sp D2 SP -o depth D2
+	      -o ({DRN:depregs D2 RS} {S:sp D2 SP} {DP:depth D2}
+		    okmemrep (LAM ^ DRN ^ S ^ SP))).
+
+satspec1 : satspec nospec o- <T>.
+satspec2 : satspec (S1 ? S2) o- satspec S1 & satspec S2.
+satspec3 : satspec (add M) o- safeRd M.
+satspec4 : satspec (arr M V) <- bplus M V M2* <- bdec M2* M2
+	o- safeRd M & safeRd M2.
+	%% >= looks at top of stack
+satspec5 : satspec (>= V) o- slook M & mlook M VS <- ble V VS o- <T>.
+
+cscheck1 : cscheck _ _ noregs o- <T>.
+cscheck2 : cscheck D D2 (R ; RLIST)
+	o- rdlook D R V & rdlook D2 R V2 & beqeat V V2 1
+		& cscheck D D2 RLIST.
+memcheck1 : memcheck D D2 SP ARG <- bplus SP ARG Startpt
+	o- memcheck* D D2 Startpt.
+memcheck*1 : memcheck* _ _ I <- maxmem MAXMEM <- binc MAXMEM P1
+	<- ble P1 I o- <T>.
+memcheck*2 : memcheck* D D2 I <- maxmem MAXMEM <- ble I MAXMEM <- binc I I2
+	o- mdlook D I V & mdlook D2 I V2 & beqeat V V2 1
+		& memcheck* D D2 I2.
+
+% ex1 : wrapper 5 5 10 =

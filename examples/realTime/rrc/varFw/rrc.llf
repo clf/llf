@@ -1,0 +1,40 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic"
+% formalization.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+d : timerName.
+g : timerName.
+l : timerName.
+b : timerName.
+
+
+time : nat -> type.              %name time T
+
+
+trainState : type.
+safe :     trainState.
+appr :     trainState.
+crossing : trainState.
+train : trainState -> type.      %name train Tr
+
+signalState : type.
+raise : signalState.
+lower : signalState.
+signal : signalState -> type.    %name signal Sig
+
+gateState : type.
+up :         gateState.
+down :       gateState.
+movingUp :   gateState.
+movingDown : gateState.
+gate : gateState -> type.        %name gate Gate
+
+
+timeOut : nat -> type.           %name timeOut O
+
+rrc : nat ->
+      trainState -> signalState -> gateState ->
+      timerValue -> timerValue -> timerValue -> timerValue ->
+      type.

@@ -1,0 +1,18 @@
+k_as : key.
+k_bs : key.
+
+a : principal.
+
+inst_1 : build (@ (name A))
+	  o- <T>.
+
+inst_2 : build (@ nonce) o- build (@ (name A)).
+
+inst_3 : build (crypt X k_as) o- build X.
+
+inst_4 : build (crypt ((@ (name A)) * X) k_bs)
+	  o- build (@ (name A))
+	   & build X.
+
+inst_5 : build (crypt X k_bs)
+	  o- build (crypt ((@ (name A)) * (crypt X k_as)) k_bs).

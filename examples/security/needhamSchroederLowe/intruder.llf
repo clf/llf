@@ -1,0 +1,122 @@
+% Needham-Schroeder Public Key Protocol -- Intruder's behavior
+% Date: 28 May 1999
+% Author: Iliano Cervesato
+
+intruder : key.
+
+tMsg : nat -> msg -> type.	% Target message for the intruder
+outMsg : msg -> type.
+
+dMsg : nat -> msg -> type.
+cMsg : msg -> type.
+aMsg : atm -> type.
+uMsg : atm -> type.
+xMsg : msg -> type.
+memKey : key -> type.
+
+maxNonc = 0.
+numNonc : nat -> type.
+nNonc ^ numNonc maxNonc.
+
+peep : type.
+genMsg : msg -> type.
+
+dCounter : nat -> type.
+
+% Send/Receive message
+
+receive : transit
+	   o- toNet C X
+	   o- (     dMsg 1 X
+		 -o dCounter 1
+		 -o peep).
+
+send : peep
+	 o- dCounter 0
+	 <- tMsg Num M
+	 <- genMsg M
+	    o- (fromNet Num M -o hook).
+
+
+% Composition and decompostion
+
+decompose : peep
+	     o- dMsg N (X * Y)
+	     o- dCounter N
+	     o- (     dMsg N X
+		   -o dMsg (s N) Y
+		   -o dCounter (s N)
+		   -o peep).
+
+compose : genMsg (X * Y)
+	   <- genMsg X
+	   <- genMsg Y.
+
+
+% Encryption and decryption
+
+decrypt : peep
+	   o- memKey (inv K)
+	   o- dMsg N (crypt X K)
+	   o- (     dMsg N X
+		 -o peep).
+
+encrypt : genMsg (crypt X K)
+	   <- genMsg X
+	   <- annKey K
+	   <- other intruder K.
+
+% Atomic information
+
+atomd1 : peep
+	  o- dMsg (s N) (@ X)
+	  <- aMsg X
+	  o- dCounter (s N)
+	  o- (     dCounter N
+		-o peep).
+
+atomd2 : peep
+	  o- dMsg (s N) (@ X)
+	  o- uMsg X
+	  o- dCounter (s N)
+	  o- (     dCounter N
+		-o aMsg X
+		-> peep).
+
+atomc : genMsg (@ X)
+	 <- aMsg X.
+
+
+% Public keys
+
+keyd : peep
+	o- dMsg (s N) (k2m X)
+	o- dCounter (s N)
+	o- (dCounter N -o peep).	% Public keys (=names) are known
+
+keyc : genMsg (k2m X)
+	<- annKey X.
+
+% New nonces
+
+nonce : peep
+	 o- numNonc (s M)
+         o- ({n:atm}
+	          aMsg n
+	       -> numNonc M
+	       -o peep).
+
+
+% Unknown keys
+
+store : peep
+	 o- dMsg (s N) (crypt X K)
+	 o- other intruder K
+	 o- dCounter (s N)
+	 o- (     dCounter N
+	       -o xMsg (crypt X K)
+	       -> peep).
+
+forward : genMsg (crypt X K)
+	   <- other intruder K
+	   <- xMsg (crypt X K).

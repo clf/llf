@@ -1,0 +1,52 @@
+exp : type.
+
+pair : (exp & exp) -> exp.
+% fst : exp -> exp.
+% snd : exp -> exp.
+z : exp.
+
+%{
+
+%%% Example 1
+
+ev : exp -> exp -> type.
+
+ev_z : ev z z.
+ev_pair : ev (pair (E1 , E2)) (pair (V1 , V2))
+        <- ev E1 V1
+        <- ev E2 V2.
+ev_fst : ev (fst E) V1
+        <- ev E (pair (V1 , V2)).
+ev_snd : ev (snd E) V2
+        <- ev E (pair (V1 , V2)).
+
+}%
+%%% Example 2
+
+ev' : exp -> exp -> type.
+
+ev'_z : ev' z z.
+ev'_pair : ev' (pair E) (pair (V1 , V2))
+        <- ev' (<fst> E) V1
+        <- ev' (<snd> E) V2.
+%{
+ev'_fst : ev' (fst E) (<fst> V)
+        <- ev' E (pair V).
+ev'_snd : ev' (snd E) (<snd> V)
+        <- ev' E (pair V).
+}%
+%{
+%%% Example 3
+
+ev'' : exp -> exp -> type.
+
+ev''_z : ev'' z z.
+ev''_pair : ev'' (pair (E1,E2)) (pair (V1 , V2))
+        <- ev'' (<fst> (E1,E2)) V1
+        <- ev'' (<snd> (E1,E2)) V2.
+ev''_fst : ev'' (fst E) (<fst> (V1,V2))
+        <- ev'' E (pair (V1,V2)).
+ev''_snd : ev'' (snd E) (<snd> (V1,V2))
+        <- ev'' E (pair (V1,V2)).
+
+}%

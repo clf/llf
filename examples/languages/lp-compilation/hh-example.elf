@@ -1,0 +1,50 @@
+%%% Compilation of hereditary Harrop formulas, signature for the list example.
+%%% Author: Iliano Cervesato
+%%% Date: 21 Nov. 1997
+
+nil  : i.
+cons : i -> i -> i.
+
+append  : i -> i -> i -> atm.
+reverse : i -> i -> atm.
+rev     : i -> i -> atm.
+
+append1Prog : o -> type.
+append2Prog : o -> type.
+compileAppend : (atm -> cg) -> (atm -> cg) -> type.
+
+_ : append1Prog
+      (all [L:i] (atom (append nil L L))).
+
+_ : append2Prog
+      (all [K:i]
+      (all [L:i]
+      (all [M:i]
+      (all [X:i]
+        (imp (atom (append K L M))
+	     (atom (append (cons X K) L (cons X M)))))))).
+
+_ : compileAppend C1 C2
+     <- append1Prog A1
+     <- cmpClause A1 C1
+     <- append2Prog A2
+     <- cmpClause A2 C2.
+
+reverseProg    : o -> type.
+compileReverse : (atm -> cg) -> type.
+
+_ : reverseProg
+      (all [K:i]
+      (all [L:i]
+        (imp (imp (and (atom (rev nil K))
+		       (all [X:i]
+		       (all [K':i]
+		       (all [L':i]
+			  (imp (atom (rev L' (cons X K')))
+			       (atom (rev (cons X L') K')))))))
+		  (atom (rev L nil)))
+	     (atom (reverse L K))))).
+
+_ : compileReverse C
+     <- reverseProg A
+     <- cmpClause A C.

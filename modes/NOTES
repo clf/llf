@@ -1,0 +1,302 @@
+Mode checking:
+
+Objects:   
+
+  A ::= a.S | {x:A1} A2
+  M ::= H.S | [x:A] M 
+  H ::= k | c
+  S ::= nil | M; S
+	     
+Contexts are only used to record the status of a variable:
+
+  s ::= par    (parameter)
+      | top  (ground)
+      | ?    (expected to be ground)
+      | bot  (no information available)
+
+  C ::= . | C, s
+
+Modes are communicated via polarities:
+
+  p ::= + | - 
+
+  pS::= nil | p; pS         (spine recording the polarities)
+  MI::= . | a : pS          (mode information for types)
+
+
+
+First version of the system:
+
+Judgments:
+
+0) C |- k.S pattern
+
+DATA formulas related judgments
+
+1) C |-d A -| C'       information resulting form the abstract execution
+	 	       of A is recorded in C resulting in C', if A is a
+		       data formula
+
+2) C |-d S : pS -| C'  traversal of the spine, records information from pS in C'
+
+3) C |-d M : p -| C'   traversal of the objects, records polarity p in C'
+
+4) C |-d S : p -| C'   traversal of a spine, records polarity p in C'.
+
+
+GOAL formulas related judgments
+
+5) C |-g A -| C'       same as above, but A is goal formula
+
+6) C |-g S : pS        check if all +'s are ground
+
+7) C |-g M : p         traversal of objects, check +
+
+8) C |-g S : p         traversal of spines, check +
+
+9) C |-g S : pS -| C'  make all variables with - ground
+
+10) C |-g M : - -| C'  traversal of objects, make all - ground
+
+11) C |-g S : - -| C'  traversal of spines, make all - ground
+
+
+
+Rules:
+
+0)
+
+C(k) =/= par
+--------------
+C |- k.nil pattern    
+
+C(k') = par  C |- k.S pattern
+---------------------------
+C |- k. k';S pattern    
+
+1)
+
+C, bot |-d D -| C', s   s =/= ?
+-------------------------------
+C |-d {x:A} D -| C'' 		
+
+(par Comment to previous rule : If s = ?, that means an output variable
+   hasn't been assigned a ground term par)
+
+C, bot |-d D -| C', bot    C' |-g G -| C''
+------------------------------------------
+C |-d G -> D -| C''
+
+
+MI(a) = pS   C |-d S : pS -| C'
+------------------------------
+C |-d a.S -| C'
+  
+
+
+2) 
+
+-------------------
+C |-d nil : nil -| C
+
+
+C |-d M : p -| C'    C' |-d S : pS -| C''
+---------------------------------------
+C |-d M;S : p;pS C''
+
+
+3)
+
+C(k) =/= par  
+-----------------    	 	    k.S is not a pattern
+C |-d k.S :+ -| C
+
+C(k) =/= par  C |-d S :- -| C'
+----------------------------	    k.S is not a pattern
+C |-d k.S :- -| C'
+
+
+C(k) =/= par  C |-d k :p -| C'
+---------------------------------   k.S is a pattern
+C |-d k.S :p -| C'
+
+
+----------------------   
+C, s |-d 1:+ -| C, top
+
+
+---------------------- 
+C, top |-d 1:- -| C, top
+
+
+----------------------   
+C, ? |-d 1:- -| C, ?
+
+
+----------------------   
+C, bot |-d 1:- -| C, ?
+
+
+C |-d k:p -| C'
+-------------------------
+C, s' |-d (k+1):p -| C',s'
+
+
+C(k) = par  C |-d S:p -| C'
+-------------------------
+C |-d k.S :p -| C'
+
+
+C |-d S:p -| C'
+------------------
+C |-d c.S :p -| C'
+
+C, par |-d M:p -| C', par
+---------------------
+C |-d [A] M:p -| C'
+
+
+4)
+
+---------------
+C |-d nil:p |- C
+
+
+C |-d M:p |- C'    C' |-d S:p -| C''
+----------------------------------
+C |-d M;S :p |- C''
+
+
+
+5) 
+
+C, par |-g G -| C'', par 
+--------------------
+C |-g {x:A} G -| C''
+
+(* second premiss: C prevents EVars which might be grounded through
+   D to have influence on C''. Example
+
+{E:e -> e} {F:e -> e} {G:e} ({x:e} (d G -> c x x) -> c (E x) (F x)) -> c (lam E) (lam F)
+ 
+   this doesn't mode check, because G need is only then ground if c x _ is called
+   during the execution of the operational semantics, which need not to be the case *)
+
+
+C |-d D -| C'    C, par |-g G -| C'', par
+-------------------------------------
+C |-g D -> G -| C''
+
+
+MI(a) = pS   C |-g S : pS    C |-g S : pS -| C'
+-----------------------------------------------
+C |-d a.S -| C'
+
+
+6)
+
+---------------
+C |-g nil : nil 
+
+C |-g M : +    C |-g S : pS
+--------------------------
+C |-g M;S : +;pS       
+
+C |-g S : pS
+----------------
+C |-g M;S : -;pS       
+
+7) 
+
+----------------     
+C, top |-g 1 : +
+
+----------------     
+C, par |-g 1 : +
+
+C, |-g k : +
+------------------
+C, s |-g (k+1) : +
+
+-----------
+C |-g c : +
+
+C |-g H : +    C |-g S : +
+------------------------
+C |-g H. S : +
+
+C, par |- M : +
+--------------------
+C |-g [x:A] M : + 
+
+
+8) 
+
+------------
+C |-g nil: +
+
+C |-g M : +   C |- S:+
+----------------------
+C |-g M;S : +
+
+
+
+9) 
+-------------------
+C |-g nil: nil -| C
+
+C |-g M : - -| C'    C' |-g S :pS -| C''
+----------------------------------------
+C |-g M;S : -;pS -| C''
+
+C |-g S : pS -| C'
+----------------------
+C |-g M;S : +;pS -| C'
+
+
+10) C |-g M : - -| C'
+
+
+C(k) =/= par
+-------------------    k.S is not a pattern
+C |-g k. S : - -| C
+
+
+C(k) =/= par    C |-g k : - -| C' 
+-------------------------------  k.S is a pattern
+C |-g k. S : - -| C'
+
+
+ s x - = s'
+------------------------
+C, s |-g 1 : - -| C, top
+
+
+C, |-g k : - -| C'
+--------------------------
+C, s |-g (k+1) : - -| C',s 
+
+
+C |-g S : C'
+---------------------------------
+C |-g c. S : - -| C'
+
+
+C(k) = par  C |-g S : C'
+--------------------------------
+C |-g k. S : - -| C'
+
+
+C, par |- M : - -| C', par 
+--------------------------
+C |-g [x:A] M : - -| C'
+
+
+11)
+
+--------------
+C |-g nil: - -| C
+
+C |-g M:- -| C'   C' |-g S:- -| C''
+---------------------------------
+C |-g M;S : - -| C''

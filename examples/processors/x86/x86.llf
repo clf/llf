@@ -1,0 +1,307 @@
+%%% Operational semantics for subset of x86 assembly
+%%% Author: Mark Plesko <mp5f@cs.cmu.edu>
+
+%%% Instruction declarations
+
+instr	: type.
+
+nop	: instr.
+% MOV instructions are named movfromto, where r = register,
+%   i = immediate, * is memory, and leading r's are omitted.
+mov	: rname -> rname -> instr.
+movi	: rname -> exp -> instr.
+mov*	: rname -> exp -> instr.
+mov*i	: exp -> exp -> instr.
+mov*r	: exp -> rname -> instr.
+xchg	: rname -> rname -> instr.
+xchg*	: rname -> exp -> instr.
+xchg*r	: exp -> rname -> instr.
+neg	: rname -> instr.
+neg*	: exp -> instr.
+inc	: rname -> instr.
+inc*	: exp -> instr.
+dec	: rname -> instr.
+dec*	: exp -> instr.
+add	: rname -> rname -> instr.
+addi	: rname -> exp -> instr.
+add*	: rname -> exp -> instr.
+add*i	: exp -> exp -> instr.
+add*r	: exp -> rname -> instr.
+mul	: rname -> instr.
+mul*	: exp -> instr.
+imul	: rname -> rname -> instr.
+imuli	: rname -> exp -> instr.
+imul*	: rname -> exp -> instr.
+imul3	: rname -> rname -> exp -> instr.
+imul3*	: rname -> exp -> exp -> instr.
+cmp	: rname -> rname -> instr.
+cmpi	: rname -> exp -> instr.
+cmp*	: rname -> exp -> instr.
+cmp*r	: exp -> rname -> instr.
+cmp*i	: exp -> exp -> instr.
+push	: rname -> instr.
+pushi	: exp -> instr.
+push*	: exp -> instr.
+pop	: rname -> instr.
+pop*	: exp -> instr.
+jmp	: exp -> instr.
+jmpr	: rname -> instr.
+jne	: exp -> instr.			% jnz
+jns	: exp -> instr.
+je	: exp -> instr.			% jz
+js	: exp -> instr.
+loop	: exp -> instr.
+call	: exp -> instr.
+callr	: rname -> instr.
+ret	: instr.
+reti	: exp -> instr.
+
+end	: instr.			%%% temporary?
+
+%%% Execution declarations
+exec	: instr -> exp -> exp -> type.
+run	: exp -> exp -> type.
+runnext	: exp -> exp -> type.
+prog	: exp -> instr -> type.
+
+%%% Updating delcarations
+upr1	: rname -> exp -> exp -> exp -> type.
+upr2	: rname -> exp -> rname -> exp -> exp -> exp -> type.
+upm1	: exp -> exp -> exp -> exp -> type.
+upr1m1	: rname -> exp -> exp -> exp -> exp -> exp -> type.
+upf	: exp -> exp -> exp -> type.
+upfr1	: rname -> exp -> exp -> exp -> type.
+upfm1	: exp -> exp -> exp -> exp -> type.
+uppush	: exp -> exp -> exp -> type.
+% No pop update helper declaration for now.
+
+%%% Other helper declarations
+execneg	: rname -> exp -> exp -> exp -> type.
+execneg*: exp -> exp -> exp -> exp -> type.
+execinc	: rname -> exp -> exp -> exp -> type.
+execinc*: exp -> exp -> exp -> exp -> type.
+execdec	: rname -> exp -> exp -> exp -> type.
+execdec*: exp -> exp -> exp -> exp -> type.
+execadd : rname -> exp -> exp -> exp -> exp -> type.
+execadd*: exp -> exp -> exp -> exp -> exp -> type.
+execmul : rname -> exp -> exp -> exp -> exp -> type.
+execjmp	: exp -> exp -> exp -> type.
+execcmp : exp -> exp -> exp -> exp -> type.
+execloop: exp -> exp -> exp -> exp -> type.
+
+%%% General variable usage
+% I = instruction : exp
+% L = program location : exp
+% M = memory location : exp
+% R = register : rname
+% V = value : exp
+% W = flag value : onoff
+% X = instruction position : exp
+
+%%% Program execution
+% For now, state.llf specifies the termination
+% conditions (if desired, otherwise just o- <T>)
+%run1 : run L
+%	<- prog L end o- <T>.
+run2 : run L OUTPUT
+	<- prog L I
+	o- exec I L OUTPUT.
+
+runnext1 : runnext L OUTPUT <- binc L L2 o- run L2 OUTPUT.
+
+%%% Updating state
+upr1a : upr1 R V X OUTPUT
+	o- reg R V2
+	o- (reg R V -o runnext X OUTPUT).
+upr2a : upr2 R V R2 V2 X OUTPUT
+	o- reg R VR
+	o- (reg R V -o upr1 R2 V2 X OUTPUT).
+upm1a : upm1 M V X OUTPUT
+	o- mem M V2
+	o- (mem M V -o runnext X OUTPUT).
+upr1m1a : upr1m1 R VR M VM X OUTPUT
+	o- mem M VM2
+	o- (mem M VM -o upr1 R VR X OUTPUT).
+upfa : upf V X OUTPUT
+	<- zeroon V FZ
+	<- posoff V FS
+	o- flag zf ZF
+	o- flag sf SF
+	o- (flag zf FZ -o flag sf FS -o runnext X OUTPUT).
+upfr1a : upfr1 R V X OUTPUT
+	<- zeroon V FZ
+	<- posoff V FS
+	o- flag zf ZF
+	o- flag sf SF
+	o- (flag zf FZ -o flag sf FS -o upr1 R V X OUTPUT).
+upfm1a : upfm1 M V X OUTPUT
+	<- zeroon V FZ
+	<- posoff V FS
+	o- flag zf ZF
+	o- flag sf SF
+	o- (flag zf FZ -o flag sf FS -o upm1 M V X OUTPUT).
+uppush1 : uppush V X OUTPUT
+	o- reg esp M
+	<- binc M M2
+	o- (reg esp M2 -o upm1 M2 V X OUTPUT).
+
+%%% Instructions
+
+execnop : exec nop X OUTPUT o- runnext X OUTPUT.
+  %% Intel docs v2: "an alias mnemonic for the XCHG (E)AX (E)AX instruction"
+exmov : exec (mov R1 R2) X OUTPUT
+	o- rlook R2 V2 & upr1 R1 V2 X OUTPUT.
+exmovri : exec (movi R V) X OUTPUT
+	o- upr1 R V X OUTPUT.
+exmov* : exec (mov* R E) X OUTPUT
+	o- simp E M & mlook M V & upr1 R V X OUTPUT.
+exmov*i : exec (mov*i E V) X OUTPUT
+	o- simp E M & upm1 M V X OUTPUT.
+exmov*r : exec (mov*r E R) X OUTPUT
+	o- simp E M & rlook R V & upm1 M V X OUTPUT.
+exxchg : exec (xchg R1 R2) X OUTPUT
+	o- rlook R1 V1 & rlook R2 V2 & upr2 R1 V2 R2 V1 X OUTPUT.
+exxchg* : exec (xchg* R E) X OUTPUT
+	o- simp E M & mlook M VM & rlook R VR & upr1m1 R VM M VR X OUTPUT.
+exxchg*r : exec (xchg*r E R) X OUTPUT
+	o- simp E M & mlook M VM & rlook R VR & upr1m1 R VM M VR X OUTPUT.
+exneg : exec (neg R) X OUTPUT
+	o- rlook R V & execneg R V X OUTPUT.
+exneg* : exec (neg* E) X OUTPUT
+	o- simp E M & mlook M VM & execneg* M VM X OUTPUT.
+exinc : exec (inc R) X OUTPUT
+	o- rlook R V & execinc R V X OUTPUT.
+exinc* : exec (inc* E) X OUTPUT
+	o- simp E M & mlook M VM & execinc* M VM X OUTPUT. 
+exdec : exec (dec R) X OUTPUT
+	o- rlook R V & execdec R V X OUTPUT.
+exdec* : exec (dec* E) X OUTPUT
+	o- simp E M & mlook M VM & execdec* M VM X OUTPUT.
+exadd : exec (add R1 R2) X OUTPUT
+	o- rlook R1 V1 & rlook R2 V2 & execadd R1 V1 V2 X OUTPUT.
+exaddi : exec (addi R E) X OUTPUT
+	o- rlook R V & execadd R V E X OUTPUT.
+exadd* : exec (add* R E) X OUTPUT
+	o- rlook R VR & simp E M & mlook M VM & execadd R VR VM X OUTPUT.
+exadd*i : exec (add*i E V) X OUTPUT
+	o- simp E M & mlook M VM & execadd* M V VM X OUTPUT.
+exadd*r : exec (add*r E R) X OUTPUT
+	o- simp E M & mlook M VM & rlook R VR & execadd* M VM VR X OUTPUT.
+%%% zf, sf undefined on multiplication instructions
+% This is implemented in execmul.
+exmul : exec (mul R) X OUTPUT
+	o- rlook R V & rlook eax V2 & execmul eax V V2 X OUTPUT.
+exmul* : exec (mul* E) X OUTPUT
+	o- simp E M & mlook M VM & rlook eax VEAX
+		& execmul eax VM VEAX X OUTPUT.
+eximul : exec (imul R1 R2) X OUTPUT
+	o- rlook R1 V1 & rlook R2 V2 & execmul R1 V1 V2 X OUTPUT.
+eximuli : exec (imuli R V) X OUTPUT
+	o- rlook R VR & execmul R VR V X OUTPUT.
+eximul* : exec (imul* R E) X OUTPUT
+	o- rlook R VR & simp E M & mlook M VM & execmul R VR VM X OUTPUT.
+eximul3 : exec (imul3 R1 R2 V) X OUTPUT
+	o- rlook R2 V2 & execmul R1 V V2 X OUTPUT.
+eximul3* : exec (imul3* R E V) X OUTPUT
+	o- rlook R VR & simp E M & mlook M VM & execmul R VR VM X OUTPUT.
+excmp : exec (cmp R1 R2) X OUTPUT
+	o- rlook R1 V1 & rlook R2 V2 & execcmp V1 V2 X OUTPUT.
+excmpi : exec (cmpi R V) X OUTPUT
+	o- rlook R VR & execcmp VR V X OUTPUT.
+excmp* : exec (cmp* R E) X OUTPUT
+	o- rlook R VR & simp E M & mlook M VM & execcmp VR VM X OUTPUT.
+excmp*r : exec (cmp*r E R) X OUTPUT
+	o- simp E M & mlook M VM & rlook R VR & execcmp VM VR X OUTPUT.
+excmp*i : exec (cmp*i E V) X OUTPUT
+	o- simp E M & mlook M VM & execcmp VM V X OUTPUT.
+expush: exec (push R) X OUTPUT
+	o- rlook R V & uppush V X OUTPUT.
+expushi : exec (pushi V) X OUTPUT o- uppush V X OUTPUT.
+expush* : exec (push* E) X OUTPUT
+	o- simp E M & mlook M V & uppush V X OUTPUT.
+expop: exec (pop R) X OUTPUT
+	o- reg esp M
+	<- bdec M M2
+	o- mlook M V & (reg esp M2 -o upr1 R V X OUTPUT).
+expop* : exec (pop* E) X OUTPUT
+	o- reg esp M
+	<- bdec M M2
+	o- simp E ME & mlook M V & (reg esp M2 -o upm1 ME V X OUTPUT).
+exjmp : exec (jmp V) X OUTPUT o- execjmp X V OUTPUT.
+exjmpr : exec (jmpr R) X OUTPUT  %% Absolute jump
+	o- rlook R X2 & run X2 OUTPUT.
+jnz = jne.
+exjne1 : exec (jne V) X OUTPUT
+	o- flook zf off & execjmp X V OUTPUT.
+exjne2 : exec (jne V) X OUTPUT
+	o- flook zf on & runnext X OUTPUT.
+exjns1 : exec (jns V) X OUTPUT
+	o- flook sf off & execjmp X V OUTPUT.
+exjns2 : exec (jns V) X OUTPUT
+	o- flook sf on & runnext X OUTPUT.
+jz = je.
+exje1 : exec (je V) X OUTPUT
+	o- flook zf on & execjmp X V OUTPUT.
+exje2 : exec (je V) X OUTPUT
+	o- flook zf off & runnext X OUTPUT.
+exjs1 : exec (js V) X OUTPUT
+	o- flook sf on & execjmp X V OUTPUT.
+exjs2 : exec (js V) X OUTPUT
+	o- flook sf off & runnext X OUTPUT.
+exloop : exec (loop V) X OUTPUT
+	o- rlook ecx RV & execloop RV V X OUTPUT.
+%% These should be combinable; add a helper..
+excall : exec (call Xrel) Xcurr OUTPUT
+	<- bplus Xcurr Xrel Xnew
+	<- binc Xcurr Xcurrnext
+	o- reg esp M
+	<- binc M M2
+	o- mem M2 VM2
+	o- (reg esp M2 -o mem M2 Xcurrnext -o run Xnew OUTPUT).
+excallr : exec (callr R) Xcurr OUTPUT
+	o- reg R Xnew
+	<- binc Xcurr Xcurrnext
+	o- reg esp M
+	<- binc M M2
+	o- mem M2 VM2
+	o- (reg esp M2 -o mem M2 Xcurrnext -o run Xnew OUTPUT).
+exret : exec ret Xcurr OUTPUT
+	o- reg esp M
+	<- bdec M M2
+	o- mlook M Xret & (reg esp M2 -o run Xret OUTPUT).
+exreti : exec (reti V) Xcurr OUTPUT
+	o- reg esp M
+	<- bsub M V M2
+	<- bdec M2 M3
+	o- mlook M2 Xret & (reg esp M3 -o run Xret OUTPUT).
+
+%%% Instruction helpers
+
+execneg1 : execneg R V X OUTPUT <- bnegate V NEGV
+	o- upr1 R NEGV X OUTPUT.
+execneg*1 : execneg* M V X OUTPUT <- bnegate V NEGV
+	o- upm1 M NEGV X OUTPUT.
+execinc1 : execinc R V X OUTPUT <- binc V V2
+	o- upfr1 R V2 X OUTPUT.
+execinc*1 : execinc* M V X OUTPUT <- binc V V2
+	o- upm1 M V2 X OUTPUT.
+execdec1 : execdec R V X OUTPUT <- bdec V V2
+	o- upfr1 R V2 X OUTPUT.
+execdec*1 : execdec* M V X OUTPUT <- bdec V V2
+	o- upm1 M V2 X OUTPUT.
+execadd1 : execadd R V1 V2 X OUTPUT <- bplus V1 V2 V3
+	o- upfr1 R V3 X OUTPUT.
+execadd*1 : execadd* M V1 V2 X OUTPUT <- bplus V1 V2 V3
+	o- upfm1 M V3 X OUTPUT.
+execmul1 : execmul R V1 V2 X OUTPUT <- btimes V1 V2 V3
+	% Flags are undefined on multiply results.
+	o- flag zf ZFOLD o- flag sf SFOLD
+	o- {ZF:onoff} {SF:onoff} flag zf ZF -o flag sf SF
+		-o upr1 R V3 X OUTPUT.
+execjmp1 : execjmp X X2 OUTPUT <- bplus X X2 X3 o- run X3 OUTPUT.
+execcmp1 : execcmp V1 V2 X OUTPUT <- bsub V1 V2 V3 o- upf V3 X OUTPUT.
+execloop1 : execloop VR V X OUTPUT <- bdec VR VR2 <- beq VR2 0 1
+	o- runnext X OUTPUT.
+execloop2 : execloop VR V X OUTPUT <- bdec VR VR2 <- beq VR2 0 0
+	o- execjmp X V OUTPUT.
+

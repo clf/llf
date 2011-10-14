@@ -1,0 +1,15 @@
+% Needham-Schroeder Public Key Protocol -- Intruder's behavior
+% Date: 11 September 1998
+% Author: Iliano Cervesato
+
+% Send/Receive message
+
+receive2 : loop2
+	    o- toNet P N X
+	    o- (     dMsg X
+		  -o peepD).
+
+send2 : peepC
+	 o- cMsg X
+	 o- (fromNet P N X -o loop2).
+

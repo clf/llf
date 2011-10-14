@@ -1,0 +1,20 @@
+%%% Compilation of hereditary Harrop formulas, intermediate code syntax 
+%%% Author: Iliano Cervesato
+%%% Date: 21 Nov. 1997
+
+g   : type.             % Goals
+cg  : type.             % Compiled goals
+%name g  G
+%name cg C
+
+gAtom  : atm -> g.
+gTrue  : g.
+gAnd   : g -> g -> g.
+gImp   : (atm -> cg) -> g -> g.
+gAll   : (i -> g) -> g.
+
+cgEq     : atm -> atm -> cg.
+cgFalse  : cg.
+cgOr     : cg -> cg -> cg.
+cgAnd    : cg -> g -> cg.
+cgSome   : (i -> cg) -> cg.

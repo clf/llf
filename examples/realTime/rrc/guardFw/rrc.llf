@@ -1,0 +1,57 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic"
+% formalization.
+% Preconditions factored out
+% Date: 21 July  1998
+% Author: Iliano Cervesato
+
+d : timerName.
+g : timerName.
+l : timerName.
+b : timerName.
+
+
+time : nat -> type.              %name time T
+
+readTime : nat -> type.
+read_time : readTime T
+	     o- time T
+	     o- <T>.
+
+trainState : type.
+safe :     trainState.
+appr :     trainState.
+crossing : trainState.
+train : trainState -> type.      %name train Tr
+
+readTrain : trainState -> type.
+read_train : readTrain S
+	      o- train S
+	      o- <T>.
+
+signalState : type.
+raise : signalState.
+lower : signalState.
+signal : signalState -> type.    %name signal Sig
+
+readSignal : signalState -> type.
+read_signal : readSignal S
+	       o- signal S
+	       o- <T>.
+
+gateState : type.
+up :         gateState.
+down :       gateState.
+movingUp :   gateState.
+movingDown : gateState.
+gate : gateState -> type.        %name gate Gate
+
+readGate : gateState -> type.
+read_gate : readGate S
+	     o- gate S
+	     o- <T>.
+
+
+timeOut : nat -> type.           %name timeOut O
+
+rrc : type.

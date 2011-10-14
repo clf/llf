@@ -1,0 +1,39 @@
+%%% Operational semantics for subset of x86 assembly
+%%% Author: Mark Plesko <mp5f@cs.cmu.edu>
+
+setr1 ^ reg r1 unk.
+seteax ^ reg eax unk.
+setecx ^ reg ecx unk.
+setesp ^ reg esp 0.
+
+setzf ^ flag zf off.
+setsf ^ flag sf off.
+
+% Program in state2.llf
+
+% go label memory_size output.
+go' : exp -> exp -> exp -> type.
+go'1 : go' L 0 OUTPUT o- run L OUTPUT.
+go'2 : go' L X OUTPUT <- beq 0 X 0 <- bdec X X2
+	o- (mem X unk -o go' L X2 OUTPUT).
+go : exp -> exp -> exp -> type.
+go1 : go L X OUTPUT o- (maxmem X -> go' L X OUTPUT).
+
+consumemem : exp -> type.
+consumemem1 : consumemem 0.
+consumemem2 : consumemem X <- beq 0 X 0 <- bdec X X2
+	o- mem X V o- consumemem X2.
+
+term : run L OUTPUT
+	o- reg eax OUTPUT
+	o- reg ecx ECX
+	o- reg r1 R1
+	o- reg esp 0
+	o- flag zf F1 o- flag sf F2
+	<- maxmem M o- consumemem M
+	<- prog L end
+	o- <T>.
+
+%% Just if we want to check if the linear context is empty
+done : type.
+d : done.

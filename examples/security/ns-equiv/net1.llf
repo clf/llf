@@ -1,0 +1,7 @@
+% Needham-Schroeder Public Key Protocol -- networks's behavior
+% Date: 5 October 1998
+% Author: Iliano Cervesato
+
+net : loop1
+       o- toNet P N X
+       o- (fromNet P N X -o loop1).

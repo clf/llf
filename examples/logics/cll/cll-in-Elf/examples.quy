@@ -1,0 +1,492 @@
+% Formula example
+(forall [x:i] A x and perp (B x)) : o.
+
+% Correct
+([A:o] [B:o]
+   [n:neg (A times B)]
+   [p:pos (B times A)]
+   timesl ([n1:neg A] [n2:neg B]
+	     timesr ([p2:pos B] axiom n2 p2)
+	     ([p1:pos A] axiom n1 p1)
+	     p)
+   n)
+:
+{A:o} {B:o}
+   neg (A times B)
+   -> pos (B times A)
+   -> #.
+
+% Check for correctness
+{A:o} {B:o}
+lin2
+([n:neg (A times B)]
+   [p:pos (B times A)]
+   timesl ([n1:neg A] [n2:neg B]
+	     timesr ([p2:pos B] axiom n2 p2)
+	     ([p1:pos A] axiom n1 p1)
+	     p)
+   n).
+
+L :
+{A:o} {B:o}
+lin2
+([n:neg (A times B)]
+   [p:pos (B times A)]
+   timesl ([n1:neg A] [n2:neg B]
+	     timesr ([p2:pos B] axiom n2 p2)
+	     ([p1:pos A] axiom n1 p1)
+	     p)
+   n).
+
+% An ambiguous proof term
+([A:o] [B:o]
+   [n:neg (A times B)]
+   [p:pos (top times top)]
+   timesl ([n1:neg A] [n2:neg B]
+	     timesr ([p1:pos top] topr p1)
+	     ([p2:pos top] topr p2)
+	     p)
+   n)
+:
+{A:o} {B:o}
+   neg (A times B)
+   -> pos (top times top)
+   -> #.
+
+% There are four proof that this is linear, corresponding
+% to the four distributions A and B to the left and right.
+L :
+     {A:o} {B:o}
+     lin2
+     [n:neg (A times B)]
+     [p:pos (top times top)]
+     timesl ([n1:neg A] [n2:neg B]
+	       timesr ([p1:pos top] topr p1)
+	       ([p2:pos top] topr p2)
+	       p)
+     n.
+
+
+% Incorrect (not linear), but type-checks
+([A:o] [B:o]
+   [n:neg (A times B)]
+   [p:pos (B times A)]
+   timesr ([p2:pos B] timesl ([n1:neg A] [n2:neg B] axiom n2 p2) n)
+   ([p1:pos A] timesl ([n1:neg A] [n2:neg B] axiom n1 p1) n)
+   p)
+:
+{A:o} {B:o}
+   neg (A times B)
+   -> pos (B times A)
+   -> #.
+
+% Check for correctness; should fail
+{A:o} {B:o}
+lin2
+([n:neg (A times B)]
+   [p:pos (B times A)]
+   timesr ([p2:pos B] timesl ([n1:neg A] [n2:neg B] axiom n2 p2) n)
+   ([p1:pos A] timesl ([n1:neg A] [n2:neg B] axiom n1 p1) n)
+   p).
+
+%  A and B --> B and A
+([A:o] [B:o]
+   [n:neg (A and B)]
+   [p:pos (B and A)]
+   andr ([p2:pos B] andl2 ([n2:neg B] axiom n2 p2) n)
+   ([p1:pos A] andl1 ([n1:neg A] axiom n1 p1) n)
+   p)
+:
+{A:o} {B:o}
+   neg (A and B)
+   -> pos (B and A)
+   -> #.
+
+% Check for correctness
+
+{A:o} {B:o}
+lin2
+([n:neg (A and B)]
+   [p:pos (B and A)]
+   andr ([p2:pos B] andl2 ([n2:neg B] axiom n2 p2) n)
+   ([p1:pos A] andl1 ([n1:neg A] axiom n1 p1) n)
+   p).
+
+%{ !(A -o B)  -o (! A -o ! B) }%
+
+([A:o] [B:o]
+   [p:pos (perp ((! (perp (A times (perp B)))) times ((! A) times (perp (! B)))))]
+   (perpr ([n1:neg ((! (perp (A times (perp B)))) times ((! A) times (perp (! B))))]
+	     timesl ([n2:neg (! (perp (A times (perp B))))]
+		       [n3:neg ((! A) times (perp (! B)))]
+		       timesl ([n4:neg (! A)]
+				 [n5:neg (perp (! B))]
+				 perpl ([p6:pos (! B)]
+					  !l ([n7!:neg! (perp (A times (perp B)))]
+						!l ([n8!:neg! A]
+						      !r ([p9:pos B] 
+							    !d ([n10:neg A]
+								  !d ([n11:neg (perp (A times (perp B)))]
+									perpl ([p12:pos (A times (perp B))]
+										 timesr ([p13:pos A] axiom n10 p13)
+										 ([p14:pos (perp B)]
+										    perpr ([n15:neg B] axiom n15 p9)
+										    p14)
+										 p12)
+									n11)
+								  n7!)
+							    n8!)
+						      p6)
+						n4)
+					  n2)
+				 n5)
+		       n3)
+	     n1)
+      p))
+:
+{A:o} {B:o}
+   pos (perp ((! (perp (A times (perp B))))
+		times (((! A) times (perp (! B))))))
+   -> #.
+
+% Example of admissibility from Appendix
+
+%{ !(A -o B) --> ! A -o ! B }%
+
+([A:o] [B:o]
+   [n:neg (! (perp (A times (perp B))))]
+   [p:pos (perp ((! A) times (perp (! B))))]
+   (perpr ([n1:neg ((! A) times (perp (! B)))]
+	     timesl ([n4:neg (! A)]
+		       [n5:neg (perp (! B))]
+		       perpl ([p6:pos (! B)]
+				!l ([n7!:neg! (perp (A times (perp B)))]
+				      !l ([n8!:neg! A]
+					    !r ([p9:pos B] 
+						  !d ([n10:neg A]
+							!d ([n11:neg (perp (A times (perp B)))]
+							      perpl ([p12:pos (A times (perp B))]
+								       timesr ([p13:pos A] axiom n10 p13)
+								       ([p14:pos (perp B)]
+									  perpr ([n15:neg B] axiom n15 p9)
+									  p14)
+								       p12)
+							      n11)
+							n7!)
+						  n8!)
+					    p6)
+				      n4)
+				n)
+		       n5)
+	     n1)
+      p))
+:
+{A:o} {B:o}
+   neg (! (perp (A times (perp B))))
+   -> pos (perp ((! A) times (perp (! B))))
+   -> #.
+
+% Check for correctness
+
+{A:o} {B:o}
+lin2
+([n:neg (! (perp (A times (perp B))))]
+   [p:pos (perp ((! A) times (perp (! B))))]
+   (perpr ([n1:neg ((! A) times (perp (! B)))]
+	     timesl ([n4:neg (! A)]
+		       [n5:neg (perp (! B))]
+		       perpl ([p6:pos (! B)]
+				!l ([n7!:neg! (perp (A times (perp B)))]
+				      !l ([n8!:neg! A]
+					    !r ([p9:pos B] 
+						  !d ([n10:neg A]
+							!d ([n11:neg (perp (A times (perp B)))]
+							      perpl ([p12:pos (A times (perp B))]
+								       timesr ([p13:pos A] axiom n10 p13)
+								       ([p14:pos (perp B)]
+									  perpr ([n15:neg B] axiom n15 p9)
+									  p14)
+								       p12)
+							      n11)
+							n7!)
+						  n8!)
+					    p6)
+				      n4)
+				n)
+		       n5)
+	     n1)
+      p)).
+
+%{ ! A -o ! B --> ? (B ^) -o ? (A ^) }%
+
+([A:o] [B:o]
+   [n:neg (perp ((! A) times (perp (! B))))]
+   [p:pos (perp ((? (perp B)) times (perp (? (perp A)))))]
+   perpr ([n1:neg ((? (perp B)) times (perp (? (perp A))))]
+	    perpl ([p2:pos ((! A) times (perp (! B)))]
+		     timesl ([n3:neg (? (perp B))]
+			       [n4:neg (perp (? (perp A)))]
+			       timesr ([p5:pos (! A)] 
+					 perpl ([p6:pos (? (perp A))]
+						  ?r ([p7?:pos? (perp A)]
+							!r ([p8:pos A]
+							      ?d ([p9:pos (perp A)]
+								    perpr ([n10:neg A] axiom n10 p8)
+								    p9)
+							      p7?)
+							p5)
+						  p6)
+					 n4)
+			       ([p11:pos (perp (! B))]
+				  perpr ([n12:neg (! B)]
+					   !l ([n13!:neg! B]
+						 ?l ([n14:neg (perp B)]
+						       !d ([n15:neg B]
+							     perpl ([p16:pos B] axiom n15 p16)
+							     n14)
+						       n13!)
+						 n3)
+					   n12)
+				  p11)
+			       p2)
+		     n1)
+	    n)
+   p)
+:
+{A:o} {B:o}
+   neg (perp ((! A) times (perp (! B))))
+   -> pos (perp ((? (perp B)) times (perp (? (perp A)))))
+   -> #.
+
+% Check for correctness
+
+{A:o} {B:o}
+lin2
+([n:neg (perp ((! A) times (perp (! B))))]
+   [p:pos (perp ((? (perp B)) times (perp (? (perp A)))))]
+   perpr ([n1:neg ((? (perp B)) times (perp (? (perp A))))]
+	    perpl ([p2:pos ((! A) times (perp (! B)))]
+		     timesl ([n3:neg (? (perp B))]
+			       [n4:neg (perp (? (perp A)))]
+			       timesr ([p5:pos (! A)] 
+					 perpl ([p6:pos (? (perp A))]
+						  ?r ([p7?:pos? (perp A)]
+							!r ([p8:pos A]
+							      ?d ([p9:pos (perp A)]
+								    perpr ([n10:neg A] axiom n10 p8)
+								    p9)
+							      p7?)
+							p5)
+						  p6)
+					 n4)
+			       ([p11:pos (perp (! B))]
+				  perpr ([n12:neg (! B)]
+					   !l ([n13!:neg! B]
+						 ?l ([n14:neg (perp B)]
+						       !d ([n15:neg B]
+							     perpl ([p16:pos B] axiom n15 p16)
+							     n14)
+						       n13!)
+						 n3)
+					   n12)
+				  p11)
+			       p2)
+		     n1)
+	    n)
+   p).
+
+% Admissibility applied to previous two derivations.
+
+{A:o} {B:o}
+{N:neg (! (perp (A times (perp B))))}
+{P:pos (perp ((? (perp B)) times (perp (? (perp A)))))}
+ad (perp ((! A) times (perp (! B))))
+([p:pos (perp ((! A) times (perp (! B))))]
+   (perpr ([n1:neg ((! A) times (perp (! B)))]
+	     timesl ([n4:neg (! A)]
+		       [n5:neg (perp (! B))]
+		       perpl ([p6:pos (! B)]
+				!l ([n7!:neg! (perp (A times (perp B)))]
+				      !l ([n8!:neg! A]
+					    !r ([p9:pos B] 
+						  !d ([n10:neg A]
+							!d ([n11:neg (perp (A times (perp B)))]
+							      perpl ([p12:pos (A times (perp B))]
+								       timesr ([p13:pos A] axiom n10 p13)
+								       ([p14:pos (perp B)]
+									  perpr ([n15:neg B] axiom n15 p9)
+									  p14)
+								       p12)
+							      n11)
+							n7!)
+						  n8!)
+					    p6)
+				      n4)
+				N)
+		       n5)
+	     n1)
+      p))
+([n:neg (perp ((! A) times (perp (! B))))]
+   perpr ([n1:neg ((? (perp B)) times (perp (? (perp A))))]
+	    perpl ([p2:pos ((! A) times (perp (! B)))]
+		     timesl ([n3:neg (? (perp B))]
+			       [n4:neg (perp (? (perp A)))]
+			       timesr ([p5:pos (! A)] 
+					 perpl ([p6:pos (? (perp A))]
+						  ?r ([p7?:pos? (perp A)]
+							!r ([p8:pos A]
+							      ?d ([p9:pos (perp A)]
+								    perpr ([n10:neg A] axiom n10 p8)
+								    p9)
+							      p7?)
+							p5)
+						  p6)
+					 n4)
+			       ([p11:pos (perp (! B))]
+				  perpr ([n12:neg (! B)]
+					   !l ([n13!:neg! B]
+						 ?l ([n14:neg (perp B)]
+						       !d ([n15:neg B]
+							     perpl ([p16:pos B] axiom n15 p16)
+							     n14)
+						       n13!)
+						 n3)
+					   n12)
+				  p11)
+			       p2)
+		     n1)
+	    n)
+   P)
+(F A B N P).
+
+
+% Admissibility with additional correctness check
+
+sigma [_:
+{A:o} {B:o}
+{N:neg (! (perp (A times (perp B))))}
+{P:pos (perp ((? (perp B)) times (perp (? (perp A)))))}
+ad (perp ((! A) times (perp (! B))))
+([p:pos (perp ((! A) times (perp (! B))))]
+   (perpr ([n1:neg ((! A) times (perp (! B)))]
+	     timesl ([n4:neg (! A)]
+		       [n5:neg (perp (! B))]
+		       perpl ([p6:pos (! B)]
+				!l ([n7!:neg! (perp (A times (perp B)))]
+				      !l ([n8!:neg! A]
+					    !r ([p9:pos B] 
+						  !d ([n10:neg A]
+							!d ([n11:neg (perp (A times (perp B)))]
+							      perpl ([p12:pos (A times (perp B))]
+								       timesr ([p13:pos A] axiom n10 p13)
+								       ([p14:pos (perp B)]
+									  perpr ([n15:neg B] axiom n15 p9)
+									  p14)
+								       p12)
+							      n11)
+							n7!)
+						  n8!)
+					    p6)
+				      n4)
+				N)
+		       n5)
+	     n1)
+      p))
+([n:neg (perp ((! A) times (perp (! B))))]
+   perpr ([n1:neg ((? (perp B)) times (perp (? (perp A))))]
+	    perpl ([p2:pos ((! A) times (perp (! B)))]
+		     timesl ([n3:neg (? (perp B))]
+			       [n4:neg (perp (? (perp A)))]
+			       timesr ([p5:pos (! A)] 
+					 perpl ([p6:pos (? (perp A))]
+						  ?r ([p7?:pos? (perp A)]
+							!r ([p8:pos A]
+							      ?d ([p9:pos (perp A)]
+								    perpr ([n10:neg A] axiom n10 p8)
+								    p9)
+							      p7?)
+							p5)
+						  p6)
+					 n4)
+			       ([p11:pos (perp (! B))]
+				  perpr ([n12:neg (! B)]
+					   !l ([n13!:neg! B]
+						 ?l ([n14:neg (perp B)]
+						       !d ([n15:neg B]
+							     perpl ([p16:pos B] axiom n15 p16)
+							     n14)
+						       n13!)
+						 n3)
+					   n12)
+				  p11)
+			       p2)
+		     n1)
+	    n)
+   P)
+(F A B N P)]
+{A:o} {B:o}
+lin2 ([n] [p] F A B n p).
+
+% Query to count the number of solutions w/o showing them
+
+{A:o} {B:o}
+{N:neg (! (perp (A times (perp B))))}
+{P:pos (perp ((? (perp B)) times (perp (? (perp A)))))}
+ad (perp ((! A) times (perp (! B))))
+([p:pos (perp ((! A) times (perp (! B))))]
+   (perpr ([n1:neg ((! A) times (perp (! B)))]
+	     timesl ([n4:neg (! A)]
+		       [n5:neg (perp (! B))]
+		       perpl ([p6:pos (! B)]
+				!l ([n7!:neg! (perp (A times (perp B)))]
+				      !l ([n8!:neg! A]
+					    !r ([p9:pos B] 
+						  !d ([n10:neg A]
+							!d ([n11:neg (perp (A times (perp B)))]
+							      perpl ([p12:pos (A times (perp B))]
+								       timesr ([p13:pos A] axiom n10 p13)
+								       ([p14:pos (perp B)]
+									  perpr ([n15:neg B] axiom n15 p9)
+									  p14)
+								       p12)
+							      n11)
+							n7!)
+						  n8!)
+					    p6)
+				      n4)
+				N)
+		       n5)
+	     n1)
+      p))
+([n:neg (perp ((! A) times (perp (! B))))]
+   perpr ([n1:neg ((? (perp B)) times (perp (? (perp A))))]
+	    perpl ([p2:pos ((! A) times (perp (! B)))]
+		     timesl ([n3:neg (? (perp B))]
+			       [n4:neg (perp (? (perp A)))]
+			       timesr ([p5:pos (! A)] 
+					 perpl ([p6:pos (? (perp A))]
+						  ?r ([p7?:pos? (perp A)]
+							!r ([p8:pos A]
+							      ?d ([p9:pos (perp A)]
+								    perpr ([n10:neg A] axiom n10 p8)
+								    p9)
+							      p7?)
+							p5)
+						  p6)
+					 n4)
+			       ([p11:pos (perp (! B))]
+				  perpr ([n12:neg (! B)]
+					   !l ([n13!:neg! B]
+						 ?l ([n14:neg (perp B)]
+						       !d ([n15:neg B]
+							     perpl ([p16:pos B] axiom n15 p16)
+							     n14)
+						       n13!)
+						 n3)
+					   n12)
+				  p11)
+			       p2)
+		     n1)
+	    n)
+   P)
+_.

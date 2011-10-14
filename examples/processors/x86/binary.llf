@@ -1,0 +1,236 @@
+%%% Operational semantics for subset of x86 assembly
+%%% Author: Mark Plesko <mp5f@cs.cmu.edu>
+
+%%% Numerical helpers
+
+% 0 is e, binary digits otherwise (it reverse order).
+% We maintain "reduced form" of numbers (no extra zeroes).
+% Invariant: bneg occurs at most once, at "outermost"
+
+exp	: type.
+unk	: exp.
+e	: exp.
+bone	: exp -> exp.
+bzero	: exp -> exp.
+bneg	: exp -> exp.
+
+bplus	: exp -> exp -> exp -> type.
+bplus*	: exp -> exp -> exp -> type.
+bplus*c	: exp -> exp -> exp -> type.
+bsub	: exp -> exp -> exp -> type.
+bsub*	: exp -> exp -> exp -> type.
+bsub*h	: exp -> exp -> exp -> type.
+bsub**	: exp -> exp -> exp -> type.
+bsub**b	: exp -> exp -> exp -> type.
+bsub***	: exp -> exp -> exp -> type.
+binc	: exp -> exp -> type.
+bdec	: exp -> exp -> type.
+bdec*	: exp -> exp -> type.
+btimes	: exp -> exp -> exp -> type.
+btimes*	: exp -> exp -> exp -> type.
+beq	: exp -> exp -> exp -> type.	% (1 for =, 0 for \neq)
+beq*	: exp -> exp -> exp -> type.
+bnegate	: exp -> exp -> type.
+
+0 = e.	1 = (bone e).	2 = (bzero (bone e)).	3 = (bone (bone e)).
+4 = (bzero (bzero (bone e))).	5 = (bone (bzero (bone e))).
+6 = (bzero (bone (bone e))).	7 = (bone (bone (bone e))).
+8 = (bzero (bzero (bzero (bone e)))).	9 = (bone (bzero (bzero (bone e)))).
+10 = (bzero (bone (bzero (bone e)))).	11 = (bone (bone (bzero (bone e)))).
+12 = (bzero (bzero (bone (bone e)))).	13 = (bone (bzero (bone (bone e)))).
+14 = (bzero (bone (bone (bone e)))).	15 = (bone (bone (bone (bone e)))).
+16 = (bzero (bzero (bzero (bzero (bone e))))).
+17 = (bone (bzero (bzero (bzero (bone e))))).
+18 = (bzero (bone (bzero (bzero (bone e))))).
+19 = (bone (bone (bzero (bzero (bone e))))).
+20 = (bzero (bzero (bone (bzero (bone e))))).
+21 = (bone (bzero (bone (bzero (bone e))))).
+22 = (bzero (bone (bone (bzero (bone e))))).
+23 = (bone (bone (bone (bzero (bone e))))).
+24 = (bzero (bzero (bzero (bone (bone e))))).
+25 = (bone (bzero (bzero (bone (bone e))))).
+26 = (bzero (bone (bzero (bone (bone e))))).
+27 = (bone (bone (bzero (bone (bone e))))).
+28 = (bzero (bzero (bone (bone (bone e))))).
+29 = (bone (bzero (bone (bone (bone e))))).
+30 = (bzero (bone (bone (bone (bone e))))).
+31 = (bone (bone (bone (bone (bone e))))).
+32 = (bzero (bzero (bzero (bzero (bzero (bone e)))))).
+
+~0 = (bneg 0).	~1 = (bneg 1).	~2 = (bneg 2).	~3 = (bneg 3).	~4 = (bneg 4).
+~5 = (bneg 5).	~6 = (bneg 6).	~7 = (bneg 7).	~8 = (bneg 8).	~9 = (bneg 9).
+~10 = (bneg 10).	~11 = (bneg 11).	~12 = (bneg 12).
+~14 = (bneg 14).	~16 = (bneg 16).	~17 = (bneg 17).
+~20 = (bneg 20).
+
+bplus1 : bplus (bneg X) (bneg Y) (bneg Z) <- bplus* X Y Z.
+bplus2 : bplus X (bneg Y) Z <- bsub* X Y Z.
+bplus3 : bplus (bneg X) Y Z <- bsub* Y X Z.
+bplus4 : bplus X Y Z <- bplus* X Y Z.
+ % Unknown propogation: we avoid bplus unk X unk. bplus X unk unk.
+ %   to only obtain one proof for bplus unk unk unk.
+ %   This "overspecification" occurs several times below.
+bplus5 : bplus unk (bneg X) unk.
+bplus6 : bplus unk (bone X) unk.
+bplus7 : bplus unk (bzero X) unk.
+bplus8 : bplus unk e unk.
+bplus9 : bplus (bneg X) unk unk.
+bplus10 : bplus (bzero X) unk unk.
+bplus11 : bplus (bone X) unk unk.
+bplus12 : bplus e unk unk.
+bplus13 : bplus unk unk unk.
+ % bplus* X Y Z only for X, Y >= 0
+bplus*1 : bplus* e e e.
+bplus*2 : bplus* e (bone X) (bone X).
+bplus*3 : bplus* e (bzero X) (bzero X).
+bplus*4 : bplus* (bone X) e (bone X).
+bplus*5 : bplus* (bzero X) e (bzero X).
+bplus*6 : bplus* (bzero X) (bzero Y) (bzero Z) <- bplus* X Y Z.
+bplus*7 : bplus* (bzero X) (bone Y) (bone Z) <- bplus* X Y Z.
+bplus*8 : bplus* (bone X) (bzero Y) (bone Z) <- bplus* X Y Z.
+bplus*9 : bplus* (bone X) (bone Y) (bzero Z) <- bplus*c X Y Z.
+bplus*c0 : bplus*c e e (bone e).
+bplus*c1 : bplus*c (bzero X) e (bone X).
+bplus*c2 : bplus*c (bone X) e (bzero Y) <- bplus* X (bone e) Y.
+bplus*c3 : bplus*c e (bzero X) (bone X).
+bplus*c4 : bplus*c e (bone X) (bzero Y) <- bplus* (bone e) X Y.
+bplus*c5 : bplus*c (bzero X) (bzero Y) (bone Z) <- bplus* X Y Z.
+bplus*c6 : bplus*c (bzero X) (bone Y) (bzero Z) <- bplus*c X Y Z.
+bplus*c7 : bplus*c (bone X) (bzero Y) (bzero Z) <- bplus*c X Y Z.
+bplus*c8 : bplus*c (bone X) (bone Y) (bone Z) <- bplus*c X Y Z.
+
+bsub1 : bsub (bneg X) (bneg Y) Z <- bsub* Y X Z.
+bsub2 : bsub X (bneg Y) Z <- bplus* X Y Z.
+bsub3 : bsub (bneg X) Y (bneg Z) <- bplus* X Y Z.
+bsub4 : bsub X Y Z <- bsub* X Y Z.
+bsub5 : bsub unk (bneg X) unk.
+bsub6 : bsub unk (bone X) unk.
+bsub7 : bsub unk (bzero X) unk.
+bsub8 : bsub unk e unk.
+bsub9 : bsub (bneg X) unk unk.
+bsub10 : bsub (bzero X) unk unk.
+bsub11 : bsub (bone X) unk unk.
+bsub12 : bsub e unk unk.
+bsub13 : bsub unk unk unk.
+ %%% bsub* X Y T only for X, Y >= 0
+ %%% Fixed so bsub* X X 0 only has one proof but seems somewhat inefficient
+bsub*1 : bsub* X Y 0 <- beq X Y 1.
+bsub*2 : bsub* X Y Z <- beq X Y 0 <- bsub*h X Y Z.
+bsub*h1 : bsub*h X Y Z <- bsub** X Y T & bsub*** (bone T) (bone Z) 1.
+bsub*h2 : bsub*h X Y (bneg Z) <- bsub** Y X T & bsub*** (bone T) (bone Z) 1.
+ %%% The actual subtraction
+bsub**1 : bsub** (bone X) (bone Y) (bzero T) <- bsub** X Y T.
+bsub**2 : bsub** (bzero X) (bzero Y) (bzero T) <- bsub** X Y T.
+bsub**3 : bsub** (bone X) (bzero Y) (bone T) <- bsub** X Y T.
+bsub**4 : bsub** (bzero X) (bone Y) (bone T) <- bsub**b X Y T.
+	%% Having bsub** X e X would allow negatives
+bsub**5 : bsub** e e e.
+bsub**6 : bsub** (bzero X) e (bzero X).
+bsub**7 : bsub** (bone X) e (bone X).
+bsub**b1 : bsub**b (bzero X) (bzero Y) (bone T) <- bsub**b X Y T.
+bsub**b2 : bsub**b (bzero X) (bone Y) (bzero T) <- bsub**b X Y T.
+bsub**b3 : bsub**b (bone X) (bzero Y) (bzero T) <- bsub** X Y T.
+bsub**b4 : bsub**b (bone X) (bone Y) (bone T) <- bsub**b X Y T.
+bsub**b5 : bsub**b (bzero X) e (bone T) <- bsub**b X e T.
+bsub**b6 : bsub**b (bone X) e (bzero X).
+ %%% Eliminates "useless" zeroes, third parameter is used by bsub***.
+ % Needs at least one "1" in number!
+ % --> Use should be bsub*** (bone x) (bone X) 1.
+bsub***1 : bsub*** e e 0.
+bsub***2 : bsub*** (bzero X) Y 0 <- bsub*** X Y 0.
+bsub***3 : bsub*** (bone X) (bone Y) 1 <- bsub*** X Y 1.
+bsub***4 : bsub*** (bone X) (bone Y) 1 <- bsub*** X Y 0.
+bsub***5 : bsub*** (bzero X) (bzero Y) 1 <- bsub*** X Y 1.
+
+% Maybe eliminate these in favor of bplus X 1 Y and bsub X 1 Y ?
+binc1 : binc (bzero X) (bone X).
+binc2 : binc (bone X) (bzero Y) <- binc X Y.
+binc3 : binc e (bone e).
+binc4 : binc (bneg (bzero X)) (bneg Y) <- bdec (bzero X) Y.
+binc5 : binc (bneg (bone X)) (bneg Y) <- bdec (bone X) Y.
+binc6 : binc unk unk.
+
+bdec1 : bdec (bone e) e.
+bdec2 : bdec (bone (bzero X)) (bzero (bzero X)).
+bdec3 : bdec (bone (bone X)) (bzero (bone X)).
+bdec4 : bdec (bzero X) (bone Y) <- bdec X Y.
+bdec5 : bdec e (bneg (bone e)).
+bdec6 : bdec (bneg X) (bneg Y) <- binc X Y.
+bdec7 : bdec unk unk.
+
+btimes1 : btimes (bneg X) (bneg Y) Z <- btimes* X Y Z.
+btimes2 : btimes (bneg X) Y (bneg Z) <- btimes* X Y Z.
+btimes3 : btimes X (bneg Y) (bneg Z) <- btimes* X Y Z.
+btimes4 : btimes X Y Z <- btimes* X Y Z.
+btimes5 : btimes unk (bneg X) unk.
+btimes6 : btimes unk (bone X) unk.
+btimes7 : btimes unk (bzero X) unk.
+btimes8 : btimes unk e unk.
+btimes9 : btimes (bneg X) unk unk.
+btimes10 : btimes (bzero X) unk unk.
+btimes11 : btimes (bone X) unk unk.
+btimes12 : btimes e unk unk.
+btimes13 : btimes unk unk unk.
+btimes*1 : btimes* e e e.
+btimes*2a : btimes* e (bone X) e.
+btimes*2b : btimes* e (bzero X) e.
+btimes*2c : btimes* (bone X) e e.
+btimes*2d : btimes* (bzero X) e e.
+btimes*3 : btimes* (bzero X) Y (bzero Z) <- btimes* X Y Z.
+btimes*4 : btimes* (bone X) Y Z
+	<- btimes* X Y Z1
+  %% The following may call bplus* (bzero e) ---, this works for now.
+  % Above comment fixed
+		<- bsub*** (bone (bzero Z1)) (bone Z2) 1
+		<- bplus* Z2 Y Z.
+
+beq1 : beq 0 0 1.   % beq e e 1.
+beq2 : beq 0 ~0 1.
+beq3 : beq ~0 0 1.
+%beq4 : beq ~0 ~0 1. %covered below
+beq5 : beq (bneg X) (bone Y) 0.
+beq6 : beq (bneg X) (bzero (bzero Y)) 0.
+beq7 : beq (bneg X) (bzero (bone Y)) 0.
+
+beq8: beq (bneg (bone X)) e 0.
+beq9: beq (bneg (bzero X)) e 0.
+beq10: beq e (bneg (bone X)) 0.
+beq11: beq e (bneg (bzero X)) 0.
+
+beq12 : beq (bone X) (bneg Y) 0.
+beq13 : beq (bzero (bzero X)) (bneg Y) 0.
+beq14 : beq (bzero (bone X)) (bneg Y) 0.
+
+beq15 : beq e (bone Y) 0.
+beq16 : beq e (bzero (bzero Y)) 0.
+beq17 : beq e (bzero (bone Y)) 0.
+beq18 : beq (bone X) e 0.
+beq19 : beq (bzero (bzero X)) e 0.
+beq20 : beq (bzero (bone X)) e 0.
+
+beq21 : beq (bone X) (bzero Y) 0.
+beq22 : beq (bzero X) (bone Y) 0.
+
+% conjecture: these three don't need beq* if we
+% assume the numbers are in standard form.
+beq23 : beq (bneg X) (bneg Y) K <- beq X Y K.
+beq24 : beq (bzero X) (bzero Y) K <- beq X Y K.
+beq25 : beq (bone X) (bone Y) K <- beq X Y K.
+
+%beq*1 : beq* e e 1.
+%beq*2 : beq* e (bzero Y) 0.
+%beq*3 : beq* e (bone Y) 0.
+%beq*4 : beq* (bzero X) e 0.
+%beq*5 : beq* (bzero X) (bzero Y) K <- beq* X Y K.
+%beq*6 : beq* (bzero X) (bone Y) 0.
+%beq*7 : beq* (bone X) e 0.
+%beq*8 : beq* (bone X) (bzero Y) 0.
+%beq*9 : beq* (bone X) (bone Y) K <- beq* X Y K.
+
+%% Or, negate X Y o- bsub 0 X Y.  ?
+bnegate1 : bnegate 0 ~0.
+bnegate2 : bnegate ~0 0.
+bnegate3 : bnegate (bneg X) X.
+bnegate4 : bnegate (bone X) (bneg (bone X)).
+bnegate5 : bnegate (bzero X) (bneg (bzero X)).
+bnegate6 : bnegate unk unk.

@@ -1,0 +1,14 @@
+%%% External equality via translation and internal equality.
+%%% Author: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+% Also returns internal forms.
+
+eq : tm A -> tm A -> pc A -> pc A -> type.
+
+eq0 : eq M1 M2 U1 U2
+       <- tcan _ M1 N1			% expansion to long form
+       <- tcan _ M2 N2
+       <- tm2pc N1 U1			% translation to spine form
+       <- tm2pc N2 U2
+       <- peq U1 U2.			% equality check

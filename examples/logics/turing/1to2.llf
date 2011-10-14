@@ -1,0 +1,100 @@
+%%% Turing Machine
+%%% Translation of computations of tm1 into computations of tm2
+%%% Author: Iliano Cervesato
+%%% October 1996, revised December 1998
+
+
+%% (s,q)  -1->  (s',q',M)      ===>       (s,q)  -2->  (s',Q')
+%%                                      (s',Q')  -2->  (M,q')
+
+newQ1 : (state -> head2 C Q) -o head2 C Q.
+newTr1: (trans2 S Q SM Q' -o head2 C' Q) -o head2 C Q.
+
+1to2 : {C:cell}{Q:state} head1 C Q -> head2 C Q -> type.
+
+1to2_lcell : 1to2 C Q
+	          (tm1_lcell ^ ([t^contains C S'][a^adjacent C' C] H1 ^ t ^ a)
+		             ^ A ^ Tr ^ T)
+	          (newQ1  ^ [q':state]
+		   newTr1 ^ [tr2 ^trans2 S Q (sy S') q']
+		            tm2_state ^ ([t'^contains C S']
+		   newTr1 ^ [tr2'^trans2 S' q' (mv left) Q']
+			    tm2_lcell ^ ([t^contains C S']
+					 [a^adjacent C' C] H2 ^ t ^ a)
+				      ^ A ^ tr2' ^ t')
+				      ^ tr2 ^ T)
+	      <- ({t:contains C S'}
+		  {a:adjacent C' C}
+		    1to2 C' Q' (H1 ^ t ^ a) (H2 ^ t ^ a)).
+
+1to2_rcell : 1to2 C Q
+	          (tm1_rcell ^ ([t^contains C S'][a^adjacent C C'] H1 ^ t ^ a)
+		             ^ A ^ Tr ^ T) 
+	          (newQ1  ^ [q':state]
+		   newTr1 ^ [tr2 ^trans2 S Q (sy S') q']
+		            tm2_state ^ ([t'^contains C S']
+		   newTr1 ^ [tr2'^trans2 S' q' (mv right) Q']
+			    tm2_rcell ^ ([t^contains C S']
+					 [a^adjacent C C'] H2 ^ t ^ a)
+				      ^ A ^ tr2' ^ t')
+				      ^ tr2 ^ T)
+	      <- ({t:contains C S'}
+		  {a:adjacent C C'}
+		    1to2 C' Q' (H1 ^ t ^ a) (H2 ^ t ^ a)).
+
+1to2_leot : 1to2 C Q
+	         (tm1_leot ^ ([c:cell]
+			      [t ^contains C S']
+			      [t'^contains c blank]
+			      [a ^adjacent eot c]
+			      [a'^adjacent c C] H1 c ^ t ^ t' ^ a ^ a')
+			   ^ A ^ Tr ^ T)
+	          (newQ1  ^ [q':state]
+		   newTr1 ^ [tr2 ^trans2 S Q (sy S') q']
+		            tm2_state ^ ([t''^contains C S']
+		   newTr1 ^ [tr2'^trans2 S' q' (mv left) Q']
+			    tm2_leot ^ ([c:cell]
+					[t ^contains C S']
+					[t'^contains c blank]
+					[a ^adjacent eot c]
+					[a'^adjacent c C]
+					  H2 c ^ t ^ t' ^ a ^ a')
+				     ^ A ^ tr2' ^ t'')
+				     ^ tr2 ^ T)
+	      <- ({c : cell}
+		  {t :contains C S'}
+		  {t':contains c blank}
+		  {a :adjacent eot c}
+		  {a':adjacent c C}
+		    1to2 c Q' (H1 c ^ t ^ t' ^ a ^ a')
+		              (H2 c ^ t ^ t' ^ a ^ a')).
+
+1to2_reot : 1to2 C Q
+	         (tm1_reot ^ ([c:cell]
+			      [t ^contains C S']
+			      [t'^contains c blank]
+			      [a ^adjacent c eot]
+			      [a'^adjacent C c] H1 c ^ t ^ t' ^ a ^ a')
+			   ^ A ^ Tr ^ T)
+	          (newQ1  ^ [q':state]
+		   newTr1 ^ [tr2 ^trans2 S Q (sy S') q']
+		            tm2_state ^ ([t''^contains C S']
+		   newTr1 ^ [tr2'^trans2 S' q' (mv right) Q']
+			    tm2_reot ^ ([c:cell]
+					[t ^contains C S']
+					[t'^contains c blank]
+					[a ^adjacent c eot]
+					[a'^adjacent C c]
+					  H2 c ^ t ^ t' ^ a ^ a')
+				     ^ A ^ tr2' ^ t'')
+				     ^ tr2 ^ T)
+	      <- ({c : cell}
+		  {t :contains C S'}
+		  {t':contains c blank}
+		  {a :adjacent c eot}
+		  {a':adjacent C c}
+		    1to2 c Q' (H1 c ^ t ^ t' ^ a ^ a')
+		              (H2 c ^ t ^ t' ^ a ^ a')).
+
+1to2_stop : 1to2 C Q (tm1_stop ^ ([t^contains C S'] K ^ t) ^ Nt ^ T)
+	             (tm2_stop ^ ([t^contains C S'] K ^ t) ^ Nt ^ T).

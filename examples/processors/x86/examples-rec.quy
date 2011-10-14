@@ -1,0 +1,8 @@
+%%% Operational semantics for subset of x86 assembly
+%%% Example: Recursive coding of factorial
+%%% Author: Mark Plesko <mp5f@cs.cmu.edu>
+
+%% Computes 15!
+
+%query 1 1
+go 16 32 OUTPUT.

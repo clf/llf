@@ -1,0 +1,59 @@
+%%% Natural deduction for intuitionistic linear logic
+%%% Fragment without negation and why not.
+%%% Author: Frank Pfenning
+
+nd : o -> type.		    %name nd D
+
+%%% Multiplicatives
+
+% A -o B
+lolliI : (nd A -o nd B) -o nd (lolli A B).
+lolliE : nd (lolli A B) -o nd A -o nd B.
+
+% A * B
+tensorI : nd A -o nd B -o nd (tensor A B).
+tensorE : nd (tensor A B)
+	   -o (nd A -o nd B -o nd C)
+	   -o nd C.
+
+% 1
+oneI : nd (one).
+oneE : nd (one)
+	-o nd C
+	-o nd C.
+
+%%% Additives
+
+% A & B
+withI : nd A & nd B -o nd (with A B).
+withE1 : nd (with A B) -o nd A.
+withE2 : nd (with A B) -o nd B.
+
+% T
+topI : <T> -o nd (top).
+% no topE
+
+% A + B
+plusI1 : nd A -o nd (plus A B).
+plusI2 : nd B -o nd (plus A B).
+plusE : nd (plus A B)
+	 -o ((nd A -o nd C) & (nd B -o nd C))
+	 -o nd C.
+
+% 0
+% no zeroI
+zeroE : nd (zero)
+	 -o <T>
+	 -o nd C.
+
+%%% Exponentials
+
+% A -> B
+impI : (nd A -> nd B) -o nd (imp A B).
+impE : nd (imp A B) -o nd A -> nd B.
+
+% ! A
+bangI : nd A -> nd (bang A).
+bangE : nd (bang A)
+	 -o (nd A -> nd C)
+	 -o nd C.

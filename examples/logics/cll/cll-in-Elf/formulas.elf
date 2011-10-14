@@ -1,0 +1,25 @@
+%%% Language of formulas for a complete fragment classical linear logic
+%%% Author: Frank Pfenning
+
+i : type.  % individuals
+o : type.  % formulas
+%name i S
+%name o A B C
+
+% Multiplicative connectives
+times  : o -> o -> o.  %infix right 11 times
+one    : o.
+
+% Additive connectives
+and    : o -> o -> o.  %infix right 11 and
+top    : o.
+
+% Involution
+perp   : o -> o.
+
+% Quantifier
+forall : (i -> o) -> o.
+
+% Exponentials
+!      : o -> o.
+?      : o -> o.

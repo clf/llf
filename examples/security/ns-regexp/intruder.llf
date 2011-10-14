@@ -1,0 +1,97 @@
+% Needham-Schroeder Public Key Protocol -- Intruder's behavior
+% Date: 11 September 1998
+% Author: Nancy Durgin, Iliano Cervesato
+
+dMsg : msg -> type.
+cMsg : msg -> type.
+aMsg : atm -> type.
+memKey : key -> type.
+
+peepD : tactRun -> type.
+peepC : tactRun -> type.
+
+
+% Send/Receive message
+
+receive : loop R
+	   o- toNet P N X
+	   o- (     dMsg X
+		 -o peepD R).
+
+send : peepC R
+	o- cMsg X
+	o- (fromNet P N X -o loop R).
+
+
+% Composition and decompostion
+
+i-dcp : tactic.
+decompose : peepD (i-dcp -- R)
+	     o- dMsg (X * Y)
+	     o- (     dMsg X
+		   -o dMsg Y
+		   -o peepD R).
+
+i-cps : tactic.
+compose : peepC (i-cps -- R)
+	   o- cMsg X
+	   o- cMsg Y
+	   o- (     cMsg (X * Y)
+		 -o peepC R).
+
+
+% Encryption and decryption
+
+i-dcr : tactic.
+decrypt : peepD (i-dcr -- R)
+	   o- memKey (inv K)
+	   o- dMsg (crypt X K)
+	   o- (     dMsg X
+		 -o peepD R).
+
+i-ecr : tactic.
+encrypt : peepC (i-ecr -- R)
+	   o- cMsg X
+	   o- annKey K
+	   o- (cMsg (crypt X K)
+		 -o peepC R).
+
+
+% Atomic information
+
+i-atd : tactic.
+atomd : peepD (i-atd -- R)
+	 o- dMsg (@ X)
+	 o- (aMsg X -> peepD R).
+
+i-atc : tactic.
+atomc : peepC (i-atc -- R)
+	 o- aMsg X
+	 o- (cMsg (@ X) -o peepC R).
+
+
+% New nonces
+
+i-nnc : tactic.
+nonce : peepC (i-nnc -- R)
+	 o- ({N:atm} aMsg N -o peepC R).
+
+
+% Unknown keys
+
+i-fwd : tactic.
+forward : peepD (i-fwd -- R)
+	   o- dMsg (crypt X K)
+	   o- (cMsg (crypt X K) -o peepD R).
+
+
+% Phase alternance
+
+alternate : peepD R o- peepC R .
+
+
+% Abort
+
+pD_! : peepD ! o- <T>.
+
+pC_! : peepC ! o- <T>.

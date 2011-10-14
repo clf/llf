@@ -1,0 +1,8 @@
+% Needham-Schroeder Public Key Protocol (short version -- no server)
+% Date: 11 September 1998
+% Author: Nancy Durgin
+% Revised: Iliano Cervesato, Sept. 26
+
+
+%query * *
+loop 1.

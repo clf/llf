@@ -1,0 +1,10 @@
+k1 : key.
+k2 : key.
+
+m1 : atmMsg.
+m2 : atmMsg.
+
+kn_k1 : knowsKey k1 o- count _.
+kn_k2 : knowsKey k2 o- count _.
+
+kn_X :  given ((crypt (@ m2) k2) * (@ m1)) o- count _.

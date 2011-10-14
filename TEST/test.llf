@@ -1,0 +1,4 @@
+a : type.
+b : (a -o a) & (a -o a) -> type.
+
+d : b ([x^]x, [y^]y).

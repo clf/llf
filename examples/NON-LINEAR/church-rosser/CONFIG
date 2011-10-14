@@ -1,0 +1,8 @@
+-static lam.elf
+-dynamic ord-red.elf
+-dynamic par-red.elf
+-dynamic par-lemmas.elf
+-dynamic par-cr.elf
+-dynamic ord-lemmas.elf
+-dynamic equiv.elf
+-dynamic ord-cr.elf

@@ -1,0 +1,134 @@
+%%% Admissibility of cut linear heritary Harrop formulas
+%%% Author: Iliano Cervesato
+
+
+adm     : pf A -> (lin A -o pf C) -> pf C -> type.
+adm!    : pf A -> (int A -> pf C) -> pf C -> type.
+
+%{
+%mode +[A!] +[C!] +[D!:pf A!] +[E!:int A! -> pf C!] -[F!: pf C!] -[_:adm! D! E! F!]
+%mode +[A]  +[C]  +[D:pf A]   +[E:lin A -o pf C]    -[F pf C]    -[_:adm D E F]
+%lex {A! A} {} {D! D} {E! E}
+}%
+
+
+%%% Admissibility of cut
+
+% Last rule of D operates on the left-hand side, so not on A
+
+adm_id-*      : adm (id ^ K) E (E ^ K).
+adm_clone-*   : adm (clone ^ D1 J) E (clone ^ F1 J)
+                 <- ({k:lin B} adm (D1 ^ k) E (F1 ^ k)).
+adm_with_l1-* : adm (with_l1 ^ D1 ^ K) E (with_l1 ^ F1 ^ K)
+                 <- ({k':lin B1} adm (D1 ^ k') E (F1 ^ k')).
+adm_with_l2-* : adm (with_l2 ^ D1 ^ K) E (with_l2 ^ F1 ^ K)
+                 <- ({k':lin B2} adm (D1 ^ k') E (F1 ^ k')).
+adm_lolli_l-* : adm (lolli_l ^ D1 ^ D2 ^ K) E (lolli_l ^ D1 ^ F2 ^ K)
+                 <- ({k':lin B2} adm (D2 ^ k') E (F2 ^ k')).
+adm_imp_l-*   : adm (imp_l D1 ^ D2 ^ K) E (imp_l D1 ^ F2 ^ K)
+                 <- ({k':lin B2} adm (D2 ^ k') E (F2 ^ k')).
+adm_all_l-*   : {K: lin (all B)}
+                adm (all_l T ^ D1 ^ K) E (all_l T ^ F1 ^ K)
+                 <- ({k':lin (B T)} adm (D1 ^ k') E (F1 ^ k')).
+
+
+% Last rule of E operates on the right-hand side, so not on A
+
+adm_*-id      : adm D id D.
+adm_*-top_r   : adm D ([l^lin A] top_r ^ ()) (top_r ^ ()).
+adm_*-with_r  : adm D ([l^lin A] with_r ^ (E1^l , E2^l)) (with_r ^ (F1 , F2))
+                 <- adm D E1 F1
+                 <- adm D E2 F2.
+adm_*-lolli_r : adm D ([l^lin A] lolli_r ^ (E1^l)) (lolli_r ^ F1)
+                 <- ({k:lin C1} adm D ([l^lin A] E1^l^k) (F1^k)).
+adm_*-imp_r   : adm D ([l^lin A] imp_r ^ (E1^l)) (imp_r ^ F1)
+                 <- ({j:int C1} adm D ([l^lin A] E1^l j) (F1 j)).
+adm_*-all_r   : adm D ([l^lin A] all_r ^ (E1^l)) (all_r ^ F1)
+                 <- ({c:i} adm D ([l^lin A] E1^l c) (F1 c)).
+
+
+% Last rule of E operates on the left-hand side, but not on A.
+
+adm_*-clone   : adm D ([l^lin A] clone ^ (E1^l) J) (clone ^ F1 J)
+                 <- ({k:lin B} adm D ([l^lin A] E1^l^k) (F1^k)).
+adm_*_with_l1 : adm D ([l^lin A] with_l1 ^ (E1^l) ^ K) (with_l1 ^ F1 ^ K)
+                 <- ({k':lin B1} adm D ([l^lin A] E1^l^k') (F1^k')).
+adm_*_with_l2 : adm D ([l^lin A] with_l2 ^ (E1^l) ^ K) (with_l2 ^ F1 ^ K)
+                 <- ({k':lin B2} adm D ([l^lin A] E1^l^k') (F1^k')).
+adm_*-lolli_l1: adm D ([l^lin A] lolli_l ^ (E1^l) ^ E2 ^ K)
+	              (lolli_l ^ F1 ^ E2 ^ K)
+                 <- adm D E1 F1.
+adm_*-lolli_l2: adm D ([l^lin A] lolli_l ^ E1 ^ (E2^l) ^ K)
+	              (lolli_l ^ E1 ^ F2 ^ K)
+                 <- ({k':lin B2} adm D ([l^lin A] E2^l^k') (F2^k')).
+% no adm_*-imp_l1
+adm_*-imp_l2  : adm D ([l^lin A] imp_l E1 ^ (E2^l) ^ K) (imp_l E1 ^ F2 ^ K)
+                 <- ({k':lin B2} adm D ([l^lin A] E2^l^k') (F2^k')).
+adm_*-all_l   : {K: lin (all B)}
+                adm D ([l^lin A] all_l T ^ (E1^l) ^ K) (all_l T ^ F1 ^ K)
+                 <- ({k':lin (B T)} adm D ([l^lin A] E1^l^k') (F1^k')).
+
+
+% Essential conversions: last rule of both D and E operates on A
+
+% no rule for top
+adm_with_r+with_l1  : adm (with_r ^ (D1 , D2)) (with_l1 ^ E1) F
+                       <- adm D1 E1 F.
+adm_with_r+with_l2  : adm (with_r ^ (D1 , D2)) (with_l2 ^ E1) F
+                       <- adm D2 E1 F.
+adm_lolli_r+lolli_l : adm (lolli_r ^ D) (lolli_l ^ E1 ^ E2) F
+                       <- adm E1 D F1
+                       <- adm F1 E2 F.
+adm_imp_r+imp_l     : adm (imp_r ^ D) (imp_l E1 ^ E2) F
+                       <- adm! E1 D F1
+                       <- adm F1 E2 F.
+adm_all_r+all_l     : adm (all_r ^ D1) (all_l T ^ E1) F
+                       <- adm (D1 T) E1 F.
+
+
+
+%%% Admissibility of cut!
+
+% We never need to consider D
+
+% Last rule of E operates on the right-hand side, so not on A
+
+adm!_*-id     : adm! D ([j:int A] id ^ K) (id ^ K).
+adm!_*-top_r  : adm! D ([j:int A] top_r ^ ()) (top_r ^ ()).
+adm!_*-with_r : adm! D ([j:int A] with_r ^ (E1 j , E2 j)) (with_r ^ (F1 , F2))
+                 <- adm! D E1 F1
+                 <- adm! D E2 F2.
+adm!_*-lolli_r: adm! D ([j:int A] lolli_r ^ (E1 j)) (lolli_r ^ F1)
+                 <- ({k:lin C1} adm! D ([j:int A] E1 j^k) (F1^k)).
+adm!_*-imp_r  : adm! D ([j:int A] imp_r ^ (E1 j)) (imp_r ^ F1)
+                 <- ({k:int C1} adm! D ([j:int A] E1 j k) (F1 k)).
+adm!_*-all_r  : adm! D ([j:int A] all_r ^ (E1 j)) (all_r ^ F1)
+                 <- ({c:i} adm! D ([j:int A] E1 j c) (F1 c)).
+
+
+% Last rule of E operates on the left-hand side, but not on A.
+
+adm!_*-clone  : adm! D ([j:int A] clone ^ (E1 j) J') (clone ^ F1 J')
+                 <- ({k:lin B} adm! D ([j:int A] E1 j^k) (F1^k)).
+adm!_*_with_l1: adm! D ([j:int A] with_l1 ^ (E1 j) ^ K) (with_l1 ^ F1 ^ K)
+                 <- ({k':lin B1} adm! D ([j:int A] E1 j^k') (F1^k')).
+adm!_*_with_l2: adm! D ([j:int A] with_l2 ^ (E1 j) ^ K) (with_l2 ^ F1 ^ K)
+                 <- ({k':lin B2} adm! D ([j:int A] E1 j^k') (F1^k')).
+adm!_*-lolli_l: adm! D ([j:int A] lolli_l ^ (E1 j) ^ (E2 j) ^ K)
+	               (lolli_l ^ F1 ^ F2 ^ K)
+                 <- adm! D E1 F1
+                 <- ({k':lin B2} adm! D ([j:int A] E2 j^k') (F2^k')).
+adm!_*-imp_l  : adm! D ([j:int A] imp_l (E1 j) ^ (E2 j) ^ K)
+                       (imp_l F1 ^ F2 ^ K)
+                 <- adm! D E1 F1
+                 <- ({k':lin B2} adm! D ([j:int A] E2 j^k') (F2^k')).
+adm!_*-all_l  : {K: lin (all B)}
+                adm! D ([j:int A] all_l T ^ (E1 j) ^ K) (all_l T ^ F1 ^ K)
+                 <- ({k':lin (B T)} adm! D ([j:int A] E1 j^k') (F1^k')).
+
+
+% Essential conversions: last rule of E operates on A
+
+adm!_*+clone  : adm! D ([j:int A] clone ^ (E1 j) j) F
+                 <- ({k:lin A} adm! D ([j:int A] E1 j^k) (F1^k))
+                 <- adm D F1 F.

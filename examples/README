@@ -1,0 +1,10 @@
+ccc             Cartesian-closed categories [incomplete]
+church-rosser   Proof of Church-Rosser theorem for untyped lambda-calculus
+compile		Various compilers starting from Mini-ML
+cut-elim	Cut elimination for two sequent calculi
+lp		Logic programming, uniform derivations
+lp-horn		Horn fragment of logic program
+mini-ml		Mini-ml, type preservation
+polylam		Polymorphic lambda-calculus
+prop-calc       Natural deduction and Hilbert propositional calculus
+units		Mini-ML extended with units [incomplete]

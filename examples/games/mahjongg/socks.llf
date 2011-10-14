@@ -1,0 +1,72 @@
+%%% Mahjongg, socks instance
+%%% Author: Iliano Cervesato
+
+% The initial configuration we use as an tractable example of the Mahjongg game
+% is a rather abstract representation of the common problem of matching four
+% pairs of socks of different colors at the moment in which they come out of
+% the dryer.  In this delicate phase, we want to pick up only exposed matching
+% socks, avoiding in this way any unnecessary reshuffling.  We are clearly
+% facing an instance of Mahjongg.  We consider the following instance of the
+% "board":
+%
+%	               +----------+
+%                     /|          | (Poix right)
+%	  +----------+ |  Red     |--------+
+%	 /|          | |  right   |        |
+%	+ |   Poix   | |          | Blue   |
+%	| |   left   | +----------+ right  |
+%	| |          |/|          |        |
+%	| +----------+ |  Blue    |--------+
+%	|/|          | |  right   |        |
+%	+ |   Green  | |          | Green  |
+%	| |   left   | +----------+ right  |
+%	| |          |/          /         |
+%	| +----------+----------+----------+
+%	|/          / Red left /          /
+%       +----------+----------+----------+
+
+
+
+% Types of tiles.
+
+blue  : tp.
+red   : tp.
+green : tp.
+poix  : tp.
+
+
+% Instances of each tile
+
+left  : inst.
+right : inst.
+
+
+% Initial configuration
+
+blue_r  ^    free (tile blue right).
+green_l ^    free (tile green left)
+          & (free (tile green left)
+               <- out (tile red left)).
+red_l   ^   (free (tile red left)
+               <- out (tile blue right)
+               <- out (tile green left))
+          & (free (tile red left)
+               <- out (tile blue right)
+               <- out (tile green right)).
+green_r ^   (free (tile green right)
+               <- out (tile red left))
+          &  free (tile green right).
+
+red_r   ^    free (tile red right).
+poix_l  ^    free (tile poix left)
+          & (free (tile poix left)
+               <- out (tile poix right)).
+poix_r  ^   (free (tile poix right)
+               <- out (tile red right)
+               <- out (tile poix left))
+          & (free (tile poix right)
+               <- out (tile red right)
+               <- out (tile blue left)).
+blue_l  ^   (free (tile blue left)
+               <- out (tile poix right))
+          &  free (tile blue left).

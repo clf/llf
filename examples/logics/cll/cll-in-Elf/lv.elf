@@ -1,0 +1,82 @@
+%%% Cut-Free Classical Linear Sequent Calculus LV
+%%% Author: Frank Pfenning
+
+# : type.         % Token (for derivations)
+neg!: o -> type.  % Exponential Hypotheses (far left zone)
+neg : o -> type.  % Hypotheses (left zone)
+pos : o -> type.  % Conclusions (right zone)
+pos?: o -> type.  % Exponential Conclusions (far right zone)
+%name # D
+%name neg! N!
+%name neg N
+%name pos P
+%name pos? N?
+
+%% Axioms
+
+axiom : (neg A -> pos A -> #).
+
+%% Multiplicative Connectives
+
+timesr : (pos A -> #)
+	  -> (pos B -> #)
+	  -> (pos (A times B) -> #).
+
+timesl : (neg A -> neg B -> #)
+	  -> (neg (A times B) -> #).
+
+oner : (pos one -> #).
+
+onel : #
+	-> (neg one -> #).
+
+%% Additive Connectives
+
+andr : (pos A -> #) -> (pos B -> #)
+        -> (pos (A and B) -> #).
+
+andl1 : (neg A -> #)
+	 -> (neg (A and B) -> #).
+
+andl2 : (neg B -> #)
+	 -> (neg (A and B) -> #).
+
+topr : (pos (top) -> #).
+
+% no topl
+
+%% Involution
+
+perpr : (neg A -> #)
+	 -> (pos (perp A) -> #).
+
+perpl : (pos A -> #)
+	 -> (neg (perp A) -> #).
+
+%% Quantifier
+
+forallr : ({a:i} pos (A a) -> #)
+	   -> (pos (forall A) -> #).
+
+foralll : {T:i} (neg (A T) -> #)
+	   -> (neg (forall A) -> #).
+
+%% Exponentials
+
+!r : (pos A -> #)
+      -> (pos (! A) -> #).
+
+!l : (neg! A -> #)
+      -> (neg (! A) -> #).
+
+!d : (neg A -> #)
+      -> (neg! A -> #).
+
+?r : (pos? A -> #)
+      -> (pos (? A) -> #).
+
+?l : (neg A -> #)
+      -> (neg (? A) -> #).
+
+?d : (pos A -> #)
+      -> (pos? A -> #).

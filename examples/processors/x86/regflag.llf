@@ -1,0 +1,81 @@
+%%% Operational semantics for subset of x86 assembly
+%%% Author: Mark Plesko <mp5f@cs.cmu.edu>
+
+%%% Registers.  Instantiate with actual register names.
+
+rname	: type.
+r1	: rname.
+eax	: rname.
+ecx	: rname.
+esp	: rname.
+
+% exp defined elsewhere, currently binary.llf
+reg	: rname -> exp -> type.
+
+rlook	: rname -> exp -> type.
+rlook1 : rlook R V o- reg R V o- <T>.	% Use with &
+
+%%% Memory.
+
+mem	: exp -> exp -> type.
+
+mlook	: exp -> exp -> type.
+mlook1 : mlook E V o- mem E V o- <T>.	% Use with &
+
+maxmem	: exp -> type.
+
+%%% Attempt to get past overloading in memory address specifications
+
+*	: rname -> exp -> exp.			%infix none 70 *
++	: rname -> exp -> exp.			%infix right 50 +
+++	: exp -> exp -> exp.			%infix right 60 ++
+@	: rname -> exp.
+
+simp	: exp -> exp -> type.
+
+simp1 : simp 0 0 o- <T>.
+simp2 : simp (bneg X) (bneg X) o- <T>.
+simp3 : simp (bone X) (bone X) o- <T>.
+simp4 : simp (bzero X) (bzero X) o- <T>.
+simp5 : simp (@ R1) V o- rlook R1 V.
+simp6 : simp (R + E) V o- rlook R VR & simp E VE <- bplus VR VE V.
+simp7 : simp (E1 ++ E2) V o- simp E1 V1 <- bplus V1 E2 V.
+simp8 : simp (R * E) V o- rlook R VR <- btimes VR E V.
+
+%%% Stack: part of memory, uses register esp
+
+%%% Flags
+
+fname	: type.
+zf	: fname.
+sf	: fname.
+
+onoff	: type.
+on	: onoff.
+off	: onoff.
+
+flag	: fname -> onoff -> type.
+
+flook	: fname -> onoff -> type.
+flook1 : flook F X o- flag F X o- <T>.   % Use with &
+
+  %%% Flag helpers
+
+%flip	: onoff -> onoff -> type.
+zeroon	: exp -> onoff -> type.
+posoff	: exp -> onoff -> type.
+
+%flip1 : flip on off.
+%flip2 : flip off on.
+
+zeroon1 : zeroon 0 on.
+zeroon1b : zeroon ~0 on.
+zeroon2 : zeroon (bone X) off.
+zeroon3 : zeroon (bzero X) off.
+zeroon4 : zeroon (bneg (bzero X)) off.
+zeroon5 : zeroon (bneg (bone X)) off.
+
+posoff1 : posoff e off.
+posoff2 : posoff (bzero X) off.
+posoff3 : posoff (bone X) off.
+posoff4 : posoff (bneg X) on.

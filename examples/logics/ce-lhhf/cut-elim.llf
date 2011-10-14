@@ -1,0 +1,48 @@
+%%% Cut-elimination for linear heritary Harrop formulas
+%%% Author: Iliano Cervesato
+
+
+ce: pf+ A -> pf A -> type.
+
+%{
+%mode -ce +C -D
+%lex C
+}%
+
+ce_id      : ce (id+ ^ K) (id ^ K).
+ce_clone   : ce (clone+ ^ D1 J) (clone ^ F1 J)
+              <- ({k:lin A} ce (D1 ^ k) (F1 ^ k)).
+
+ce_top_r   : ce (top_r+ ^ ()) (top_r ^ ()).
+ce_with_r  : ce (with_r+ ^ (D1 , D2)) (with_r ^ (F1 , F2))
+              <- ce D1 F1
+              <- ce D2 F2.
+ce_lolli_r : ce (lolli_r+ ^ D1) (lolli_r ^ F1)
+              <- ({k:lin A} ce (D1 ^ k) (F1 ^ k)).
+ce_imp_r   : ce (imp_r+ ^ D1) (imp_r ^ F1)
+              <- ({j:int A} ce (D1 j) (F1 j)).
+ce_all_r   : ce (all_r+ ^ D1) (all_r ^ F1)
+              <- ({c:i} ce (D1 c) (F1 c)).
+
+ce_with_l1 : ce (with_l1+ ^ D1 ^ K) (with_l1 ^ F1 ^ K)
+              <- ({l:lin A} ce (D1 ^ l) (F1 ^ l)).
+ce_with_l2 : ce (with_l2+ ^ D1 ^ K) (with_l2 ^ F1 ^ K)
+              <- ({l:lin B} ce (D1 ^ l) (F1 ^ l)).
+ce_lolli_l : ce (lolli_l+ ^ D1 ^ D2 ^ K) (lolli_l ^ F1 ^ F2 ^ K)
+              <- ce D1 F1
+              <- ({l:lin B} ce (D2 ^ l) (F2 ^ l)).
+ce_imp_l   : ce (imp_l+ D1 ^ D2 ^ K) (imp_l F1 ^ F2 ^ K)
+              <- ce D1 F1
+              <- ({l:lin B} ce (D2 ^ l) (F2 ^ l)).
+ce_all_l   : {K: lin (all A)}
+             ce (all_l+ T ^ D1 ^ K) (all_l T ^ F1 ^ K)
+              <- ({l:lin (A T)} ce (D1 ^ l) (F1 ^ l)).
+
+ce_cut     : ce (cut ^ D1 ^ D2) F
+              <- ce D1 F1
+              <- ({k:lin A} ce (D2 ^ k) (F2 ^ k))
+              <- adm F1 F2 F.
+ce_cut!    : ce (cut! D1 ^ D2) F
+              <- ce D1 F1
+              <- ({j:int A} ce (D2 j) (F2 j))
+              <- adm! F1 F2 F.

@@ -1,0 +1,195 @@
+%%% Mini-ML with References, type preservation
+%%% Author: Iliano Cervesato
+
+
+%%% Type preservation over cells
+
+prCell : contains C V -> tpc C T -> tpe V T -> type.
+
+%{
+%mode -prCell +Cn +Tc -Tv
+%lex Cn
+}%
+
+% Only run-time assumptions
+
+
+
+%%% Type preservation over read values
+
+prRead : read C V -> tpc C T -> tpe V T -> type.
+
+%{
+%mode -prRead +R +Tc -Tv
+}%
+
+prRead_val : prRead (read_val ^ () ^ Cn) Tc Tv
+              o- prCell Cn Tc Tv
+              o-  <T>.
+
+
+
+%%% Type preservation for collected values
+
+prCollect : collect S -> tpS S -> type.
+
+%{
+%mode -prCollect +Col -TS
+%lex S
+}%
+
+prCol_empty : prCollect col_empty tpS_empty.
+prCol_item  : prCollect (col_item ^ Col ^ Cn) (tpS_item Tv Tc TS)
+               o- prCell Cn Tc Tv
+               o- prCollect Col TS.
+
+
+
+%%% Type Preservation for evaluations
+
+pr : ev K I A -> tpi I T -> tpK K T T' -> tpa A T' -> type.
+
+%{
+%mode -pr +E +Ti +TK -Ta
+%lex E
+}%
+
+% Expressions
+
+pr-ev_z        : pr (ev_z ^ E) (tpi_eval tpe_z) TK Ta
+                  o- pr E (tpi_return tpe_z) TK Ta.
+pr-ev_s        : pr (ev_s ^ E) (tpi_eval (tpe_s Te)) TK Ta
+                  o- pr E
+                        (tpi_eval Te)
+                        (tpK_lam TK [x][t:tpe x nat] tpi_return (tpe_s t))
+                        Ta.
+pr-ev_case     : pr (ev_case ^ E) (tpi_eval (tpe_case Te'' Te' Te)) TK Ta
+                  o- pr E
+                        (tpi_eval Te)
+                        (tpK_lam TK [x][t:tpe x nat] tpi_case* Te'' Te' t)
+                        Ta.
+pr-ev_pair     : pr (ev_pair ^ E) (tpi_eval (tpe_pair Te'' Te')) TK Ta
+                  o- pr E
+                        (tpi_eval Te')
+                        (tpK_lam TK [x][t:tpe x T'] tpi_pair* Te'' t)
+                        Ta.
+pr-ev_fst      : pr (ev_fst ^ E) (tpi_eval (tpe_fst Te)) TK Ta
+                  o- pr E
+                        (tpi_eval Te)
+                        (tpK_lam TK [x][t:tpe x (T' cross T'')] tpi_fst* t)
+                        Ta.
+pr-ev_snd      : pr (ev_snd ^ E) (tpi_eval (tpe_snd Te)) TK Ta
+                  o- pr E
+                        (tpi_eval Te)
+                        (tpK_lam TK [x][t:tpe x (T' cross T'')] tpi_snd* t)
+                        Ta.
+pr-ev_lam      : pr (ev_lam ^ E) (tpi_eval (tpe_lam Te)) TK Ta
+                  o- pr E (tpi_return (tpe_lam Te)) TK Ta.
+pr-ev_app      : pr (ev_app ^ E) (tpi_eval (tpe_app Te'' Te')) TK Ta
+                  o- pr E
+                        (tpi_eval Te')
+                        (tpK_lam TK [x][t:tpe x (T' arrow T'')]tpi_app* Te'' t)
+                        Ta.
+pr-ev_letval   : pr (ev_letval ^ E) (tpi_eval (tpe_letval Te'' Te')) TK Ta
+                  o- pr E
+                        (tpi_eval Te')
+                        (tpK_lam TK [x][t:tpe x T'] tpi_eval (Te'' x t))
+                        Ta.
+pr-ev_letname  : pr (ev_letname ^ E) (tpi_eval (tpe_letname Te)) TK Ta
+                  o- pr E (tpi_eval Te) TK Ta.
+pr-ev_fix      : pr (ev_fix ^ E) (tpi_eval (tpe_fix Te)) TK Ta
+                  o- pr E (tpi_eval (Te (fix X) (tpe_fix Te))) TK Ta.
+
+pr-ev_cell     : pr (ev_cell ^ E) (tpi_eval (tpe_cell Tc)) TK Ta
+                  o- pr E (tpi_return (tpe_cell Tc)) TK Ta.
+pr-ev_ref      : pr (ev_ref ^ E) (tpi_eval (tpe_ref Te)) TK Ta
+                  o- pr E
+                        (tpi_eval Te)
+                        (tpK_lam TK [x][t:tpe x T] tpi_ref* t)
+                        Ta.
+pr-ev_deref    : pr (ev_deref ^ E) (tpi_eval (tpe_deref Te)) TK Ta
+                  o- pr E
+                        (tpi_eval Te)
+                        (tpK_lam TK [x][t:tpe x (T tref)] tpi_deref* t)
+                        Ta.
+pr-ev_noop     : pr (ev_noop ^ E) (tpi_eval tpe_noop) TK Ta
+                  o- pr E (tpi_return tpe_noop) TK Ta.
+pr-ev_seq      : pr (ev_seq ^ E) (tpi_eval (tpe_seq Te'' Te')) TK Ta
+                  o- pr E
+                        (tpi_eval Te')
+                        (tpK_lam TK [x][t:tpe x T'] tpi_eval Te'')
+                        Ta.
+pr-ev_assign   : pr (ev_assign ^ E) (tpi_eval (tpe_assign Te'' Te')) TK Ta
+                  o- pr E
+                        (tpi_eval Te')
+                        (tpK_lam TK [x][t:tpe x (T tref)] tpi_assign*1 Te'' t)
+                        Ta.
+pr-ev_while    : pr (ev_while ^ E) (tpi_eval (tpe_while Te'' Te')) Tk Ta
+		  o- pr E
+		        (tpi_eval Te')
+		        (tpK_lam TK [x][t:tpe x nat]
+			   tpi_case* ([x'][t':tpe x' nat]
+					  tpe_seq (tpe_while Te'' Te') Te'')
+			              tpe_noop t)
+		        Ta.
+
+% Values
+
+pr-ev_init     : pr (ev_init ^ C) (tpi_return Tv) tpK_init (tpa_close Tv TS)
+                  o- prCollect C TS.
+pr-ev_cont     : pr (ev_cont ^ E) (tpi_return Tv) (tpK_lam TK Ti) Ta
+                  o- pr E (Ti V Tv) TK Ta.
+
+
+% Auxiliary instructions
+
+pr-ev_case*1   : pr (ev_case*1 ^ E) (tpi_case* Te'' Te' tpe_z) TK Ta
+                  o- pr E (tpi_eval Te') TK Ta.
+pr-ev_case*2   : pr (ev_case*2 ^ E) (tpi_case* Te'' Te' (tpe_s Tv)) TK Ta
+                  o- pr E (tpi_eval (Te'' V Tv)) TK Ta.
+pr-ev_pair*    : pr (ev_pair* ^ E) (tpi_pair* Te Tv) TK Ta
+                  o- pr E
+                        (tpi_eval Te)
+                        (tpK_lam TK [x][t:tpe x T'']tpi_return (tpe_pair t Tv))
+                        Ta.
+pr-ev_fst*     : pr (ev_fst* ^ E) (tpi_fst* (tpe_pair Tv'' Tv')) TK Ta
+                  o- pr E (tpi_return Tv') TK Ta.
+pr-ev_snd*     : pr (ev_snd* ^ E) (tpi_snd* (tpe_pair Tv'' Tv')) TK Ta
+                  o- pr E (tpi_return Tv'') TK Ta.
+pr-ev_app*     : pr (ev_app* ^ E) (tpi_app* Te'' (tpe_lam Te')) TK Ta
+                  o- pr E
+                        (tpi_eval Te'')
+                        (tpK_lam TK [x][t:tpe x T''] tpi_eval (Te' x t))
+                        Ta.
+
+pr-ev_ref*     : pr (ev_ref* ^ E) (tpi_ref* Tv) TK (tpa_new Ta)
+                  o- ({c:cell} {Cn:contains c V} {Tc:tpc c T}
+                      prCell Cn Tc Tv
+                      -o pr (E c ^ Cn) (tpi_return (tpe_cell Tc)) TK (Ta c Tc)).
+pr-ev_deref*   : pr (ev_deref* ^ (R , E)) (tpi_deref* (tpe_cell Tc)) Tk Ta
+                  o- prRead R Tc Tv 
+                  &  pr E (tpi_return Tv) TK Ta.
+pr-ev_assign*1 : pr (ev_assign*1 ^ E) (tpi_assign*1 Te Tv) Tk Ta
+                  o- pr E
+                        (tpi_eval Te)
+                        (tpK_lam TK [x][t:tpe x T] tpi_assign*2 t Tv)
+                        Ta.
+pr-ev_assign*2 : pr (ev_assign*2 ^ E ^ Cn') (tpi_assign*2 Tv (tpe_cell Tc)) Tk Ta
+                  o- prCell Cn' Tc Tv'
+                  o- ({Cn:contains C V}
+                      prCell Cn Tc Tv
+                      -o pr (E ^ Cn) (tpi_return (tpe_noop)) Tk Ta).
+
+
+
+%%% Type preservation for expressions
+
+pr0 : ev init (eval Exp) A -> tpe Exp T -> tpa A T -> type.
+
+%{
+%mode -pr0 +E +Te -Ta
+%lex E
+}%
+
+pr0-pr  : pr0 E Te Ta
+           o- pr E (tpi_eval Te) tpK_init Ta.

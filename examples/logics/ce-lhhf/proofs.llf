@@ -1,0 +1,51 @@
+%%% Sequent rules for linear heritary Harrop formulas
+%%% Author: Iliano Cervesato
+
+
+% assumptions
+
+int : o -> type.  %name int I
+lin : o -> type.  %name lin L
+
+
+% cut-free proofs
+
+pf  : o -> type.  %name pf  D
+
+id      : (lin A -o pf A).
+clone   : (lin A -o pf C)                        -o (int A -> pf C).
+
+top_r   : <T>                                    -o pf top.
+with_r  : pf A                 & pf B            -o pf (A with B).
+lolli_r : (lin A -o pf B)                        -o pf (A lolli B).
+imp_r   : (int A -> pf B)                        -o pf (A imp B).
+all_r   : ({c:i} pf (A c))                       -o pf (all A).
+
+with_l1 : (lin A -o pf C)                        -o (lin (A with B) -o pf C).
+with_l2 : (lin B -o pf C)                        -o (lin (A with B) -o pf C).
+lolli_l : pf A                -o (lin B -o pf C) -o (lin (A lolli B) -o pf C).
+imp_l   : pf A                -> (lin B -o pf C) -o (lin (A imp B) -o pf C).
+all_l   : {t:i}(lin (A t) -o pf C)               -o (lin (all A) -o pf C).
+
+
+% proofs with cut
+
+pf+ : o -> type.  %name pf+ C
+
+id+      : (lin A -o pf+ A).
+clone+   : (lin A -o pf+ C)                      -o (int A -> pf+ C).
+
+top_r+   : <T>                                   -o pf+ top.
+with_r+  : pf+ A              & pf+ B            -o pf+ (A with B).
+lolli_r+ : (lin A -o pf+ B)                      -o pf+ (A lolli B).
+imp_r+   : (int A -> pf+ B)                      -o pf+ (A imp B).
+all_r+   : ({c:i} pf+ (A c))                     -o pf+ (all A).
+
+with_l1+ : (lin A -o pf+ C)                      -o (lin (A with B) -o pf+ C).
+with_l2+ : (lin B -o pf+ C)                      -o (lin (A with B) -o pf+ C).
+lolli_l+ : pf+ A             -o (lin B -o pf+ C) -o (lin (A lolli B) -o pf+ C).
+imp_l+   : pf+ A             -> (lin B -o pf+ C) -o (lin (A imp B) -o pf+ C).
+all_l+   : {t:i}(lin (A t) -o pf+ C)             -o (lin (all A) -o pf+ C).
+
+cut      : pf+ A             -o (lin A -o pf+ C) -o pf+ C.
+cut!     : pf+ A             -> (int A -> pf+ C) -o pf+ C.

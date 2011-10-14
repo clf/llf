@@ -1,0 +1,20 @@
+%%% Language of terms over types 1, *, =>
+%%% Authors: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+%%% Long forms
+
+can : tp -> type.
+atm : tp -> type.
+
+unit+ : <T> -o can 1.
+pair+ : can A & can B -o can (A * B).
+fst+  : atm (A * B) -o atm A.
+snd+  : atm (A * B) -o atm B.
+llam+  : (atm A -o can B) -o can (A =o B).
+lapp+  : atm (A =o B) -o can A -o atm B.
+lam+  : (atm A -> can B) -o can (A => B).
+app+  : atm (A => B) -o can A -> atm B.
+
+ca : atm (base P) -o can (base P).
+ac : can A -o atm A.

@@ -1,0 +1,24 @@
+% Needham-Schroeder Public Key Protocol -- test, part II
+% Date: 11 September 1998
+% Author: Nancy Durgin, Iliano Cervesato
+
+alice    : key.
+bob      : key.
+% The intruder is ther by default
+
+
+o_AB : other' alice bob.
+o_AI : other' alice intruder.
+o_BI : other' bob intruder.
+
+ak-A : annKey alice.
+ak-B : annKey bob.
+ak-I : annKey intruder.
+
+inv-K_i : memKey (inv intruder).
+
+nA : atm.
+nB : atm.
+
+init-A ^ a0 alice nA.
+init-B ^ b0 bob nB.

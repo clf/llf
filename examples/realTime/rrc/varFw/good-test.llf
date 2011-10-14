@@ -1,0 +1,35 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic",
+% test data.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+valD = 1.
+valG = 1.
+valL = 1.
+valB = 4.
+
+init_train  ^ train safe.
+init_signal ^ signal raise.          %init_signal ^ signal lower.
+init_gate   ^ gate up.               %init_gate   ^ gate down.
+
+init_time   ^ time 0.
+init_d      ^ ubTimer d off.
+init_g      ^ ubTimer g off.
+init_l      ^ ubTimer l off.
+init_b      ^ lbTimer b off.
+
+init_timeOut ^ timeOut 5.
+
+notDown : gateState -> type.
+notDown_up     : notDown up.
+notDown_mvDown : notDown movingDown.
+notDown_mvUp   : notDown movingUp.
+
+test : nat ->
+       signalState -> gateState ->
+       timerValue -> timerValue -> timerValue ->
+       type.
+
+test0 : test T Sig Gate Td Tg Tl
+	 o- rrc T crossing Sig down Td Tg Tl off.

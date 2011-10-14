@@ -1,0 +1,13 @@
+This directory contains the LLF implementation of cut elimination
+for first-order linear hereditary Harrop formulas described for
+example in 
+
+  Joshua Hodas and Dale Miller: "Logic Programming in a Fragment of
+  Intuitionistic Linear Logic".  Information and Computation
+  110(2):327-355, 1994.
+
+The encoding is analyzed at length in
+
+  Iliano Cervesato: "A Linear Logical Framework", Ph. D. thesis,
+  Department of Computer Science, University of Turin, Italy.
+  English version to appear shortly.

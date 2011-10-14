@@ -1,0 +1,84 @@
+%%% Turing Machine
+%%% Translation of computations of tm2 into computations of tm1
+%%% Author: Iliano Cervesato
+%%% October 1996, revised December 1998
+
+
+newQ2 : (state -> head1 C Q) -o head1 C Q.
+newTr2: (trans1 S Q S' Q' M -o head1 C' Q) -o head1 C Q.
+
+2to1 : {C:cellname}{Q:state} head2 C Q -> head1 C Q -> type.
+
+
+%% (s,q)  -2->  (s',q')      ===>        (s,q)  -1->  (s',Q',left)
+%%                                    (s'',Q')  -1->  (s'',q',right)
+
+2to1_state_lc : 2to1 C Q
+		     (tm2_state ^ ([t^tape C S' (cell L) R] H2 ^ t ^ TL) ^ Tr ^ T)
+	             (newQ2  ^ [q':state]
+		      newTr2 ^ [tr1 ^trans1 S Q S' q' left]
+		               tm1_lcell ^ ([t^tape C S' (cell L) R]
+		      newTr2 ^ [tr1'^trans1 S'' q' S'' Q' right]
+			       tm1_rcell ^ ([t'^tape L S'' L'' (cell C)]
+					    H1 ^ t ^ t')
+				         ^ tr1' ^ TL)
+		                         ^ tr1  ^ T)
+		 <- ({t : tape C S' (cell L) R}
+		     {t': tape L S'' L'' (cell C)}
+		       2to1 C Q' (H2 ^ t ^ t') (H1 ^ t ^ t')).
+
+%% Problem!!!!
+% 2to1_state_eot :
+
+%% (s,q)  -2->  (M,q')       ===>     (s,q)  -1->  (s,q',M)
+
+2to1_lcell : 2to1 C Q
+	          (tm2_lcell ^ ([t^tape C S (cell L) R] H2 ^ t) ^ Tr ^ T)
+	          (newTr2 ^ [tr1^trans1 S Q S Q' left]
+			    tm1_lcell ^ ([t^tape C S (cell L) R] H1 ^ t)
+			              ^ tr1 ^ T)
+	      <- ({t:tape C S (cell L) R}
+		    2to1 L Q' (H2 ^ t) (H1 ^ t)).
+
+2to1_rcell : 2to1 C Q
+	          (tm2_rcell ^ ([t^tape C S L (cell R)] H2 ^ t) ^ Tr ^ T)
+	          (newTr2 ^ [tr1^trans1 S Q S Q' right]
+			    tm1_rcell ^ ([t^tape C S L (cell R)] H1 ^ t)
+			              ^ tr1 ^ T)
+	      <- ({t:tape C S L (cell R)}
+		    2to1 R Q' (H2 ^ t) (H1 ^ t)).
+
+2to1_leot : 2to1 C Q
+	         (tm2_leot ^ ([c:cellname]
+			      [t ^tape c blank eot (cell C)]
+			      [t'^tape C S (cell c) R] H2 c ^ t ^ t')
+		           ^ Tr ^ T)
+	          (newTr2 ^ [tr1^trans1 S Q S Q' left]
+			    tm1_leot ^ ([c:cellname]
+					[t ^tape c blank eot (cell C)]
+					[t'^tape C S (cell c) R] H1 c ^ t ^ t')
+			              ^ tr1 ^ T)
+	      <- ({c : cellname}
+		  {t : tape c blank eot (cell C)}
+		  {t': tape C S (cell c) R}
+		    2to1 c Q' (H2 c ^ t ^ t') (H1 c ^ t ^ t')).
+
+2to1_reot : 2to1 C Q
+	         (tm2_reot ^ ([c:cellname]
+			      [t ^tape c blank (cell C) eot]
+			      [t'^tape C S L (cell c)] H2 c ^ t ^ t')
+		           ^ Tr ^ T)
+	          (newTr2 ^ [tr1^trans1 S Q S Q' right]
+			    tm1_reot ^ ([c:cellname]
+					[t ^tape c blank (cell C) eot]
+					[t'^tape C S L (cell c)] H1 c ^ t ^ t')
+			              ^ tr1 ^ T)
+	      <- ({c : cellname}
+		  {t : tape c blank (cell C) eot}
+		  {t': tape C S L (cell c)}
+		    2to1 c Q' (H2 c ^ t ^ t') (H1 c ^ t ^ t')).
+
+2to1_stop : 2to1 C Q (tm2_stop ^ ([t^tape C S' L R] K ^ t) ^ Nt ^ T)
+	             (tm1_stop ^ ([t^tape C S' L R] K ^ t) ^ Nt ^ T).
+
+

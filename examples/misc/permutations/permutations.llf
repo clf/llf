@@ -1,0 +1,28 @@
+item : type.
+list : type.
+
+nil  : list.
+cons : item -> list -> list.
+
+permute : list -> list -> type.
+unload  : list -> list -> type.
+tmp     : item -> type.
+load    : list -> type.
+
+perm: permute L K
+       o- unload L K.
+
+ul/cons : unload (cons X L) K
+	   o- (tmp X -o unload L K).
+ul/nil  : unload nil K
+	   o- load K.
+
+l/cons  : load (cons X K)
+	   o- tmp X
+	   o- load K.
+l/nil   : load nil.
+
+
+a : item.
+b : item.
+c : item.

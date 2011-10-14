@@ -1,0 +1,22 @@
+%%% Turing Machine
+%%% Common features
+%%% Author: Iliano Cervesato
+%%% October 1996, revised December 1998
+
+symbol : type.				%name symbol S
+blank  : symbol.			% Blank symbol
+
+state : type.				%name state Q
+q0 : state.				% Initial state
+
+move  : type.				% Movement
+left  : move.
+right : move.
+
+cell : type.				%name cell C
+eot  : cell.				% End of tape
+
+adjacent : cell -> cell -> type.	%name adjacent A
+contains : cell -> symbol -> type.	%name contains N
+
+notrans : symbol -> state -> type.

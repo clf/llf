@@ -1,0 +1,17 @@
+%%% Constructing Evaluations and then Transforming Them.
+%%% Author: Frank Pfenning
+
+%%% The only purpose of find is to construct an evaluation.
+
+  find : {E:exp} eval E V -> type.
+  find_all : {E:exp} {D:eval E V} find E D.
+
+%%% A query  ?- tfm e D P  for some expression e will construct
+%%% an evaluation D and then transform it to the value deduction P.
+%%% For example,
+%%%   ?- tfm (app (lam [x] x) z) D P.
+%%% works correctly.
+
+  tfm : {E:exp} eval E V -> value V -> type.
+  tfm_all : tfm E D P <- find E D <- vs D P.
+

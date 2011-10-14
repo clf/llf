@@ -1,0 +1,63 @@
+%%% Normalization of long terms in external representation
+%%% Authors: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+
+%%% Beta-reductions and congruence
+
+whr' : atm A -> atm A -> type.
+
+whr'_fst+ : whr' (fst+ ^ N1) (fst+ ^ N1')
+	     <- whr' N1 N1'.
+whr'_snd+ : whr' (snd+ ^ N1) (snd+ ^ N1')
+	     <- whr' N1 N1'.
+whr'_lapp+: whr' (lapp+ ^ N1 ^ N2) (lapp+ ^ N1' ^ N2)
+	     <- whr' N1 N1'.
+whr'_app+ : whr' (app+ ^ N1 N2) (app+ ^ N1' N2)
+	     <- whr' N1 N1'.
+
+whr'_beta=o : whr' (lapp+ ^ (ac ^ (llam+ ^ N1)) ^ N2) (ac ^ (N1 ^ (ac ^ N2))).
+whr'_beta=> : whr' (app+ ^ (ac ^ (lam+ ^ N1)) N2) (ac ^ (N1 (ac ^ N2))).
+whr'_beta*1 : whr' (fst+ ^ (ac ^ (pair+ ^ (N1, N2)))) (ac ^ N1).
+whr'_beta*2 : whr' (snd+ ^ (ac ^ (pair+ ^ (N1, N2)))) (ac ^ N2).
+whr'_acca   : whr' (ac ^ (ca ^ N)) N.
+
+
+%%% Normalization
+
+norm : can A -> can A -> type.
+norm' : atm A -> atm A -> type.
+
+norm_unit : norm (unit+ ^ ()) (unit+ ^ ())
+	     o- <T>.
+norm_pair : norm (pair+ ^ (N1, N2)) (pair+ ^ (N1', N2'))
+	     o- norm N1 N1'
+	      & norm N2 N2'.
+norm_llam: norm (llam+ ^ N2) (llam+ ^ N2')
+	    o- ({x:atm A1} {x':atm A1}
+		  norm' x x' -o norm (N2 ^ x) (N2' ^ x')).
+norm_lam : norm (lam+ ^ N2) (lam+ ^ N2')
+	    o- ({x:atm A1} {x':atm A1}
+		  norm' x x' -> norm (N2 x) (N2' x')).
+norm_atm : norm (ca ^ N) (ca ^ N')
+	    o- norm' N N'.
+
+norm'_fst : norm' (fst+ ^ N1) (fst+ ^ N1')
+	     o- norm' N1 N1'.
+norm'_snd : norm' (snd+ ^ N1) (snd+ ^ N1')
+	     o- norm' N1 N1'.
+norm'_lapp: norm' (lapp+ ^ N1 ^ N2) (lapp+ ^ N1' ^ N2')
+	     o- norm' N1 N1'
+	     o- norm N2 N2'.
+norm'_app : norm' (app+ ^ N1 N2) (app+ ^ N1' N2')
+	     o- norm' N1 N1'
+	     <- norm N2 N2'.
+norm'_red : norm' N N'
+	     <- whr' N N1
+	     o- norm' N1 N'.
+
+normalize : tm A -> can A -> type.
+
+normalize0 : normalize M N'
+	      <- tcan _ M N
+	      <- norm N N'.

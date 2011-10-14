@@ -1,0 +1,86 @@
+%%% Cut-Free Classical Linear Sequent Calculus
+%%% Representation in Lolli (in natural deduction style)
+%%% Author: Frank Pfenning
+
+# : type.         % Token (for derivations)
+neg!: o -> type.  % Modal Hypotheses (far left)
+neg : o -> type.  % Hypotheses (left)
+pos : o -> type.  % Conclusions (right)
+pos?: o -> type.  % Modal Conclusions (far right)
+%name # D
+%name neg! N!
+%name neg N
+%name pos P
+%name pos? N?
+
+% Declare linear framework connectives
+% so that this file can be parsed by Elf
+
+%% Axioms
+
+axiom : (neg A -o pos A -o #).
+
+%% Multiplicative Connectives
+
+timesr : (pos A -o #)
+	  -o (pos B -o #)
+	  -o (pos (A times B) -o #).
+
+timesl : (neg A -o neg B -o #)
+	  -o (neg (A times B) -o #).
+
+oner : (pos one -o #).
+
+onel : #
+	-o (neg one -o #).
+
+%% Additive Connectives
+
+withr : ((pos A -o #) & (pos B -o #))
+	 -o (pos (A with B) -o #).
+
+withl1 : (neg A -o #)
+	  -o (neg (A with B) -o #).
+
+withl2 : (neg B -o #)
+	  -o (neg (A with B) -o #).
+
+topr : <T> -o (pos (top) -o #).
+
+% no topl
+
+%% Involution
+
+perpr : (neg A -o #)
+	 -o (pos (perp A) -o #).
+
+perpl : (pos A -o #)
+	 -o (neg (perp A) -o #).
+
+%% Quantifier
+
+forallr : ({a:i} pos (A a) -o #)
+	   -o (pos (forall A) -o #).
+
+foralll : {T:i} (neg (A T) -o #)
+	   -o (neg (forall A) -o #).
+
+%% Exponentials
+
+!r : (pos A -o #)
+      -> (pos (! A) -o #).
+
+!l : (neg! A -> #)
+      -o (neg (! A) -o #).
+
+!d : (neg A -o #)
+      -o (neg! A -> #).
+
+?r : (pos? A -> #)
+      -o (pos (? A) -o #).
+
+?l : (neg A -o #)
+      -> (neg (? A) -o #).
+
+?d : (pos A -o #)
+      -o (pos? A -> #).

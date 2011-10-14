@@ -1,0 +1,13 @@
+% Needham-Schroeder Public Key Protocol -- test, part II
+% Date: 11 September 1998
+% Author: Nancy Durgin, Iliano Cervesato
+
+alice    : key.
+bob      : key.
+
+ak-A : annKey alice.
+ak-B : annKey bob.
+ak-I : annKey intruder.
+
+init-A ^ a0 alice.
+init-B ^ b0 bob.

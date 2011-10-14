@@ -1,0 +1,78 @@
+%%% Cut Elimination for Classical Linear Sequent Calculus LV
+%%% Author: Frank Pfenning
+
+elim : @ -> # -> type.
+
+%mode -elim +D^ -D
+%lex {D^}
+
+ce_axiom  : elim (axiom^ N P) (axiom N P).
+
+ce_timesr : elim (timesr^ D1^ D2^ P) (timesr D1 D2 P)
+	     <- ({p1} elim (D1^ p1) (D1 p1))
+	     <- ({p2} elim (D2^ p2) (D2 p2)).
+
+ce_timesl : elim (timesl^ D1^ N) (timesl D1 N)
+	     <- ({n1} {n2} elim (D1^ n1 n2) (D1 n1 n2)).
+
+ce_oner   : elim (oner^ P) (oner P).
+
+ce_onel   : elim (onel^ D1^ N) (onel D1 N)
+	     <- elim D1^ D1.
+
+ce_andr   : elim (andr^ D1^ D2^ P) (andr D1 D2 P)
+	     <- ({p1} elim (D1^ p1) (D1 p1))
+	     <- ({p2} elim (D2^ p2) (D2 p2)).
+
+ce_andl1  : elim (andl1^ D1^ N) (andl1 D1 N)
+	     <- ({n1} elim (D1^ n1) (D1 n1)).
+
+ce_andl2  : elim (andl2^ D2^ N) (andl2 D2 N)
+	     <- ({n2} elim (D2^ n2) (D2 n2)).
+
+ce_topr   : elim (topr^ P) (topr P).
+
+ce_perpr  : elim (perpr^ D1^ P) (perpr D1 P)
+	     <- ({n1} elim (D1^ n1) (D1 n1)).
+
+ce_perpl  : elim (perpl^ D1^ N) (perpl D1 N)
+	     <- ({p1} elim (D1^ p1) (D1 p1)).
+
+ce_forallr: elim (forallr^ D1^ P) (forallr D1 P)
+	     <- ({a:i} {p1} elim (D1^ a p1) (D1 a p1)).
+
+ce_foralll: elim (foralll^ T D1^ N) (foralll T D1 N)
+	     <- ({n1} elim (D1^ n1) (D1 n1)).
+
+ce_!r     : elim (!r^ D1!^ P) (!r D1! P)
+	     <- ({p1} elim (D1!^ p1) (D1! p1)).
+
+ce_!l     : elim (!l^ D1^ N) (!l D1 N)
+	     <- ({n1!} elim (D1^ n1!) (D1 n1!)).
+
+ce_!d     : elim (!d^ D1^ N!) (!d D1 N!)
+	     <- ({n1} elim (D1^ n1) (D1 n1)).
+
+ce_?r     : elim (?r^ D1^ P) (?r D1 P)
+	     <- ({p1?} elim (D1^ p1?) (D1 p1?)).
+
+ce_?l     : elim (?l^ D1!^ N) (?l D1! N)
+	     <- ({n1} elim (D1!^ n1) (D1! n1)).
+
+ce_?d     : elim (?d^ D1^ P?) (?d D1 P?)
+	     <- ({p1} elim (D1^ p1) (D1 p1)).
+
+ce_cut    : elim (cut^ D1^ D2^) F
+	     <- ({p} elim (D1^ p) (D1 p))
+	     <- ({n} elim (D2^ n) (D2 n))
+	     <- ad A D1 D2 F.
+
+ce_cut!   : elim (cut!^ D1!^ D2^) F
+	     <- ({p} elim (D1!^ p) (D1! p))
+	     <- ({n!} elim (D2^ n!) (D2 n!))
+	     <- ad! A D1! D2 F.
+
+ce_cut?   : elim (cut?^ D1^ D2!^) F
+	     <- ({p?} elim (D1^ p?) (D1 p?))
+	     <- ({n} elim (D2!^ n) (D2! n))
+	     <- ad? A D1 D2! F.

@@ -1,0 +1,52 @@
+%%% Local reductions and expansions for intuitionistic linear logic
+%%% Author: Frank Pfenning
+
+%%% Local reductions and expansions
+lred : nd A -> nd A -> type. %name lred LR
+lexp : nd A -> nd A -> type. %name lexp LE
+
+%%% Multiplicatives
+
+% A -o B
+lolliLR : lred (lolliE ^ (lolliI ^ D) ^ E) (D ^ E).
+lolliLE : lexp (D:nd (lolli A B)) (lolliI ^ [x^nd A] lolliE ^ D ^ x).
+
+% A * B
+tensorLR : lred (tensorE ^ (tensorI ^ D1 ^ D2) ^ E) (E ^ D1 ^ D2).
+tensorLE : lexp (D:nd (tensor A B))
+	    (tensorE ^ D ^ [x^nd A] [y^nd B] tensorI ^ x ^ y).
+
+% 1
+oneLR : lred (oneE ^ (oneI) ^ E) E.
+oneLE : lexp (D:nd (one)) (oneE ^ D ^ (oneI)).
+
+%%% Additives
+
+% A & B
+withLR1 : lred (withE1 ^ (withI ^ (D, E))) D.
+withLR2 : lred (withE2 ^ (withI ^ (D, E))) E.
+withLE : lexp (D:nd (with A B)) (withI ^ (withE1 ^ D, withE2 ^ D)).
+
+% T
+% no topLR
+topLE : lexp (D:nd (top)) (topI ^ ()).
+
+% A + B
+plusLR1 : lred (plusE ^ (plusI1 ^ D1) ^ (E1, E2)) (E1 ^ D1).
+plusLR2 : lred (plusE ^ (plusI2 ^ D2) ^ (E1, E2)) (E2 ^ D2).
+plusLE : lexp (D:nd (plus A B))
+	  (plusE ^ D ^ (([x1^nd A] plusI1 ^ x1), ([x2^nd B] plusI2 ^ x2))).
+
+% 0
+% no zeroLR
+zeroLE : lexp (D:nd (zero)) (zeroE ^ D ^ ()).
+
+%%% Exponentials
+
+% A -> B
+impLR : lred (impE ^ (impI ^ D) E) (D E).
+impLE : lexp (D:nd (imp A B)) (impI ^ ([u:nd A] impE ^ D u)).
+
+% ! A
+bangLR : lred (bangE ^ (bangI D) ^ E) (E D).
+bangLE : lexp (D:nd (bang A)) (bangE ^ D ^ ([u:nd A] bangI u)).

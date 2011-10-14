@@ -1,0 +1,79 @@
+%%% Mini-ML with References, syntax
+%%% Author: Iliano Cervesato
+
+
+exp    : type.  %name exp    E
+tp     : type.  %name tp     T
+instr  : type.  %name instr  I
+cont   : type.  %name cont   K
+cell   : type.  %name cell   C
+item   : type.  %name item   It
+store  : type.  %name store  S
+answer : type.  %name answer A
+
+
+% Expressions
+
+z       : exp.
+s       : exp -> exp.
+case    : exp -> exp -> (exp -> exp) -> exp.
+pair    : exp -> exp -> exp.
+fst     : exp -> exp.
+snd     : exp -> exp.
+lam     : (exp -> exp) -> exp.
+app     : exp -> exp -> exp.
+letval  : exp -> (exp -> exp) -> exp.
+letname : exp -> (exp -> exp) -> exp.
+fix     : (exp -> exp) -> exp.
+
+rf      : cell -> exp.                          %prefix 80 rf
+ref     : exp -> exp.
+!       : exp -> exp.
+noop    : exp.
+;       : exp -> exp -> exp.                    %infix left  90  ;
+is      : exp -> exp -> exp.                    %infix right 100 is
+while   : exp -> exp -> exp.
+
+% Types
+
+nat   : tp.
+cross : tp -> tp -> tp.                         %infix   right 90  cross
+arrow : tp -> tp -> tp.                         %infix   right 100 arrow
+
+tref  : tp -> tp.                               %postfix       110 tref
+cmd   : tp.
+
+
+% Instructions
+
+eval : exp -> instr.
+return : exp -> instr.
+case*  : exp -> exp -> (exp -> exp) -> instr.
+pair*  : exp -> exp -> instr.
+fst*   : exp -> instr.
+snd*   : exp -> instr.
+app*   : exp -> exp -> instr.
+
+ref*   : exp -> instr.
+deref* : exp -> instr.
+is*1   : exp -> exp -> instr.                   %infix right 100 is*1
+is*2   : exp -> exp -> instr.                   %infix right 100 is*2
+
+
+% Continuations
+
+init : cont.
+-    : cont -> (exp -> instr) -> cont.          %infix left 80 -
+
+
+% Store
+
+estore : store.
+and    : store -> item -> store.                %infix left 70 and
+==      : cell -> exp -> item.                   %infix none 60 ==
+
+
+% Answers
+
+close : store -> exp -> answer.
+new   : (cell -> answer) -> answer.

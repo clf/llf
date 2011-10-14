@@ -1,0 +1,14 @@
+%%% Language of terms over types 1, *, =>
+%%% Authors: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+%%% Types
+btp : type.				% base types
+tp : type.
+
+base : btp -> tp.
+
+1  : tp.
+*  : tp -> tp -> tp.			%infix right 11 *
+=> : tp -> tp -> tp.			%infix right 10 =>
+=o : tp -> tp -> tp.			%infix right 10 =o

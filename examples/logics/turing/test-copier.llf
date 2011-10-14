@@ -1,0 +1,62 @@
+%%% Turing Machine
+%%% Example: copier (makes a copy of a string of 1's)
+%%% Author: Iliano Cervesato
+%%% October 1996, revised December 1998
+
+%% Symbols
+
+1 : symbol.
+x : symbol.
+
+
+%% States
+
+q1 : state.
+q2 : state.
+q3 : state.
+q4 : state.
+q5 : state.
+q6 : state.
+q7 : state.
+
+
+%% Transitions
+
+d10 : trans2 1 q0 (sy x) q1.
+dx1 : trans2 x q1 (mv right) q2.
+d12 : trans2 1 q2 (mv right) q2.
+db2 : trans2 blank q2 (mv right) q3.
+d13 : trans2 1 q3 (mv right) q3.
+db3 : trans2 blank q3 (sy 1) q4.
+db4 : trans2 1 q4 (mv left) q5.
+d15 : trans2 1 q5 (mv left) q5.
+db5 : trans2 blank q5 (mv left) q6.
+d16 : trans2 1 q6 (mv left) q6.
+dx6 : trans2 x q6 (sy 1) q7.
+D17 : trans2 1 q7 (mv right) q0.
+
+nb0 : notrans blank q0.
+nx0 : notrans x q0.
+nb1 : notrans blank q1.
+n11 : notrans 1 q1.
+nx2 : notrans x q2.
+nx3 : notrans x q3.
+nb4 : notrans blank q4.
+nx4 : notrans x q4.
+nx5 : notrans x q5.
+nb6 : notrans blank q6.
+nb7 : notrans blank q7.
+nx7 : notrans x q7.
+
+%% Initial configuration
+
+c0 : cellname.
+c1 : cellname.
+c2 : cellname.
+c3 : cellname.
+
+t0 ^ tape c0 1 eot       (cell c1).
+t1 ^ tape c1 1 (cell c0) (cell c2).
+t2 ^ tape c2 1 (cell c1) (cell c3).
+t3 ^ tape c3 1 (cell c2) eot.
+

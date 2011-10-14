@@ -1,0 +1,93 @@
+A parser for LLF
+Yaoshiang Ho <hoding@soda.csua.berkeley.edu>
+December 1st, 1998
+
+These are simple instructions for the installation and use of this
+parser.  See README-USAGE for help on programming against this api.
+
+
+1. Background
+
+  The tool used to generate the lexical analyzer and parser is JavaCC 0.7.1.
+JavaCC takes as input a .jj file, which is analogous to a .l and .y file for
+flex and bison, and outputs .java files.  The .jj file contained in this
+distribution is:
+
+Parser.jj
+
+  The AST files are not created by JavaCC.  The AST files were hand coded.
+This is the list of AST files.
+
+App.java
+BaseObject.java
+Constant.java
+First.java
+FunctionType.java
+Identifier.java
+Lambda.java
+LinearApp.java
+LinearLambda.java
+Lollipop.java
+Pair.java
+Second.java
+Top.java
+Type.java
+TypeFamily.java
+TypeFamilyConstant.java
+TypeFamilyInstantiation.java
+Unit.java
+Variable.java
+With.java
+
+
+2. Installation
+
+2.1. Installing JavaCC
+
+  First, you must install JavaCC.  The file JavaCC0_7_1.class is
+the installation file.  It is located at:
+
+http://www.sun.com/suntest/products/JavaCC/index.html
+
+
+  Suppose we save it to /tmp/JavaCC0_7_1.class.  Then, type:
+
+>cd /tmp
+>java JavaCC0_7_1
+
+  A GUI will guide you through the installation.  Suppose we install it
+to ~/JavaCC.  The executable will reside in ~/JavaCC/bin/javacc.
+
+
+2.2. Unpacking the parser distribution.
+
+  Second, you must unzip the parser files.  Assuming they reside in
+llf.zip, just copy to to your desired location and unzip:
+  
+>unzip llf.zip
+>cd llf
+
+2.3. Building the parser.
+
+  Third, you must run javacc on the .jj file.  The command is:
+
+>javacc Parser.jj
+
+  If javacc is in your path, and everything is okay, JavaCC should say
+
+Java Compiler Compiler Version 0.7.1 (Parser Generator)
+Copyright (c) 1996, 1997 Sun Microsystems Inc.
+(type "javacc" with no arguments for help)
+Reading from file Parser.jj . . .
+Parser generated successfully.
+
+  Then, compile the files:
+
+>javac *.java
+
+  You are now ready to write programs using the Parser.java object!  A
+short sample is included as Example.java.  It allows
+a user to type in a valid llf expression, and returns the AST, the
+original expression (with parenthesis), and the head of the expression.
+
+  See README-USAGE for details.

@@ -1,0 +1,43 @@
+%%% Compilation of hereditary Harrop formulas, uniform derivations
+%%% Author: Iliano Cervesato
+%%% Date: 21 Nov. 1997
+
+clause : o -> type.            % Clauses (program assumptions)
+unid   : o -> type.            % Uniform derivability
+immd   : o -> atm -> type.     % Immediate entailment
+%name clause K
+%name unid   U
+%name immd   I
+
+u_atom : unid (atom P)
+	  <- clause A
+	  <- immd A P.
+
+u_true : unid True.
+
+u_and  : unid (and A B)
+	  <- unid A
+	  <- unid B.
+
+u_imp  : unid (imp A B)
+	  <- (clause A -> unid B).
+
+u_all  : unid (all A)
+	  <- ({x:i} unid (A x)).
+
+
+i_atom : immd (atom P) P.
+
+i_and1 : immd (and A1 A2) P
+	  <- immd A1 P.
+
+i_and2 : immd (and A1 A2) P
+	  <- immd A2 P.
+
+i_imp  : immd (imp A B) P
+	  <- immd B P
+	  <- unid A.
+
+i_all  : {T:i}
+	 immd (all A) P
+	  <- immd (A T) P.

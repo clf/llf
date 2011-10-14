@@ -1,0 +1,126 @@
+% Needham-Schroeder Public Key Protocol -- Intruder's behavior
+% Date: 11 September 1998
+% Author: Iliano Cervesato
+
+intruder : key.
+
+tMsg : nat -> nat -> msg -> type.	% Target message for the intruder
+					% 1st arg: protocol message number
+					% 2nd arg: next message (z if none)
+outMsg : msg -> type.
+
+dMsg : nat -> msg -> type.
+cMsg : msg -> type.
+aMsg : atm -> type.
+xMsg : msg -> type.
+memKey : key -> type.
+
+maxNonc = 0.
+numNonc : nat -> type.
+nNonc ^ numNonc maxNonc.
+
+peep : type.
+genMsg : msg -> type.
+
+dCounter : nat -> type.
+seen : nat -> type.
+
+% Send/Receive message
+
+receive : transit
+	   o- toNet C X
+	   o- (     dMsg 1 X
+		 -o dCounter 1
+		 -o seen C
+		 -> peep).
+
+send1 : peep
+	 o- dCounter 0
+	 <- seen Curr
+	 <- tMsg Curr _ M
+	 <- genMsg M
+	    o- (fromNet Curr M -o hook).
+
+send2 : peep
+	 o- dCounter 0
+	 <- seen Curr
+	 <- tMsg Curr Next _
+	 <- tMsg Next _ M
+	 <- genMsg M
+	    o- (fromNet Next M -o hook).
+
+
+% Composition and decompostion
+
+decompose : peep
+	     o- dMsg N (X * Y)
+	     o- dCounter N'
+	     o- (     dMsg N X
+		   -o dMsg (s N') Y
+		   -o dCounter (s N')
+		   -o peep).
+
+compose : genMsg (X * Y)
+	   <- genMsg X
+	   <- genMsg Y.
+
+
+% Encryption and decryption
+
+decrypt : peep
+	   o- memKey (inv K)
+	   o- dMsg N (crypt X K)
+	   o- (     dMsg N X
+		 -o peep).
+
+encrypt : genMsg (crypt X K)
+	   <- genMsg X
+	   <- annKey K
+	   <- other intruder K.
+
+% Atomic information
+
+atomd : peep
+	 o- dMsg (s N) (@ X)
+	 o- dCounter (s N)
+	 o- (     dCounter N
+	       -o aMsg X		% Opt: only if X is not there yet
+	       -> peep).
+
+atomc : genMsg (@ X)
+	 <- aMsg X.
+
+
+% Public keys
+
+keyd : peep
+	o- dMsg (s N) (k2m X)
+	o- dCounter (s N)
+	o- (dCounter N -o peep).	% Public keys (=names) are known
+
+keyc : genMsg (k2m X)
+	<- annKey X.
+
+% New nonces
+
+nonce : peep
+	 o- numNonc (s M)
+         o- ({n:atm}
+	          aMsg n
+	       -> numNonc M
+	       -o peep).
+
+
+% Unknown keys
+
+store : peep
+	 o- dMsg (s N) (crypt X K)
+	 o- other intruder K
+	 o- dCounter (s N)
+	 o- (     dCounter N
+	       -o xMsg (crypt X K)
+	       -> peep).
+
+forward : genMsg (crypt X K)
+	   <- other intruder K
+	   <- xMsg (crypt X K).

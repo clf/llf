@@ -1,0 +1,10 @@
+Group is
+  ../lambda/sources.cm
+  ../print/sources.cm
+  ../names/sources.cm	
+  ../paths/sources.cm
+  modes.sig
+  modes.fun
+  modeprint.sig
+  modeprint.fun
+  modes.sml

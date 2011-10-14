@@ -1,0 +1,78 @@
+%%% Some experimentation with display of sequents
+
+hyps : type.
+
+none : hyps.
+gamma : hyps.
+, : hyps -> hyp A -> hyps.  %infix left 6 ,
+
+left : type.
+gamma' : left.
+none'l : left.
+,l : left -> neg A -> left.  %infix left 6 ,l
+
+right : type.
+delta' : right.
+none'r : right.
+,r : pos A -> right -> right.  %infix right 6 ,r
+
+token : type.
+
+$<$ : token.				% {
+$>$ : token.				% }
+$<<$ : token.				% (
+$>>$ : token.				% )
+$$  : token.				% space
+
+#< : A -> token.			% begin quote
+># : token -> token.			% end quote
+%prefix 7 #<
+%postfix 6 >#
+
+>@ : token.				% end stream
+
+$\ldot$   : token.
+
+$\land$ : token.
+$\limplies$ : token.
+$\lor$  : token.
+$\lnot$ : token.
+$\top$: token.
+$\bot$ : token.
+$\forall$ : token.
+$\exists$ : token.
+$\cutrule$ : token.
+
+$L$ : token.
+$R$ : token.
+$I$ : token.
+$_1$ : token.
+$_2$ : token.
+$!$ : token.
+
+$\Gamma$ : token.
+$\Delta$ : token.
+$,$ : token.
+$\longrightarrow$ : token.
+
+$\vdots$ : token.
+$\above$ : token.
+$\ian$ : token.
+$\ibn$ : token.
+$\\$ : token.
+
+$\cut$ : token.
+$\rew$ : token.
+
+stream : type.
+
+@< : stream.				% global begin stream
+@@ : stream.				% local begin stream
+++ : stream -> token -> stream.		% add token
+@+ : stream -> stream -> stream.	% concatenate streams
++@ : stream -> (A -> stream) -> stream. % anonymous scope
+## : stream -> (A -> stream) -> stream. % named scope
+%infix left 5 ++
+%infix left 5 @+
+%infix left 5 +@
+%infix left 5 ##

@@ -1,0 +1,70 @@
+% Needham-Schroeder Public Key Protocol (short version -- no server)
+% Date: 11 September 1998
+% Author: Nancy Durgin
+% Revised: Iliano Cervesato, Sept. 26
+
+
+%% Needham Schroeder public key authentication (simplified)
+%      A -> B : enc(kb, <Na,A>)
+%      B -> A : enc(ka, <Na, Nb>)
+%      A -> B : enc(kb, Nb)
+
+
+% Alice's role
+
+a0 : key -> atm -> type.
+a1 : key -> key -> msg -> type.
+a2 : key -> key -> msg -> msg -> type.
+
+nsA1 : loop (s N)
+        o- annKey B
+        o- a0 A Na
+	o- other A B
+        o- (     a1 A B (@ Na)
+	      -o toNet (crypt ((@ Na) * (@ (k2m A))) B)
+	      -o transit N).
+
+nsA2 : loop (s N)
+        o- a1 A B X
+        o- fromNet (crypt (X * Y * (@ (k2m B))) A)
+        o- (     toNet (crypt Y B)
+	      -o a2 A B X Y
+	      -o transit N).
+
+nsA0 : loop (s N)
+	o- annKey A
+	o- ({na:atm}a0 A na -o loop N).
+
+% Bob's Role
+
+b0 : key -> atm -> type.
+b1 : key -> key -> msg -> msg -> type.
+b2 : key -> key -> msg -> msg -> type.
+
+nsB1 : loop (s N)
+        o- b0 B Nb
+        o- fromNet (crypt (X * (@ (k2m A))) B)
+        o- annKey A
+	o- other B A
+        o- (     b1 B A X (@ Nb)
+	      -o toNet (crypt (X * (@ Nb) * (@ (k2m B))) A)
+	      -o transit N).
+
+nsB2 : loop (s N)
+        o- b1 B A X Y
+        o- fromNet (crypt Y B)
+        o- (b2 B A X Y -o transit N).
+
+nsB0 : loop (s N)
+	o- annKey B
+	o- ({nb:atm}b0 B nb -o loop N).
+
+
+% Termination condition
+
+%nsDone: loop (s N)
+%	 o- b2 B1 A1 X1 Y1
+%	 o- a2 A2 B2 X2 Y2
+%	 o- <T>.
+
+ns_z : loop z o- <T>.

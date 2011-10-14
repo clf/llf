@@ -1,0 +1,46 @@
+principal : type.
+atmMsg : type.
+msg : type.
+key : type.
+
+name : principal -> atmMsg.
+nonce : atmMsg.
+
+@ : atmMsg -> msg.			%prefix 11 @
+
+* : msg -> msg -> msg.			%infix left 10 *
+crypt : msg -> key -> msg.
+
+symKey : principal -> principal -> key.
+
+knowledge : type.			%name knowledge Kn
+andMsg : knowledge -> msg -> knowledge. %infix left 8 andMsg
+andKey : knowledge -> key -> knowledge.	%infix left 8 andKey
+nothing : knowledge.
+
+knowsKey : key -> type.			%name knowsKey K
+knowsMsg : atmMsg -> type.		%name knowsMsg M
+
+given : knowledge -> type.
+break : knowledge -> msg -> type.
+build : msg -> type.
+
+readKey : key -> type.
+rdKey : readKey K
+	 o- knowsKey K
+	 o- <T>.
+
+readMsg : atmMsg -> type.
+rdMsg : readMsg M
+	 o- knowsMsg M
+	 o- <T>.
+
+count : nat -> type.			%name count C
+
+
+getMsg : nat -> msg -> type.
+
+getM : getMsg N M
+	o- given Kn
+	o- (count N -o break Kn M)
+	o- <T>.

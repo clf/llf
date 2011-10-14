@@ -1,0 +1,50 @@
+bin : type.          %name bin B
+
+e : bin.
+one : bin -> bin.
+zero : bin -> bin.
+
+succ : bin -> bin -> type.
+
+s/e: succ e (one e).
+s/0: succ (zero B) (one B).
+s/1: succ (one B) (zero B') <- succ B B'.
+
+
+odd : bin -> type.
+
+odd/1 : odd (one B).
+
+
+
+%{
+unary : type.        %name unary U
+
+z : unary.
+s : unary -> unary.
+
+
+uni2bin : unary -> bin -> type.
+
+u2b/z: uni2bin z e.
+u2b/s: uni2bin (s U) B'
+	<- uni2bin U B
+	<- succ B B'.
+
+
+double : unary -> unary -> type.
+
+dbl/z : double z z.
+dbl/s : double (s U) (s (s U2)) <- double U U2.
+
+bin2uni : bin -> unary -> type.
+
+b2u/e : bin2uni e z.
+b2u/0 : bin2uni (zero B) U'
+	 <- bin2uni B U
+	 <- double U U'.
+b2u/1 : bin2uni (one B) (s U')
+	 <- bin2uni B U
+	 <- double U U'.
+
+}%

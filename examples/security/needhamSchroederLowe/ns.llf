@@ -1,0 +1,133 @@
+% Needham-Schroeder Public Key Protocol (short version -- no server)
+% Date: 28 May 1999
+% Author: Iliano Cervesato
+
+
+%% Needham Schroeder public key authentication (simplified)
+%      A -> B : enc(kb, <Na,A>)
+%      B -> A : enc(ka, <Na, Nb, B>)
+%      A -> B : enc(kb, Nb)
+
+msg1 : atm -> key -> key -> msg
+     = [X:atm][K1:key][K2:key]           crypt ((@ X) * (k2m K1)) K2.
+msg2 : atm -> atm -> key -> key -> msg
+     = [X1:atm][X2:atm][K1:key][K2:key]  crypt ((@ X1) * (@ X2) * (k2m K1)) K2.
+msg3 : atm -> key -> msg
+     = [X:atm][K:key]                    crypt (@ X) K.
+
+ns_t1 : tMsg 1 (msg1 X K1 K2).
+ns_t2 : tMsg 2 (msg2 X1 X2 K1 K2).
+ns_t3 : tMsg 3 (msg3 X K).
+
+
+% Alice's role
+
+nsA : role.
+sessionA : nat -> type.
+
+a1 : key -> key -> atm -> type.
+a2 : key -> key -> atm -> atm -> type.
+
+nsA! ^ step
+        o- attack nsA A
+        o- other A intruder
+	o- sessionA (s N)
+	o- annKey B
+	o- other B A
+        o- other B intruder
+	o- ({Na:atm}
+	         a1 A B Na
+	      -o sessionA N
+	      -o uMsg Na
+	      -o attacked
+	      -o toNet 1 (msg1 Na A B)
+	      -o transit).
+
+nsA1 : step
+	o- sessionA (s N)
+	o- annKey A
+	o- annKey B
+	o- other A B
+	o- ({Na:atm}
+	         a1 A B Na
+	      -o sessionA N
+	      -o uMsg Na
+	      -o toNet 1 (msg1 Na A B)
+	      -o transit).
+
+nsA2 : step
+        o- a1 A B X
+        o- fromNet 2 (msg2 X Y B A)
+        o- (     a2 A B X Y
+	      -o toNet 3 (msg3 Y B)
+	      -o transit).
+
+% Bob's Role
+
+nsB : role.
+sessionB : nat -> type.
+
+b1 : key -> key -> atm -> atm -> type.
+b2 : key -> key -> atm -> atm -> type.
+
+nsB! ^ step
+        o- attack nsB B
+        o- other B intruder
+	o- sessionB (s N)
+	o- fromNet 1 (msg1 X A B)
+	o- annKey A
+	o- other A B
+        o- other A intruder
+	o- ({Nb:atm}
+	         b1 B A X Nb
+	      -o sessionB N
+	      -o uMsg Nb
+	      -o attacked
+	      -o toNet 2 (msg2 X Nb B A)
+	      -o transit).
+
+nsB1 : step
+	o- sessionB (s N)
+	o- annKey B
+	o- fromNet 1 (msg1 X A B)
+	o- annKey A
+	o- other B A
+	o- ({Nb:atm}
+	         b1 B A X Nb
+	      -o sessionB N
+	      -o uMsg Nb
+	      -o toNet 2 (msg2 X Nb B A)
+	      -o transit).
+
+nsB2 : step
+        o- b1 B A X Y
+        o- fromNet 3 (msg3 Y B)
+        o- (     b2 B A X Y
+	      -o step).
+
+
+% Termination condition
+
+fooled : atm -> atm -> atm -> atm -> key -> key -> key -> key -> type.
+
+nsDone: step
+	 o- a2 A1 B1 Na1 Nb1
+	 o- b2 B2 A2 Na2 Nb2
+	 o- fooled Na1 Na2 Nb1 Nb2 A1 A2 B1 B2
+	 o- <T>.
+
+notfooled: fooled Na Na Nb Nb A A B B
+	    o- noattack.
+
+flA: fooled Na Na Nb Nb A1 A2 B B
+      o- attacked
+      <- other A1 A2.
+
+flB: fooled Na Na Nb Nb A A B1 B2
+      o- attacked
+      <- other B1 B2.
+
+flAB: fooled Na Na Nb Nb A1 A2 B1 B2
+       o- attacked
+       <- other A1 A2
+       <- other B1 B2.

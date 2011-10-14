@@ -1,0 +1,42 @@
+%%% Compilation of hereditary Harrop formulas, soundness proof
+%%% Author: Iliano Cervesato
+%%% Date: 26 Nov. 1997
+
+
+uSound : unid A -> cmpGoal A G -> gRun G -> type.
+iSound : immd A P -> cmpClause A C -> cgRun (C P) -> type.
+cSound : clause A -> cmpClause A C -> cClause C -> type.
+
+uSound_atom : uSound (u_atom I C) cg_atom (rg_atom S L)
+               <- cSound C F L
+	       <- iSound I F S.
+
+uSound_true : uSound u_true cg_true rg_true.
+
+uSound_and  : uSound (u_and U1 U2) (cg_and E1 E2) (rg_and R1 R2)
+	       <- uSound U1 E1 R1
+	       <- uSound U2 E2 R2.
+
+uSound_imp  : uSound (u_imp [k](U k)) (cg_imp E F) (rg_imp [l](R l))
+	       <- (cSound K F L -> uSound (U K) E (R L)).
+
+uSound_all  : uSound (u_all [x] (U x)) (cg_all [x] (E x)) (rg_all [x] (R x))
+	       <- {x:i} (uSound (U x) (E x) (R x)).
+
+
+iSound_atom : iSound i_atom cc_atom rcg_eq.
+
+% No iSound_true
+
+iSound_and1 : iSound (i_and1 I) (cc_and F2 F1) (rcg_or1 S)
+	       <- iSound I F1 S.
+
+iSound_and2 : iSound (i_and2 I) (cc_and F2 F1) (rcg_or2 S)
+	       <- iSound I F2 S.
+
+iSound_imp  : iSound (i_imp U I) (cc_imp E F) (rcg_and R S)
+	       <- uSound U E R
+	       <- iSound I F S.
+
+iSound_all  : iSound (i_all T I) (cc_all [x] (F x)) (rcg_some T S)
+	       <- iSound I (F T) S.

@@ -1,0 +1,126 @@
+Using the LLF Parser                                    December 7th, 1998
+Yaoshiang Ho
+
+
+  This document is intended for people who need an introduction to
+using the LLF Parser.
+
+
+
+_Background_
+
+  JavaCC is an LL(k) parser/lexical analyzer, and the LLF Parser uses
+JavaCC for all it's parsing and lexical analysis. 
+
+  None of the classes are part of any package.  Obviously, you can change
+this to suit your needs.
+
+  Using the LLF Parser is very simple.  First, you need to install JavaCC,
+and the LLF Parser distribution.  See the file INSTALL for details. 
+
+
+
+_Building the AST_
+
+  To create a parser, call the static create method with either a
+java.io.InputStream or a java.lang.String.  (Don't use the Parser
+constructor). 
+
+  Then, simply call the root() method.  That method will return an
+instance of BaseObject, which is the top level of the grammar.  It's as
+simple as that. 
+
+
+
+_Walking the AST_
+
+  The classes of the AST all implement the interface LLFNode, as well as
+the interface that represents the non-terminal that the class is produced
+from.  For example, the class Pair directly implements the interface
+BaseObject, and indirectly implements the interface LLFNode. 
+
+  All classes that implement LLFNode implement a method called type() that
+returns an integer.  The interface LLFNode has public static final ints
+that assign a unique constant for each class. 
+
+  For example, suppose you have a pointer to a TypeFamily.  This pointer
+might point to either a TypeFamilyConstant or TypeFamilyInstantiation. 
+The following code segment would disambiguate the pointer tf: 
+
+  TypeFamily tf = SomeTypeFamily;
+
+  if (LLFNode.TYPE_FAMILY_CONSTANT == tf.type()) {
+    System.out.println("It's a Type Family Constant!");
+  } 
+
+  else if (LLFNode.TYPE_FAMILY_INSTANTIATION == tf.type()) {
+    System.out.println("It's a Type Family Instantiation!");
+  }
+
+  Once you have figured out the type of an object, you can use the
+AST-navigation methods that make sense for that object.  For example if
+you have a Pair, then you can call safely call the methods leftSubterm()
+and rightSubterm(), but not subterm().  For the class Unit, none of the
+navigation methods make sense becuase Unit is a terminal.
+
+  
+
+_Utilities for the AST_
+
+  First, you can find the nth term of any BaseObject by calling the method
+nth with an integer parameter.  Invalid calls to nth will result in a null
+return value.  The return value will either be a Variable, or an
+Identifier.  (An identifier a class that represents either a Variable or a
+Constant -- the parser can't figure out which).  Obviously, both Variable
+and Identifier implement the BaseObject interface. 
+
+  Secondly, you can find the head of any BaseObject by calling the static
+method Util.head with a base object.  The second parameter is a Vector,
+and that Vector will contain all the Identifiers and Variables that
+comprise the head of the base object. 
+
+
+_Methods of AST_
+
+  Because of a desire to keep the AST interface as abstract as possible,
+many classes include methods which are not supported, and
+wherever possible, all classes contain the same names for methods.  This
+is a list of these methods.
+
+value
+	This returns the String value of a variable or constant.  
+
+	Valid for: Variable, Identifier, TypeFamilyConstant
+
+
+variable
+	This returns the variable part of an ast node.
+
+	Valid for: Lambda, LinearLambda, FunctionType
+
+lambdaType
+	This returns the lambda type.
+
+	Valid for: Lambda, LinearLambda
+
+leftSubterm
+	This returns the left subterm.
+
+	Valid for: App, LinearApp, Pair, With, FunctionType
+
+rightSubterm
+	This returns the right subterm.
+
+	Valid for: App, LinearApp, Pair, With, FunctionType
+
+subTerm
+	This returns the subterm.
+
+	Valid for: First, Second, Lambda, LinearLambda, 
+		   TypeFamilyInstantiation
+
+subTypeFamily
+	This returns the subtype family.
+
+	Valid for: TypeFamilyInstantiation
+

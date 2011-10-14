@@ -1,0 +1,25 @@
+%%% Mahjongg
+%%% Author: Iliano Cervesato
+
+% Tiles
+
+tp    : type.   %name tp     N
+inst  : type.   %name inst   I
+tiles : type.   %name tiles  T
+
+tile : tp -> inst -> tiles.
+
+
+% Game
+
+free : tiles -> type.
+out  : tiles -> type.
+play : type.
+
+match : play
+       o- free (tile T N1)
+       o- free (tile T N2)
+       o- (out (tile T N1)
+          -> out (tile T N2)
+          -> play).
+done  : play.

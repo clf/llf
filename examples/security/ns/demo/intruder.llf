@@ -1,0 +1,97 @@
+% Needham-Schroeder Public Key Protocol -- Intruder's behavior
+% Date: 11 September 1998
+% Author: Nancy Durgin, Iliano Cervesato
+
+intruder : key.
+
+freshness : type.
+fresh : freshness.
+tempered : freshness.
+
+dMsg : msg -> freshness -> type.
+cMsg : msg -> type.
+aMsg : atm -> nat -> type.
+memKey : key -> type.
+
+inv_I : memKey (inv intruder).
+
+compLimit : nat -> type.
+cmpLim ^ compLimit maxComp.
+
+cryptLimit : nat -> type.
+cryLim ^ cryptLimit maxCrypt.
+
+peepD : key -> key -> type.
+peepC : key -> key -> type.
+netFree : type.
+
+
+% Send/Receive message
+
+receive : loop
+	   o- toNet P N A B X
+	   o- (     netFree
+		 -o dMsg X fresh
+		 -o peepD A B).
+
+send : peepC A B
+	o- netFree
+	o- cMsg X
+	o- (fromNet P N intruder B X -o loop).
+
+
+% Composition and decompostion
+
+decompose : peepD A B
+	     o- dMsg (X * Y) F
+	     o- (     dMsg X tempered
+		   -o dMsg Y tempered
+		   -o peepD A B).
+
+compose : peepC A B
+	   o- cMsg X
+	   o- cMsg Y
+	   o- compLimit (s N)
+	   o- (     cMsg (X * Y)
+		 -o compLimit N
+		 -o peepC A B).
+
+
+% Encryption and decryption
+
+decrypt : peepD A B
+	   o- memKey (inv K)
+	   o- dMsg (crypt X K) F
+	   o- (     dMsg X tempered
+		 -o peepD A B).
+
+encrypt : peepC A B
+	   o- cMsg X
+	   o- cryptLimit (s N)
+	   o- annKey K
+	   o- (cMsg (crypt X K)
+		 -o cryptLimit N
+		 -o peepC A K).
+
+
+% Atomic information
+
+atomd : peepD A B
+	 o- dMsg (@ X) F
+	 o- (aMsg X maxAtom -o peepD A B).
+
+atomc : peepC A B
+	 o- aMsg X (s N)
+	 o- (cMsg (@ X) -o aMsg X N -o peepC A B).
+
+
+% Unknown keys
+
+forward : peepD A B
+	   o- dMsg (crypt X K) tempered
+	   o- (cMsg (crypt X K) -o peepD A B).
+
+
+% Phase alternance
+
+alternate : peepD A B o- peepC A B.

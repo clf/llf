@@ -1,0 +1,39 @@
+%%% Compilation of hereditary Harrop formulas, compiler
+%%% Author: Iliano Cervesato
+%%% Date: 21 Nov. 1997
+
+cmpGoal   : o -> g -> type.              % Goal compilation
+cmpClause : o -> (atm -> cg) -> type.    % Clause compilation
+%name cmpGoal   E
+%name cmpClause F
+
+cg_atom : cmpGoal (atom P) (gAtom P).
+
+cg_true : cmpGoal true gTrue.
+
+cg_and  : cmpGoal (and A1 A2) (gAnd G1 G2)
+	   <- cmpGoal A1 G1
+	   <- cmpGoal A2 G2.
+
+cg_imp  : cmpGoal (imp A B) (gImp C G)
+	   <- cmpClause A C
+	   <- cmpGoal B G.
+
+cg_all  : cmpGoal (all A) (gAll G)
+	   <- ({x:i} cmpGoal (A x) (G x)).
+
+
+cc_atom : cmpClause (atom P) ([p:atm] cgEq P p).
+
+cc_true : cmpClause true ([p:atm] cgFalse).
+
+cc_and  : cmpClause (and A1 A2) ([p:atm] cgOr (C1 p) (C2 p))
+	   <- cmpClause A1 C1
+	   <- cmpClause A2 C2.
+
+cc_imp  : cmpClause (imp A B) ([p:atm] cgAnd (C p) G)
+	   <- cmpClause B C
+	   <- cmpGoal A G.
+
+cc_all  : cmpClause (all A) ([p:atm] cgSome (C p))
+	   <- ({x:i} cmpClause (A x) ([p:atm] C p x)).

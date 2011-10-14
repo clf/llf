@@ -1,0 +1,13 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic".
+% Backward chaining.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+Backward chaining:
+
++ final values are available (no tricks)
+
+- the specifications needs to be massaged quite a bit
+- very inefficient (when read backwards, the given rules are extremely
+  non-deterministic)

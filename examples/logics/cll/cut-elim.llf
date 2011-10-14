@@ -1,0 +1,105 @@
+%%% Cut-elimination for LV
+%%% Author: Frank Pfenning and Iliano Cervesato
+
+
+ce: #+ -> # -> type.
+
+%{
+%mode -ce +C -D
+%lex C
+}%
+
+
+%% Axioms
+
+ce_axiom : ce (axiom+ ^ N ^ P) (axiom ^ N ^ P).
+
+
+%% Multiplicative Connectives
+
+ce_timesr : ce (timesr+ ^ D1 ^ D2 ^ P) (timesr ^ D1' ^ D2' ^ P)
+	     <- ({p1:pos A1} ce (D1 ^ p1) (D1' ^ p1))
+	     <- ({p2:pos A2} ce (D2 ^ p2) (D2' ^ p2)).
+
+ce_timesl : ce (timesl+ ^ D ^ N) (timesl ^ D' ^ N)
+	     <- ({n1:neg A1}{n2:neg A2}
+		   ce (D ^ n1 ^ n2) (D' ^ n1 ^ n2)).
+
+ce_oner : ce (oner+ ^ P) (oner ^ P).
+
+ce_onel : ce (onel+ ^ D ^ N) (onel ^ D' ^ N)
+	   <- ce D D'.
+
+
+%% Additive Connectives
+
+ce_withr : ce (withr+ ^ (D1, D2) ^ P) (withr ^ (D1', D2') ^ P)
+	    <- ({n1:pos A1} ce (D1 ^ n1) (D1' ^ n1))
+	    <- ({n2:pos A2} ce (D2 ^ n2) (D2' ^ n2)).
+
+ce_withl1 : ce (withl1+ ^ D ^ N) (withl1 ^ D' ^ N)
+	     <- ({n1:neg A1} ce (D ^ n1) (D' ^ n1)).
+
+ce_withl2 : ce (withl2+ ^ D ^ N) (withl2 ^ D' ^ N)
+	     <- ({n2:neg A2} ce (D ^ n2) (D' ^ n2)).
+
+ce_topr : ce (topr+ ^ () ^ P) (topr ^ () ^ P).
+
+% no ce_topl
+
+
+%% Involution
+
+ce_perpr : ce (perpr+ ^ D ^ P) (perpr ^ D' ^ P)
+	     <- ({n:neg A} ce (D ^ n) (D' ^ n)).
+
+ce_perpl : ce (perpl+ ^ D ^ N) (perpl ^ D' ^ N)
+	     <- ({p:pos A} ce (D ^ p) (D' ^ p)).
+
+
+%% Quantifier
+
+ce_forallr : ce (forallr+ ^ D ^ P) (forallr ^ D' ^ P)
+	      <- ({a:i}{p:pos (A a)} ce (D a ^ p) (D' a ^ p)).
+
+ce_foralll : ce (foralll+ T ^ D ^ N) (foralll T ^ D' ^ N)
+	      <- ({n} ce (D ^ n) (D' ^ n)).
+
+
+%% Exponentials
+
+ce_!r : ce (!r+ D! ^ P) (!r D!' ^ P)
+	 <- ({p:pos A} ce (D! ^ p) (D!' ^ p)).
+
+ce_!l : ce (!l+ ^ D ^ N) (!l ^ D' ^ N)
+	 <- ({n!:neg! A} ce (D n!) (D' n!)).
+
+ce_!d : ce (!d+ ^ D N!) (!d ^ D' N!)
+	 <- ({n:neg A} ce (D ^ n) (D' ^ n)).
+
+ce_?r : ce (?r+ ^ D ^ P) (?r ^ D' ^ P)
+	 <- ({p?:pos? A} ce (D p?) (D' p?)).
+
+ce_?l : ce (?l+ D ^ N) (?l D' ^ N)
+	 <- ({n:neg A} ce (D ^ n) (D' ^ n)).
+
+ce_?d : ce (?d+ ^ D P) (?d ^ D' P)
+	 <- ({p:pos A} ce (D ^ p) (D' ^ p)).
+
+
+%% Cuts
+
+ce_cut : ce (cut ^ D1 ^ D2) D'
+	  <- ({p:pos A} ce (D1 ^ p) (D1' ^ p))
+	  <- ({n:neg A} ce (D2 ^ n) (D2' ^ n))
+	  <- ad A D1' D2' D'.
+
+ce_cut! : ce (cut! D1! ^ D2) D'
+	  <- ({p:pos A} ce (D1! ^ p) (D1!' ^ p))
+	  <- ({n!:neg! A} ce (D2 n!) (D2' n!))
+	  <- ad! A D1!' D2' D'.
+
+ce_cut? : ce (cut? ^ D1 D2?) D'
+	  <- ({p?:pos? A} ce (D1 p?) (D1' p?))
+	  <- ({n:neg A} ce (D2? ^ n) (D2?' ^ n))
+	  <- ad? A D1' D2?' D'.

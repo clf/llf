@@ -1,0 +1,113 @@
+% Needham-Schroeder Public Key Protocol (short version -- no server)
+% Date: 11 September 1998
+% Author: Nancy Durgin
+% Revised: Iliano Cervesato, Sept. 26
+
+
+%% Needham Schroeder public key authentication (simplified)
+%      A -> B : enc(kb, <Na,A>)
+%      B -> A : enc(ka, <Na, Nb>)
+%      A -> B : enc(kb, Nb)
+
+ns_t1 : tMsg 1 2 (crypt ((@ X) * (k2m K1)) K2).
+ns_t2 : tMsg 2 3 (crypt ((@ X1) * (@ X2) * (k2m K1)) K2).
+ns_t3 : tMsg 3 z (crypt (@ X) K).
+
+% Alice's role
+
+a0 : key -> atm -> nat -> type.
+a1 : key -> key -> msg -> nat -> type.
+a2 : key -> key -> msg -> msg -> nat -> type.
+
+nsA1 : step
+        o- annKey B
+        o- a0 A Na _
+	o- other A B
+	o- clock T
+        o- (     clock (s T)
+	      -o a1 A B (@ Na) T
+	      -o toNet 1 (crypt ((@ Na) * (k2m A)) B)
+	      -o transit).
+
+nsA2 : step
+        o- a1 A B (@ X) _
+        o- fromNet 2 (crypt ((@ X) * (@ Y) * (k2m B)) A)
+	o- clock T
+        o- (     clock (s T)
+	      -o a2 A B (@ X) (@ Y) T
+	      -o toNet 3 (crypt (@ Y) B)
+	      -o transit).
+
+nsA01 : step
+	 o- annKey B
+	 o- other A B
+	 o- clock T
+	 o- ({Na:atm}
+	          clock (s T)
+	       -o a1 A B (@ Na) T
+	       -o toNet 1 (crypt ((@ Na) * (k2m A)) B)
+	       -o transit).
+
+%{
+nsA0 : step
+	o- annKey A
+	o- clock T
+	o- ({na:atm}
+	         a0 A na T
+	      -o clock (s T)
+	      -o transit).
+}%
+
+% Bob's Role
+
+b0 : key -> atm -> nat -> type.
+b1 : key -> key -> msg -> msg -> nat -> type.
+b2 : key -> key -> msg -> msg -> nat -> type.
+
+nsB1 : step
+        o- b0 B Nb _
+        o- fromNet 1 (crypt ((@ X) * (k2m A)) B)
+        o- annKey A
+	o- other B A
+	o- clock T
+        o- (     clock (s T)
+	      -o b1 B A (@ X) (@ Nb) T
+	      -o toNet 2 (crypt ((@ X) * (@ Nb) * (k2m B)) A)
+	      -o transit).
+
+nsB2 : step
+        o- b1 B A (@ X) (@ Y) _
+        o- fromNet 3 (crypt (@ Y) B)
+	o- clock T
+        o- (     clock (s T)
+	      -o b2 B A (@ X) (@ Y) T
+	      -o transit).
+
+nsB01 : step
+	 o- fromNet 1 (crypt ((@ X) * (k2m A)) B)
+	 o- annKey A
+	 o- other B A
+	 o- clock T
+	 o- ({Nb:atm}
+	          clock (s T)
+	       -o b1 B A (@ X) (@ Nb) T
+	       -o toNet 2 (crypt ((@ X) * (@ Nb) * (k2m B)) A)
+	       -o transit).
+
+%{
+nsB0 : step
+	o- annKey B
+	o- clock T
+	o- ({nb:atm}
+	         b0 B nb T
+	      -o clock (s T)
+	      -o transit).
+}%
+
+% Termination condition
+
+nsDone: step
+	 o- a2 A2 B2 X2 Y2 T1
+	 o- b2 B1 A1 X1 Y1 T2
+	 o- T1 < T2
+	 o- transit.

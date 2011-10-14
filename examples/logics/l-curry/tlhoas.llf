@@ -1,0 +1,33 @@
+%%% Curry-style linear lambda-calculus
+%%% Typed linear higher-order abstract syntax
+%%% Author: Iliano Cervesato
+
+
+%%% Syntax
+
+% Linear types
+
+tp3 : type.
+
+arrow3 : tp3 -> tp3 -> tp3.
+%infix right 100 arrow3
+
+
+% Linear terms
+
+tm3 : tp3 -> type.
+
+lam3 : (tm3 A -o tm3 B) -o tm3 (A arrow3 B).
+app3 : tm3 (A arrow3 B) -o tm3 A -o tm3 B.
+
+
+
+%%% Evaluation
+
+eval3 : tm3 A -> tm3 A -> type.
+
+ev_lam3 : eval3 (lam3 ^ M) (lam3 ^ M).
+ev_app3 : eval3 (app3 ^ M ^ N) M''
+             <- eval3 M (lam3 ^ M')
+             <- eval3 N N'
+             <- eval3 (M' ^ N') M''.

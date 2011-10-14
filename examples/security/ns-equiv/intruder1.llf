@@ -1,0 +1,82 @@
+% Needham-Schroeder Public Key Protocol -- Intruder's behavior
+% Date: 11 September 1998
+% Author: Iliano Cervesato
+
+dMsg : msg -> type.
+cMsg : msg -> type.
+aMsg : atm -> type.
+memKey : key -> type.
+
+peepD : type.
+peepC : type.
+
+
+% Send/Receive message
+
+receive1 : loop1
+	    o- toNet P N X
+	    o- (     dMsg X
+		  -o peepD).
+
+send1 : peepC
+	 o- cMsg X
+	 o- (fromNet P N X -o loop1).
+
+
+% Composition and decompostion
+
+decompose : peepD
+	     o- dMsg (X * Y)
+	     o- (     dMsg X
+		   -o dMsg Y
+		   -o peepD).
+
+compose : peepC
+	   o- cMsg X
+	   o- cMsg Y
+	   o- (     cMsg (X * Y)
+		 -o peepC).
+
+
+% Encryption and decryption
+
+decrypt : peepD
+	   o- memKey (inv K)
+	   o- dMsg (crypt X K)
+	   o- (     dMsg X
+		 -o peepD).
+
+encrypt : peepC
+	   o- cMsg X
+	   o- annKey K
+	   o- (cMsg (crypt X K)
+		 -o peepC).
+
+
+% Atomic information
+
+atomd : peepD
+	 o- dMsg (@ X)
+	 o- (aMsg X -> peepD).
+
+atomc : peepC
+	 o- aMsg X
+	 o- (cMsg (@ X) -o peepC).
+
+
+% New nonces
+
+nonce : peepC
+         o- ({N:atm} aMsg N -> peepC).
+
+
+% Unknown keys
+
+forward : peepD
+	   o- dMsg (crypt X K)
+	   o- (cMsg (crypt X K) -o peepD).
+
+
+% Phase alternance
+
+alternate : peepD o- peepC.

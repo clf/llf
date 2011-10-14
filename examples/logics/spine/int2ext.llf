@@ -1,0 +1,43 @@
+%%% Internal to external representation
+%%% Authors: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+pc2tm : pc A -> tm A -> type.
+hd2tm : hd A -> tm A -> type.    % Assumed for variables
+sp2tm : spine A B -> tm A -> tm B -> type.
+
+% Pre-canonical terms
+
+pc2tm_unit : pc2tm (unit' ^ ()) (unit ^ ())
+	      o- <T>.
+pc2tm_pair : pc2tm (pair' ^ (U1, U2)) (pair ^ (M1, M2))
+	      o- pc2tm U1 M1
+	       & pc2tm U2 M2.
+pc2tm_llam : pc2tm (llam' ^ U) (llam ^ M)
+	      o- ({x':hd A} {x:tm A}
+		    hd2tm x' x -o pc2tm (U ^ x') (M ^ x)).
+pc2tm_lam  : pc2tm (lam' ^ U) (lam ^ M)
+	      o- ({x':hd A} {x:tm A}
+		    hd2tm x' x -> pc2tm (U x') (M x)).
+pc2tm_atom : pc2tm (patom ^ (root ^ H ^ S)) M
+	      o- hd2tm H M'
+	      o- sp2tm S M' M.
+
+% Redices
+
+hd2tm_conv : hd2tm (pcan ^ U) M
+	      <- pc2tm U M.
+
+% Spines
+
+sp2tm_nil : sp2tm nil M M.
+sp2tm_pi1 : sp2tm (pi1 ^ S) M' M
+	     o- sp2tm S (fst ^ M') M.
+sp2tm_pi2 : sp2tm (pi2 ^ S) M' M
+	     o- sp2tm S (snd ^ M') M.
+sp2tm_l;  : sp2tm (l; ^ U ^ S) M' M
+	     o- pc2tm U M''
+	     o- sp2tm S (lapp ^ M' ^ M'') M.
+sp2tm_;   : sp2tm (; U ^ S) M' M
+	     <- pc2tm U M''
+	     o- sp2tm S (app ^ M' M'') M.

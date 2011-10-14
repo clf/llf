@@ -1,0 +1,42 @@
+This directory contains a Linear Twelf implementation of the operational
+semantics for a subset of x86 assembly.
+
+There are two examples programs included: factorial written iteratively
+and recursively.  To load the iterative version:
+
+use "examples/LINEAR/architectures/x86/config-iter.sml";
+go 9 32 OUT.
+
+For the recursive version:
+
+use "examples/LINEAR/architectures/x86/config-rec.sml";
+go 16 32 OUT.
+
+In either case, OUT will be forced to the factorial of fifteen.
+
+
+The files involved:
+
+binary.llf: An implementation of binary operations, used for the program
+counter as well as stored values.
+
+regflag.llf: Basic framework for registers, memory, and flags.
+
+x86.llf: The operational semantics of the x86 assembly subset.  Instructions
+include variants of mov, add, mul, cmp, push/pop, jmp, loop, and call/ret.
+
+state.llf: Handles initial state and final state conditions.
+
+state2-xxx.llf: The example programs.
+
+config-xxx.sml: Load setups for the examples.
+
+Once a program is loaded, the standard query is "go L M OUT."
+where L is the program label that indicates where to begin execution,
+M is the amount of memory desired for execution, and OUT will be instantiated
+to the final value of the register EAX.  The simple Perl script p2llf will
+convert a text file into an appropriate file for execution here; it labels
+and numbers the lines - leaving any line that begins with a % as a comment.
+
+Author: Mark Plesko <mp5f@cs.cmu.edu>
+Version: 3.2: 10/31/98

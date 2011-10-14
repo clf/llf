@@ -1,0 +1,40 @@
+%%% Intuitionistic propositional calculus
+%%% Positive fragment with implies, and, true.
+%%% Two formulations here: natural deduction and Hilbert-style system.
+%%% Author: Frank Pfenning
+
+% Type of propositions.
+o : type.
+%name o A
+
+% Syntax: implication, plus a few constants.
+=> : o -> o -> o.  %infix right 10 =>
+and  : o -> o -> o.  %infix right 11 and
+true : o.
+
+% Provability.
+|- : o -> type.    %prefix 9 |-
+%name |- P
+
+% Axioms.
+K : |- A => B => A.
+S : |- (A => B => C) => (A => B) => A => C.
+ONE : |- true.
+PAIR : |- A => B => A and B.
+LEFT : |- A and B => A.
+RIGHT : |- A and B => B.
+
+% Inference Rule.
+MP : |- A => B -> |- A -> |- B. 
+
+% Natural Deduction.
+
+! : o -> type.   %prefix 9 !
+%name ! D
+
+trueI : ! true.
+andI  : ! A -> ! B -> ! A and B.
+andEL : ! A and B -> ! A.
+andER : ! A and B -> ! B.
+impliesI : (! A -> ! B) -> ! A => B.
+impliesE : ! A => B -> ! A -> ! B.

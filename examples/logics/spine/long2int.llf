@@ -1,0 +1,39 @@
+%%% External to internal representation of long forms. 
+%%% Authors: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+tm2pc : can A -> pc A -> type.
+tm2rt : atm A -> spine A B -> pa B -> type.
+
+% Pre-canonical terms
+
+tm2pc_unit : tm2pc (unit+ ^ ()) (unit' ^ ())
+	      o- <T>.
+tm2pc_pair : tm2pc (pair+ ^ (M1, M2)) (pair' ^ (U1, U2))
+	      o- tm2pc M1 U1
+	       & tm2pc M2 U2.
+tm2pc_llam : tm2pc (llam+ ^ M) (llam' ^ U)
+	      o- ({x:atm A} {x':hd A}
+		    ({C:tp} {S:spine A C} tm2rt x S (root ^ x' ^ S))
+		    -o tm2pc (M ^ x) (U ^ x')).
+tm2pc_lam  : tm2pc (lam+ ^ M) (lam' ^ U)
+	      o- ({x:atm A} {x':hd A}
+		    ({C:tp} {S:spine A C} tm2rt x S (root ^ x' ^ S))
+		    -> tm2pc (M x) (U x')).
+tm2pc_atom : tm2pc (ca ^ M) (patom ^ U)
+	      o- tm2rt M nil U.
+
+% Pre-atomic terms
+
+tm2rt_hd  : tm2rt (ac ^ M) S (root ^ (pcan ^ H) ^ S)
+	     o- tm2pc M H.
+tm2rt_fst : tm2rt (fst+ ^ M) S R
+	     o- tm2rt M (pi1 ^ S) R.
+tm2rt_snd : tm2rt (snd+ ^ M) S R
+	     o- tm2rt M (pi2 ^ S) R.
+tm2rt_lapp: tm2rt (lapp+ ^ M1 ^ M2) S R
+	     o- tm2pc M2 U
+	     o- tm2rt M1 (l; ^ U ^ S) R.
+tm2rt_app : tm2rt (app+ ^ M1 M2) S R
+	     <- tm2pc M2 U
+	     o- tm2rt M1 (; U ^ S) R.

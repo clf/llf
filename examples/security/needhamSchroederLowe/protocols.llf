@@ -1,0 +1,41 @@
+% Generic protocols (well, for now)
+% Date: 28 May 1999
+% Author: Iliano Cervesato
+
+atm : type.				%name atm A
+msg : type.                             %name msg M
+key : type.                             %name key K
+
+@     : atm -> msg.
+*     : msg -> msg -> msg.              %infix left 5 *
+crypt : msg -> key -> msg.
+inv   : key -> key.
+k2m   : key -> msg.
+
+toNet   : nat -> msg -> type.		%name toNet TN
+fromNet : nat -> msg -> type.		%name fromNet FN
+annKey : key -> type.
+other : key -> key -> type.
+other': key -> key -> type.
+
+o_xy : other X Y <- other' X Y.
+o_yx : other X Y <- other' Y X.
+
+role : type.
+noattack : type.
+attack : role -> key -> type.
+attacked: key -> atm -> type.
+
+step : type.
+transit : type.
+hook : type.
+
+msgLeft : nat -> type.
+run : nat -> type.
+
+rn : run N
+      o- hook.
+
+
+hk_s : hook 
+	o- step.

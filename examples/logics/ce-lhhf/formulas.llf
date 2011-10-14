@@ -1,0 +1,12 @@
+%%% Language of linear heritary Harrop formulas
+%%% Author: Iliano Cervesato
+
+
+o : type.     %name o A
+i : type.     %name i T
+
+top   : o.
+with  : o -> o -> o.        %infix right 110 with
+lolli : o -> o -> o.        %infix right 100 lolli
+imp   : o -> o -> o.        %infix right 100 imp
+all   : (i -> o) -> o.

@@ -1,0 +1,182 @@
+%%% Turing Machine
+%%% Example: unary adder (stops positioned on the leftmost digit)
+%%% Author: Iliano Cervesato
+%%% October 1996, revised December 1998
+
+
+%query 1 1
+   adjacent eot c0
+-o adjacent c0 c1
+-o adjacent c1 c2
+-o adjacent c2 c3
+-o adjacent c3 eot
+-o contains c0 1
+-o contains c1 1
+-o contains c2 1
+-o contains c3 1
+-o head1 c0 q0.
+
+h1 : 
+      adjacent eot c0
+   -o adjacent c0 c1
+   -o adjacent c1 c2
+   -o adjacent c2 c3
+   -o adjacent c3 eot
+   -o contains c0 1
+   -o contains c1 1
+   -o contains c2 1
+   -o contains c3 1
+   -o head1 c0 q0
+=
+   [a1^adjacent eot c0]
+   [a2^adjacent c0  c1]
+   [a3^adjacent c1  c2]
+   [a4^adjacent c2  c3]
+   [a5^adjacent c3  eot]
+   [t0^contains c0 1]
+   [t1^contains c1 1]
+   [t2^contains c2 1]
+   [t3^contains c3 1]
+   tm1_rcell ^ ([t4^contains c0 1] [a6^adjacent c0 c1]
+   tm1_rcell ^ ([t5^contains c1 1] [a7^adjacent c1 c2]
+   tm1_rcell ^ ([t6^contains c2 1] [a8^adjacent c2 c3]
+   tm1_reot ^ ([c:cell]
+	       [t7^contains c3 1] [t8^contains c blank]
+               [a9^adjacent c eot] [a10^adjacent c3 c]
+   tm1_lcell ^ ([t9^contains c 1] [a11^adjacent c3 c]
+   tm1_lcell ^ ([t10^contains c3 1] [a12^adjacent c2 c3]
+   tm1_lcell ^ ([t11^contains c2 1] [a13^adjacent c1 c2]
+   tm1_lcell ^ ([t12^contains c1 1] [a14^adjacent c0 c1]
+   tm1_leot ^ ([c4:cell]
+	       [t13^contains c0 1] [t14^contains c4 blank]
+	       [a15^adjacent eot c4] [a16^adjacent c4 c0]
+   tm1_rcell ^ ([t15^contains c4 blank] [a17^adjacent c4 c0]
+   tm1_stop ^  ([t16^contains c0 1]
+		  collect_eot ^
+		 (collect_cell ^
+		 (collect_cell ^
+		 (collect_cell ^
+                 (collect_cell ^
+                 (collect_state ^
+                 (collect'_cell ^
+		 (collect'_eot ^
+		 ([X1:collect'
+(blank - q2 *> 1 - 1 - 1 - 1 - 1 - eoc)
+                  eot] the_end)) ^
+                  a15 ^ t15) ^
+		  a17 ^ t16) ^
+                  a14 ^ t12) ^
+		  a13 ^ t11) ^
+		  a12 ^ t10) ^
+		  a11 ^ t9)  ^
+                  a9) ^
+  n_2 ^ t13) ^
+  a16 ^ db1 ^ t14) ^
+  a1  ^ d11 ^ t4)  ^
+  a6  ^ d11 ^ t5)  ^
+  a7  ^ d11 ^ t6)  ^
+  a8  ^ d11 ^ t7)  ^
+  a10 ^ db0 ^ t8)  ^
+  a5  ^ d10 ^ t3)  ^
+  a4  ^ d10 ^ t2)  ^
+  a3  ^ d10 ^ t1)  ^
+  a2  ^ d10 ^ t0.
+
+
+
+%query 1 1
+{a0 : adjacent eot c0}
+{a1 : adjacent c0  c1}
+{a2 : adjacent c1  c2}
+{a3 : adjacent c2  c3}
+{a4 : adjacent c3  eot}
+{t0 : contains c0 1}
+{t1 : contains c1 1}
+{t2 : contains c2 1}
+{t3 : contains c3 1}
+  1to2 c0 q0 (h1 ^ a0 ^ a1 ^ a2 ^ a3 ^ a4 ^ t0 ^ t1 ^ t2 ^ t3)
+             (H2 ^ a0 ^ a1 ^ a2 ^ a3 ^ a4 ^ t0 ^ t1 ^ t2 ^ t3).
+
+
+%{
+ Extracted TM2 program:
+
+q' : state.
+q'1 : state.
+q'2 : state.
+q'3 : state.
+q'4 : state.
+q'5 : state.
+q'6 : state.
+q'7 : state.
+q'8 : state.
+q'9 : state.
+
+tr2 ^ trans2 1 q0 (sy 1) q'.
+tr2' ^ trans2 1 q' (mv right) q0.
+tr1 ^ trans2 1 q0 (sy 1) q'1.		% redundant
+tr3 ^ trans2 1 q'1 (mv right) q0.
+tr4 ^ trans2 1 q0 (sy 1) q'2.		% redundant
+tr5 ^ trans2 1 q'2 (mv right) q0.	% redundant
+tr6 ^ trans2 1 q0 (sy 1) q'3.		% redundant
+tr7 ^ trans2 1 q'3 (mv right) q0.	% redundant
+tr8 ^ trans2 blank q0 (sy 1) q'4.
+tr9 ^ trans2 1 q'4 (mv left) q1.
+tr10 ^ trans2 1 q1 (sy 1) q'5.
+tr11 ^ trans2 1 q'5 (mv left) q1.
+tr12 ^ trans2 1 q1 (sy 1) q'6.		% redundant
+tr13 ^ trans2 1 q'6 (mv left) q1.
+tr14 ^ trans2 1 q1 (sy 1) q'7.		% redundant
+tr15 ^ trans2 1 q'7 (mv left) q1.	% redundant
+tr16 ^ trans2 1 q1 (sy 1) q'8.		% redundant
+tr17 ^ trans2 1 q'8 (mv left) q1.	% redundant
+tr18 ^ trans2 blank q1 (sy blank) q'9.
+tr19 ^ trans2 blank q'9 (mv right) q2.
+}%
+
+% Query using the extracted program
+
+%query 1 1
+
+{q' : state}
+{q'1 : state}
+{q'2 : state}
+{q'3 : state}
+{q'4 : state}
+{q'5 : state}
+{q'6 : state}
+{q'7 : state}
+{q'8 : state}
+{q'9 : state}
+
+   trans2 1 q0 (sy 1) q'
+-o trans2 1 q' (mv right) q0
+-o trans2 1 q0 (sy 1) q'1
+-o trans2 1 q'1 (mv right) q0
+-o trans2 1 q0 (sy 1) q'2
+-o trans2 1 q'2 (mv right) q0
+-o trans2 1 q0 (sy 1) q'3
+-o trans2 1 q'3 (mv right) q0
+-o trans2 blank q0 (sy 1) q'4
+-o trans2 1 q'4 (mv left) q1
+-o trans2 1 q1 (sy 1) q'5
+-o trans2 1 q'5 (mv left) q1
+-o trans2 1 q1 (sy 1) q'6
+-o trans2 1 q'6 (mv left) q1
+-o trans2 1 q1 (sy 1) q'7
+-o trans2 1 q'7 (mv left) q1
+-o trans2 1 q1 (sy 1) q'8
+-o trans2 1 q'8 (mv left) q1
+-o trans2 blank q1 (sy blank) q'9
+-o trans2 blank q'9 (mv right) q2
+
+-o adjacent eot c0
+-o adjacent c0 c1
+-o adjacent c1 c2
+-o adjacent c2 c3
+-o adjacent c3 eot
+-o contains c0 1
+-o contains c1 1
+-o contains c2 1
+-o contains c3 1
+-o head2 c0 q0.

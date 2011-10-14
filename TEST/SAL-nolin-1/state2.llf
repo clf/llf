@@ -1,0 +1,114 @@
+%%% Summation example
+
+% summation
+prog-1: prog 1 (annot 1 1 10 1 (>= 0) nospec (r4 ; noregs)).
+prog-2: prog 2 (init r1 0).
+prog-3: prog 3 (init r2 ~1).
+prog-4: prog 4 (str r3 0).
+prog-5: prog 5 (arith r1 r1 r3).
+prog-6: prog 6 (arith r3 r3 r2).
+prog-7: prog 7 (condCOP r3 2).
+prog-8: prog 8 (jmp ~3).
+prog-9: prog 9 (stw 0 r1).
+prog-10: prog 10 (ret).
+
+% Recursive summation
+prog-11: prog 11 (annot 2 11 29 1 (>= 0) nospec (r3 ; r4 ; noregs)).
+prog-12: prog 12 (str r1 0).
+prog-13: prog 13 (condCOP r1 16).
+
+prog-14: prog 14 (advsp ~1).
+prog-15: prog 15 (stw 0 ra).
+prog-16: prog 16 (init r2 ~1).
+prog-17: prog 17 (arith r1 r1 r2).
+prog-18: prog 18 (advsp ~1).
+prog-19: prog 19 (stw 0 r1).
+prog-20: prog 20 (compRA 2).
+prog-21: prog 21 (call 2).
+prog-22: prog 22 (str r1 0).
+prog-23: prog 23 (str r2 2).
+prog-24: prog 24 (advsp 1).
+prog-25: prog 25 (arith r1 r1 r2).
+prog-26: prog 26 (stw 1 r1).
+prog-27: prog 27 (str ra 0).
+prog-28: prog 28 (advsp 1).
+
+prog-29: prog 29 (ret).
+
+% Multiplication
+prog-30: prog 30 (annot 3 30 40 2 (>= 0) nospec noregs).
+prog-31: prog 31 (str r1 0).
+prog-32: prog 32 (str r2 1).
+prog-33: prog 33 (init r3 0).
+prog-34: prog 34 (init r4 ~1).
+prog-35: prog 35 (condCOP r1 4).
+
+prog-36: prog 36 (arith r3 r3 r2).
+prog-37: prog 37 (arith r1 r1 r4).
+prog-38: prog 38 (jmp ~3).
+
+prog-39: prog 39 (stw 0 r3).
+prog-40: prog 40 (ret).
+
+% Factorial
+prog-41: prog 41 (annot 4 41 64 1 (>= 0) nospec noregs).
+
+prog-42: prog 42 (str r1 0).
+prog-43: prog 43 (condCOP r1 19).
+
+prog-44: prog 44 (stw 0 ra).
+
+prog-45: prog 45 (init r2 1).
+prog-46: prog 46 (stw ~1 r1).
+prog-47: prog 47 (stw ~2 r2).
+prog-48: prog 48 (advsp ~2).
+prog-49: prog 49 (compRA 2).
+
+prog-50: prog 50 (call 3).
+prog-51: prog 51 (str r1 1).
+prog-52: prog 52 (init r3 ~1).
+prog-53: prog 53 (arith r1 r1 r3).
+prog-54: prog 54 (condCOP r1 3).
+prog-55: prog 55 (stw 1 r1).
+prog-56: prog 56 (jmp ~6).
+
+prog-57: prog 57 (str r1 0).
+prog-58: prog 58 (str ra 2).
+prog-59: prog 59 (advsp 2).
+prog-60: prog 60 (stw 0 r1).
+prog-61: prog 61 (ret).
+
+prog-62: prog 62 (init r1 1).
+prog-63: prog 63 (stw 0 r1).
+prog-64: prog 64 (ret).
+
+% main-1
+prog-65: prog 65 (annot 5 65 76 0 nospec nospec noregs).
+prog-66: prog 66 (init r1 4).
+prog-67: prog 67 (init r2 ~5).
+prog-68: prog 68 (init r3 ~5).
+prog-69: prog 69 (init r4 ~5).
+prog-70: prog 70 (advsp ~1).
+prog-71: prog 71 (stw 0 r1).
+prog-72: prog 72 (compRA 2).
+prog-73: prog 73 (call 2).
+prog-74: prog 74 (str r1 0).
+prog-75: prog 75 (advsp 1).
+prog-76: prog 76 (end).
+
+% main-2-args
+%annot 6 65 79 0 nospec nospec noregs
+%init r1 2
+%init r2 ~5
+%init r3 ~5
+%init r4 ~5
+%advsp ~1
+%stw 0 r1
+%init r1 4
+%advsp ~1
+%stw 0 r1
+%compRA 2
+%call 1
+%str r1 0
+%advsp 2
+%end

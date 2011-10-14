@@ -1,0 +1,27 @@
+%%% Language of terms over types 1, *, =>
+%%% Authors: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+%%% Internal representation
+
+pc    : tp -> type.			% Pre-canonical objects
+pa    : tp -> type.			% Roots, i.e. (head.spine)
+hd    : tp -> type.			% Heads
+spine : tp -> tp -> type.		% Spines
+
+unit' : <T> -o pc 1.
+pair' : pc A & pc B -o pc (A * B).
+llam' : (hd A -o pc B) -o pc (A =o B).
+lam'  : (hd A -> pc B) -o pc (A => B).
+patom : pa A -o pc A.
+
+root : hd A -o spine A C -o pa C.
+
+pcan : pc A -o hd A.		% Other head are assumed in lam' and llam'
+
+nil : spine A A.
+pi1 : spine A C -o spine (A * B) C.
+pi2 : spine B C -o spine (A * B) C.
+l;  : pc A -o spine B C -o spine (A =o B) C.
+;   : pc A -> spine B C -o spine (A => B) C.
+

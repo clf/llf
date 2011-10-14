@@ -1,0 +1,37 @@
+%%% Turing Machine
+%%% Display utilities
+%%% Author: Iliano Cervesato
+%%% October 1996, revised December 1998
+
+conf : type.				% Just for debugging ...
+eoc : conf.
+- : symbol -> conf -> conf.		%infix right 10 -
+*> : state -> conf -> conf.		%infix right  10 *>
+
+collect : conf -> cell -> cell -> state  -> type.
+collect' : conf -> cell -> type.
+display : type.
+
+collect_eot : collect eoc eot C Q
+	       o- adjacent Next eot
+	       o- collect eoc Next C Q.
+
+collect_cell : collect ID Curr C Q
+		o- contains Curr S
+		o- adjacent Next Curr
+		o- collect (S - ID) Next C Q.
+
+collect_state : collect ID Curr Curr  Q
+		 o- contains Curr S
+		 o- adjacent Next Curr
+		 o- collect' (Q *> S - ID) Next.
+
+collect'_cell : collect' ID Curr
+		 o- contains Curr S
+		 o- adjacent Next Curr
+		 o- collect' (S - ID) Next.
+
+collect'_eot : collect' ID eot
+		o- {x:collect' ID eot} display.
+
+the_end : display.

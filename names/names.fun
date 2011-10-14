@@ -1,0 +1,352 @@
+(* Names of Constants and Variables *)
+(* Author: Frank Pfenning *)
+(* Modified: Jeff Polakow *)
+
+functor Names (structure Global : GLOBAL
+	       structure IntSyn' : INTSYN
+	       structure HashTable : TABLE where type key = string
+               structure RedBlackTree : TABLE where type key = string
+               structure IntTree : TABLE where type key = int)
+ 
+  : NAMES
+  (* :>  NAMES where IntSyn = IntSyn' *) =
+struct
+
+  structure IntSyn = IntSyn'
+
+  exception Error of string
+
+  structure Fixity :> FIXITY =
+  struct
+    datatype associativity = Left | Right | None
+
+    type precedence = int
+
+    val maxPrec = 9999
+    val minPrec = 0
+
+    val projPrec = maxPrec+2
+    val appPrec = maxPrec+1
+    val withPrec = minPrec-1
+    val absPrec = minPrec-2
+    val arrowPrec = minPrec-3
+    val pairPrec = minPrec-4
+    val colonPrec = minPrec-5
+    val piPrec = minPrec-6
+    val ctxPrec = minPrec-7
+
+    datatype fixity =
+        Nonfix
+      | Infix of precedence * associativity
+      | Prefix of precedence
+      | Postfix of precedence
+
+    fun prec (Infix(p,_)) = p
+      | prec (Prefix(p)) = p
+      | prec (Postfix(p)) = p
+      | prec (Nonfix) = maxPrec+1
+
+    fun toString (Infix(p,Left)) = "%infix left " ^ Int.toString p
+      | toString (Infix(p,Right)) = "%infix right " ^ Int.toString p
+      | toString (Infix(p,None)) = "%infix none " ^ Int.toString p
+      | toString (Prefix(p)) = "%prefix " ^ Int.toString p
+      | toString (Postfix(p)) = "%postfix " ^ Int.toString p
+      | toString (Nonfix) = "%nonfix"
+
+  end  (* structure Fixity *)
+
+  fun argNumber (Fixity.Nonfix) = 0
+    | argNumber (Fixity.Infix _) = 2
+    | argNumber (Fixity.Prefix _) = 1
+    | argNumber (Fixity.Postfix _) = 1
+
+  fun checkAtomic (name, IntSyn.Pi (D, V), 0) =
+      raise Error ("Constant " ^ name ^ " takes too many explicit arguments for given fixity")
+    | checkAtomic (name, IntSyn.Pi (D, V), n) =
+	checkAtomic (name, V, n-1)
+    | checkAtomic (_, IntSyn.Uni _, 0) = ()
+    | checkAtomic (_, IntSyn.Root _, 0) = ()
+    | checkAtomic (name, _, _) =
+      raise Error ("Constant " ^ name ^ " takes too few explicit arguments for given fixity")
+
+  fun checkArgNumber (IntSyn.ConstDec (name, i, V, L), n) =
+	checkAtomic (name, V, i+n)
+    | checkArgNumber (IntSyn.ConstDef (name, i, _, V, L), n) =
+	checkAtomic (name, V, i+n)
+    | checkArgNumber (IntSyn.LinDec (name, i, V, L), n) =
+	checkAtomic (name, V, i+n)
+
+  fun checkFixity (_, _, 0) = ()
+    | checkFixity (name, NONE, n) =
+      raise Error ("Undeclared identifier " ^ name ^ " cannot be given fixity")
+    | checkFixity (name, SOME(cid), n) =
+	checkArgNumber (IntSyn.sgnLookup (cid), n)
+
+  datatype nameInfo = NameInfo of IntSyn.name * Fixity.fixity
+
+  local
+    val maxCid = Global.maxCid
+    val nameArray = Array.array (maxCid+1, NameInfo ("", Fixity.Nonfix))
+      : nameInfo Array.array
+
+    val sgnHashTable : IntSyn.cid HashTable.Table = HashTable.new (4096)
+    (* val hashInsert = HashTable.insert sgnHashTable *)
+    val hashInsert = HashTable.insertShadow sgnHashTable
+    val hashLookup = HashTable.lookup sgnHashTable
+    fun hashClear () = HashTable.clear sgnHashTable
+
+    val namePrefTable : IntSyn.name IntTree.Table = IntTree.new (0)
+    val namePrefInsert = IntTree.insert namePrefTable
+    val namePrefLookup = IntTree.lookup namePrefTable
+    fun namePrefClear () = IntTree.clear namePrefTable
+  in
+    fun reset () = (hashClear (); namePrefClear ())
+    
+    fun override (cid, NameInfo (name, fixity)) =
+        (* should shadowed identifiers keep their fixity? *)
+          Array.update (nameArray, cid, NameInfo("%" ^ name ^ "%", fixity))
+
+    fun shadow NONE = ()
+      | shadow (SOME(_,cid)) =
+          override (cid, Array.sub (nameArray, cid))
+
+    fun installName (name, cid) =
+        let
+	  val shadowed = hashInsert (name, cid)
+	in
+	  (Array.update (nameArray, cid, NameInfo (name, Fixity.Nonfix));
+	   shadow shadowed)
+	end
+
+    fun nameLookup name = hashLookup name
+
+    fun constName (cid) =
+        (case Array.sub (nameArray, cid)
+	   of (NameInfo (name, _)) => name)
+
+    fun installFixity (name, fixity) = 
+        let
+	  val cidOpt = hashLookup name
+	in
+	  (checkFixity (name, cidOpt, argNumber fixity);
+	   if !Global.chatter >= 3
+	     then TextIO.print ((if !Global.chatter >= 4 then "%" else "")
+				^ Fixity.toString fixity ^ " " ^ name ^ ".\n")
+	   else ();
+	   Array.update (nameArray, valOf cidOpt,
+			 NameInfo (name, fixity)))
+	end
+
+    fun getFixity (cid) =
+        (case Array.sub (nameArray, cid)
+	   of (NameInfo (_, fixity)) => fixity)
+
+    fun fixityLookup (name) =
+        (case hashLookup (name)
+	   of SOME(cid) => getFixity (cid)
+            | NONE => Fixity.Nonfix)
+
+    (* Name Preferences *)
+
+    fun installNamePref' (name, NONE, namePref) =
+        raise Error ("Undeclared identifier " ^ name ^ " cannot be given name preference")
+      | installNamePref' (name, SOME(cid), namePref) =
+	let
+	  val L = IntSyn.constUni (cid)
+	  val _ = case L
+	            of IntSyn.Type => raise Error ("Object constant " ^ name ^ " cannot be given name preference\n"
+						   ^ "Name preferences can only be established for type families")
+		     | IntSyn.Kind => ()
+	in
+	  namePrefInsert (cid, namePref)
+	end
+
+    fun installNamePref (name, namePref) =
+          installNamePref' (name, nameLookup name, namePref)
+
+
+    fun namePrefOf'' (NONE) = "X"
+      | namePrefOf'' (SOME(namePref)) = namePref
+
+    fun namePrefOf' (NONE) = "X"
+      | namePrefOf' (SOME(cid :: nil)) = namePrefOf'' (namePrefLookup (cid))
+      | namePrefOf' (SOME _) = "X"
+
+    fun namePrefOf (V) = namePrefOf' (IntSyn.targetFamList V)
+
+  end  (* local ... *)
+
+  (* EVar and FVar names used during parsing and printing *)
+  (* These are reset for each declaration *)
+
+  local
+    datatype varEntry =
+        FVAR of IntSyn.Exp		(* global type V *)
+      | EVAR of IntSyn.Exp		(* EVar X *)
+
+    (* hashtable is too inefficient, since it is cleared too often *)
+    (* use red/black tree instead *)
+    (* size hint is ignored for red/black trees *)
+    val varTable : varEntry RedBlackTree.Table = RedBlackTree.new (0)
+    val varInsert = RedBlackTree.insert varTable
+    val varLookup = RedBlackTree.lookup varTable
+    fun varClear () = RedBlackTree.clear varTable
+
+    (* EVar's must be lists, since they are identified by reference *)
+    (* Alternative possible if time stamps are introduced *)
+    val evarList : (IntSyn.Exp * string) list ref = ref nil
+    fun evarReset () = (evarList := nil)
+    fun evarLookup (IntSyn.EVar(r,_,_)) =
+        let fun evlk (nil) = NONE
+	      | evlk ((IntSyn.EVar(r',_,_), name)::l) =
+	        if r = r' then SOME(name) else evlk l
+	in
+	  evlk (!evarList)
+	end
+    fun evarInsert entry = (evarList := entry::(!evarList))
+
+    fun namedEVars () = !evarList
+
+    (* Since constraints are not printable at present, we only *)
+    (* return a list of names of EVars that have constraints on them *)
+    (* Note that EVars which don't have names, will not be considered! *)
+    fun evarCnstr' (nil, acc) = acc
+      | evarCnstr' ((IntSyn.EVar(ref(NONE), _, Constr as (_::_)), name)::l, acc) =
+          evarCnstr' (l, name::acc)
+      | evarCnstr' (_::l, acc) = evarCnstr' (l, acc)
+    fun evarCnstr () = evarCnstr' (!evarList, nil)
+
+    (* The indexTable maps a name to the last integer suffix used for it.
+       The resulting identifer is not guaranteed to be new, and must be
+       checked against the names of constants, FVars, EVars, and BVars.
+    *)
+    val indexTable : int RedBlackTree.Table = RedBlackTree.new (0)
+    val indexInsert = RedBlackTree.insert indexTable
+    val indexLookup = RedBlackTree.lookup indexTable
+    fun indexClear () = RedBlackTree.clear indexTable
+
+    fun nextIndex' (name, NONE) = (indexInsert (name, 1); 1)
+      | nextIndex' (name, SOME(i)) = (indexInsert (name, i+1); i+1)
+
+    fun nextIndex (name) = nextIndex' (name, indexLookup (name))
+  in
+    fun varReset () = (varClear (); evarReset (); indexClear ())
+
+    fun getFVarType (name) =
+        (case varLookup name
+	   of NONE => let
+			val V = IntSyn.newTypeVar ()
+			val _ = varInsert (name, FVAR (V));
+		      in 
+			 V
+		      end
+            | SOME(FVAR(V)) => V)
+	    (* other cases should be impossible *)
+
+    (* getEVar (name) => EVar identified by given name
+       If no EVar with this name exists, a new one will be
+       created in the empty context with variable type.
+       Used in parsing a query
+    *)
+    fun getEVar (name) =
+        (case varLookup name
+	   of NONE => let
+			val V = IntSyn.newTypeVar ()
+			val (X as (IntSyn.EVar(r,_,_))) = IntSyn.newEVar V
+			val _ = varInsert (name, EVAR (X))
+			val _ = evarInsert (X, name)
+		      in 
+			 X
+		      end
+            | SOME(EVAR(X)) => X)
+	    (* other cases should be impossible *)
+
+    fun varDefined (name) =
+        (case varLookup name
+	   of NONE => false
+            | SOME _ => true)
+
+    fun constDefined (name) =
+        (case nameLookup name
+	   of NONE => false
+            | SOME _ => true)
+
+    fun ctxDefined (G, name) =
+        let fun cdfd (IntSyn.Null) = false
+	      | cdfd (IntSyn.Decl(G', IntSyn.Dec(SOME(name'),_))) =
+                  name = name' orelse cdfd G'
+	      | cdfd (IntSyn.Decl(G', IntSyn.LDec(SOME(name'),_))) =
+                  name = name' orelse cdfd G'
+	      | cdfd (IntSyn.Decl(G', _)) = cdfd G'
+	in
+	  cdfd G
+	end
+
+    fun tryNextName (G, base) =
+        let
+	  val name = base ^ Int.toString (nextIndex (base))
+	in
+	  if varDefined name orelse constDefined name
+	     orelse ctxDefined (G,name)
+	    then tryNextName (G,base)
+	  else name
+	end
+
+    val takeNonDigits = Substring.takel (not o Char.isDigit)
+
+    fun baseOf (name) = Substring.string (takeNonDigits (Substring.all name))
+
+    fun newEVarName (G, X as IntSyn.EVar(r, V, Cnstr)) =
+        let
+	  (* use name preferences below *)
+	  val name = tryNextName (G, namePrefOf V)
+	in
+	  (evarInsert (X, name);
+	   name)
+	end
+
+    fun evarName (G, X) =
+        (case evarLookup X
+	   of NONE => let
+			val name = newEVarName (G, X)
+		      in
+			(varInsert (name, EVAR(X));
+			 name)
+		      end
+            | SOME (name) => name)
+
+    fun bvarName (G, k) =
+        (case IntSyn.ctxLookup (G, k)
+	   of IntSyn.Dec(SOME(name), _) => name
+	    | IntSyn.LDec(SOME(name), _) => name)
+              (* NONE should not happen *)
+
+    fun decName (G, IntSyn.Dec (NONE, V)) =
+        let (* use name preferences below *)
+	  val name = tryNextName (G, namePrefOf V)
+	in
+	  IntSyn.Dec (SOME(name), V)
+	end
+      | decName (G, D as IntSyn.Dec (SOME(name), V)) =
+	if varDefined name orelse constDefined name
+	  orelse ctxDefined (G, name)
+	  then IntSyn.Dec (SOME (tryNextName (G, baseOf name)), V)
+	else D
+      | decName (G, IntSyn.LDec (NONE, V)) =
+        let (* use name preferences below *)
+	  val name = tryNextName (G, namePrefOf V)
+	in
+	  IntSyn.LDec (SOME(name), V)
+	end
+      | decName (G, D as IntSyn.LDec (SOME(name), V)) =
+	if varDefined name orelse constDefined name
+	  orelse ctxDefined (G, name)
+	  then IntSyn.LDec (SOME (tryNextName (G, baseOf name)), V)
+	else D
+
+    val namedEVars = namedEVars
+    val evarCnstr = evarCnstr
+
+  end;  (* local varTable ... *)
+
+end;  (* functor Names *)

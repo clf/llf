@@ -1,0 +1,87 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic"
+% formalization - rules.
+% Meta-interpreted version.
+% Date: 29 July  1998
+% Author: Iliano Cervesato
+
+% Transitions of the train
+
+rrc_train_safe-app :       (usr (train safe))
+		         * (ubTimer d off)
+		         * (lbTimer b off)
+		         * (time T)
+		         * (plus valD T D)
+		         * (plus valB T B)
+		       ==> (usr (train appr))
+		         * (ubTimer d (at D))
+		         * (lbTimer b (at B))
+		         * (time T).
+
+rcc_train_app-cross :      (usr (train appr))
+		         * (lbTimer b (at B))
+		         * (time T)
+		         * (B <= T)
+		       ==> (usr (train crossing))
+		         * (lbTimer b off)
+		         * (time T).
+rcc_train_cross-safe :     (usr (train crossing))
+		       ==> (usr (train safe)).
+
+% Transitions of the signal
+
+rrc_signal_*-lower :       (ubTimer d (at D))
+		         * (ubTimer g off)
+		         * (time T)
+		         * (plus valG T G)
+		         * (usr (signal _))
+		       ==> (usr (signal lower))
+		         * (ubTimer d off)
+		         * (ubTimer g (at G))
+		         * (time T).
+rrc_signal_lower-raise :   (usr (train safe))
+			 * (usr (signal lower))
+		       ==> (usr (train safe))
+			 * (usr (signal raise)).
+
+% Transitions of the gate
+
+rrc_gate_*-mvdown :        (ubTimer g (at G))
+		         * (ubTimer l off)
+		         * (time T)
+		         * (plus valL T L)
+		         * (usr (gate _))
+		       ==> (usr (gate movingDown))
+		         * (ubTimer g off)
+		         * (ubTimer l (at L))
+		         * (time T).
+rrc_gate_mvdown-down :     (usr (gate movingDown))
+		         * (ubTimer l (at L))
+		       ==> (usr (gate down))
+		         * (ubTimer l off).
+rrc_gate_mvdown-mvup :     (usr (signal raise))
+		         * (usr (gate movingDown))
+		       ==> (usr (signal raise))
+		         * (usr (gate movingUp)).
+rrc_gate_down-mvup :       (usr (signal raise))
+		         * (usr (gate down))
+		       ==> (usr (signal raise))
+		         * (usr (gate movingUp)).
+rrc_gate_mvup-up :         (usr (gate movingUp))
+		       ==> (usr (gate up)).
+
+% Progress of time
+
+rrc_time :                 (timeOut (s O))
+	                 * (time T)
+	                 * (ubTimer d D)
+	                 * (ubTimer g G)
+	                 * (ubTimer l L)
+	                 * ((at T) < D)
+	                 * ((at T) < G)
+	                 * ((at T) < L)
+	               ==> (time (s T))
+	                 * (timeOut O)
+	                 * (ubTimer d D)
+	                 * (ubTimer g G)
+	                 * (ubTimer l L).

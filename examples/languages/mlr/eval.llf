@@ -1,0 +1,127 @@
+%%% Mini-ML with References, evaluation
+%%% Author: Iliano Cervesato
+
+
+%%% Contents of a cell
+
+contains: cell -> exp -> type.   %name contains Cn
+
+%{
+%mode -contains +C -V
+}%
+
+% Only run-time assumptions
+
+
+
+%%% Collection of all the cells in the store
+
+collect: store -> type.          %name collect Col
+
+col_empty : collect estore.
+col_item  : collect (S and (C == V))
+             o- contains C V
+             o- collect S.
+
+%{
+%mode -collect -S
+%lex ASSUME TERMINATION
+}%
+
+
+%%% Reading the value of a cell from the store
+
+read: cell -> exp -> type.       %name read R
+
+read_val  : read C V
+             o- contains C V
+             o- <T>.
+
+%{
+%mode -read +C -V
+}%
+
+
+%%% Evaluation
+
+ev : cont -> instr -> answer -> type.   %name ev E
+
+%{
+%mode -ev +C +I -A
+%lex C
+}%
+
+% Expressions
+
+ev_z        : ev K (eval z) A
+               o- ev K (return z) A.
+ev_s        : ev K (eval (s E)) A
+               o- ev (K - [x:exp] return (s x)) (eval E) A.
+ev_case     : ev K (eval (case E E1 E2)) A
+               o- ev (K - [x:exp] case* x E1 E2) (eval E) A.
+ev_pair     : ev K (eval (pair E1 E2)) A
+               o- ev (K - [x:exp] pair* x E2) (eval E1) A.
+ev_fst      : ev K (eval (fst E)) A
+               o- ev (K - [x:exp] fst* x) (eval E) A.
+ev_snd      : ev K (eval (snd E)) A
+               o- ev (K - [x:exp] snd* x) (eval E) A.
+ev_lam      : ev K (eval (lam E)) A
+               o- ev K (return (lam E)) A.
+ev_app      : ev K (eval (app E1 E2)) A
+               o- ev (K - [x:exp] app* x E2) (eval E1) A.
+ev_letval   : ev K (eval (letval E1 E2)) A
+               o- ev (K - [x:exp] eval (E2 x)) (eval E1) A.
+ev_letname  : ev K (eval (letname E1 E2)) A
+               o- ev K (eval (E2 E1)) A.
+ev_fix      : ev K (eval (fix E)) A
+               o- ev K (eval (E (fix E))) A.
+
+ev_cell     : ev K (eval (rf C)) A
+               o- ev K (return (rf C)) A.
+ev_ref      : ev K (eval (ref E)) A
+               o- ev (K - [x:exp] ref* x) (eval E) A.
+ev_deref    : ev K (eval (! E)) A
+               o- ev (K - [x:exp] deref* x) (eval E) A.
+ev_noop     : ev K (eval noop) A
+               o- ev K (return noop) A.
+ev_seq      : ev K (eval (E1 ; E2)) A
+               o- ev (K - [x:exp] eval E2) (eval E1) A.
+ev_assign   : ev K (eval (E1 is E2)) A
+               o- ev (K - [x:exp] x is*1 E2) (eval E1) A.
+ev_while    : ev K (eval (while E1 E2)) A
+	       o- ev (K - [x:exp] case* x noop [x']
+			E2 ; while E1 E2) (eval E1) A.
+
+% Values
+
+ev_init     : ev init (return V) (close S V)
+               o- collect S.
+ev_cont     : ev (K - I) (return V) A
+               o- ev K (I V) A.
+
+
+% Auxiliary instructions
+
+ev_case*1   : ev K (case* z E1 E2) A
+               o- ev K (eval E1) A.
+ev_case*2   : ev K (case* (s V) E1 E2) A
+               o- ev K (eval (E2 V)) A.
+ev_pair*    : ev K (pair* V E) A
+               o- ev (K - [x:exp] return (pair V x)) (eval E) A.
+ev_fst*     : ev K (fst* (pair V1 V2)) A
+               o- ev K (return V1) A.
+ev_snd*     : ev K (snd* (pair V1 V2)) A
+               o- ev K (return V2) A.
+ev_app*     : ev K (app* (lam E1) E2) A
+               o- ev (K - [x:exp] eval (E1 x)) (eval E2) A.
+
+ev_ref*     : ev K (ref* V) (new A)
+               o- ({c:cell} contains c V -o ev K (return (rf c)) (A c)).
+ev_deref*   : ev K (deref* (rf C)) A
+               o- read C V
+               &  ev K (return V) A.
+ev_assign*1 : ev K ((rf C) is*1 E) A
+               o- ev (K - [x:exp] (rf C) is*2 x) (eval E) A.
+ev_assign*2 : ev K ((rf C) is*2 V) A
+               o- contains C V'
+               o- (contains C V -o ev K (return noop) A).

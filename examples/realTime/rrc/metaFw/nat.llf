@@ -1,0 +1,33 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic",
+% natural numbers.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+nat: type.
+z : nat.
+s : nat -> nat.
+
+0 = z.
+1 = s 0.
+2 = s 1.
+3 = s 2.
+4 = s 3.
+5 = s 4.
+10 = s (s (s (s (s 5)))).
+15 = s (s (s (s (s 10)))).
+
+add : nat -> nat -> nat -> type.
+add_z : add N z N.
+add_s : add N (s M) (s R)
+	 <- add N M R.
+
+lt : nat -> nat -> type.
+lt_z : lt z (s M).
+lt_s : lt (s N) (s M)
+	 <- lt N M.
+
+leq : nat -> nat -> type.
+leq_eq : leq N N.
+leq_lt : leq N M
+	  <- lt N M.

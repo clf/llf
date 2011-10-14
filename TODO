@@ -1,0 +1,5 @@
+* Allow rhs of definitions to mention linear assumptions.
+
+* Allow query files to contain declarations (makes it easier to separate
+  the specification of a problem from the specification of an instance or
+  test).

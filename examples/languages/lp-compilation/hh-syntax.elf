@@ -1,0 +1,17 @@
+%%% Compilation of hereditary Harrop formulas, syntax
+%%% Author: Iliano Cervesato
+%%% Date: 21 Nov. 1997
+
+o   : type.             % Formulas
+atm : type.             % Atomic formulas
+i   : type.             % Terms
+%name o   A B D
+%name atm P
+%name i   T
+
+
+atom : atm -> o.
+true : o.
+and  : o -> o -> o.
+imp  : o -> o -> o.
+all  : (i -> o) -> o.

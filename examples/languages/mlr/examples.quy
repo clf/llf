@@ -1,0 +1,176 @@
+%%% Mini-ML with References
+%%% Author: Iliano Cervesato
+
+%% Factorial
+
+1 = s z.
+2 = s 1.
+3 = s 2.
+4 = s 3.
+
+plus = lam [m]
+       lam [n]
+       letval
+	  (fix [plus]
+	     lam [x]
+	     lam [y]
+	        case x
+		     y
+		     [x'] s (app (app plus x') y))
+	  [plus]
+	     app (app plus m) n.
+
+
+times = lam [m]
+        lam [n]
+        letval
+          (fix [times]
+	     lam [x]
+	     lam [y]
+	        case x
+		     z
+		     [x'] app (app plus (app (app times x') y)) y)
+	  [times]
+	     app (app times m) n.
+
+
+fact = lam [n]
+       letval
+	  (fix [fact]
+	     lam [x]
+	        case x
+		    (s z)
+		    [x'] app (app times x) (app fact x'))
+	  [fact]
+	     app fact n.
+
+pred = lam [n]
+       case n
+            z
+            [n'] n'.
+
+fact! = lam [n]
+        letval (ref n) [n']
+        letval (ref (s z)) [r]
+          while (! n')
+            (r is (app (app times (! r)) (! n')) ;
+	     n' is (app pred (! n'))) ;
+          ! r.
+
+while' = lam [b]
+         lam [e]
+         letval
+           (fix [while']
+	      case (app b noop)
+	            noop
+	            [x] (app e noop) ; while')
+           [while']
+	      while'.
+
+fact!' = lam [n]
+         letval (ref n) [n']
+         letval (ref (s z)) [r]
+           app (app while' (lam [dummy] ! n'))
+           (lam [dummy]
+	      (r is (app (app times (! r)) (! n'))) ;
+	       n' is (app pred (! n'))) ;
+            ! r.
+
+%query 1 1
+tpe fact T.
+
+%query 1 1
+ev init (eval (app fact 2)) A.
+
+%query 1 1
+tpe fact! T.
+
+%query 1 1
+ev init (eval (app fact! 2)) A.
+
+%query 1 1
+tpe while' T.
+
+%query 1 1
+tpe fact!' T.
+
+%query 1 1
+ev init (eval (app fact!' 2)) A.
+
+
+
+%% Value-polymorphism test
+
+trap = letname
+          (ref (lam [x]x))
+          ([f] f is lam ([x] s x) ;
+	       app (! f) (lam [z]z)).
+
+tp_trap = T1 arrow T1.
+
+tpd_trap : tpe trap tp_trap
+ = tpe_letname
+      (tpe_seq
+          (tpe_app
+	     (tpe_lam ([x:exp] [Te1:tpe x T1] Te1))
+	     (tpe_deref
+		(tpe_ref (tpe_lam ([x:exp] [Te2:tpe x (T1 arrow T1)] Te2)))))
+	 (tpe_assign
+	    (tpe_lam ([x:exp] [Te3:tpe x nat] tpe_s Te3))
+	    (tpe_ref (tpe_lam ([x:exp] [Te4:tpe x nat] Te4))))).
+
+a_trap =
+   new
+      ([C1:cell]
+          new
+             ([C2:cell]
+                 close
+                    (estore and (C1 == lam ([E2:exp] s E2))
+                        and (C2 == lam ([E1:exp] E1))) (lam ([E3:exp] E3)))).
+
+evd_trap : ev init (eval trap) a_trap
+ = ev_letname ^
+      (ev_seq ^
+          (ev_assign ^
+              (ev_ref ^
+                  (ev_lam ^
+                      (ev_cont ^
+                          (ev_ref* ^
+                              ([c:cell] [Cn1^contains c (lam ([E4:exp] E4))]
+                                  ev_cont ^
+                                     (ev_assign*1 ^
+                                         
+(ev_lam ^
+    (ev_cont ^
+        (ev_assign*2 ^
+            ([Cn2^contains c (lam ([E5:exp] s E5))]
+                ev_cont ^
+                   (ev_app ^
+                       (ev_deref ^
+                           (ev_ref ^
+                               (ev_lam ^
+                                   (ev_cont ^
+                                       (
+ev_ref* ^
+   ([c1:cell] [Cn3^contains c1 (lam ([E6:exp] E6))]
+       ev_cont ^
+          (ev_deref* ^
+              (read_val ^ () ^ Cn3 ,
+                  ev_cont ^
+                     (ev_app* ^
+                         (ev_lam ^
+                             (ev_cont ^
+                                 (ev_lam ^
+                                     (ev_init ^
+                                         (col_item ^
+                                             (col_item ^ col_empty ^ Cn2) ^ Cn3)))))))))))))))) ^
+            Cn1))))))))))).
+
+%query 1 1
+tpe trap T.
+
+%query 1 1
+ev init (eval trap) A.
+
+%query 1 1
+pr0 evd_trap tpd_trap TA.

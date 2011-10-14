@@ -1,0 +1,22 @@
+This directory contains three encodings of the purely multiplicative
+fragment of the linear adaptation of the lambda calculus in the style
+of Curry:
+
+- hoas.llf: the language is defined using traditional higher-order
+  abstract syntax.  Linearity and typing restrictions are enforced
+  at the semantic level.
+
+- lhoas.llf: the language is defined using linear higher-order
+  abstract syntax.  Only typing restrictions are enforced at the
+  semantic level.
+
+- tlhoas.llf: the language is defined using linear higher-order
+  abstract syntax and enforces typing restrictions directly.
+  Neither typing nor linearity need to be defined at the semantic
+  level.
+
+More on these encodings in:
+
+  Iliano Cervesato: "A Linear Logical Framework", Ph. D. thesis,
+  Department of Computer Science, University of Turin, Italy.
+  English version to appear shortly.

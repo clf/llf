@@ -1,0 +1,34 @@
+go : exp -> exp -> exp -> type.
+buildgo	: exp -> exp -> exp -> type.
+consumemem : type.
+cons : exp -> type.
+wrapper : exp -> exp -> exp -> type.
+
+consumemem1 : consumemem <- maxmem MAXMEM <- binc MAXMEM FINSP
+	o- sp 1 FINSP <- ble 0 MAXMEM o- cons MAXMEM.
+cons1 : cons 0.
+cons2 : cons X <- beq 0 X 0 <- bdec X X2 o- mem 1 X VAL o- cons X2.
+
+go1 : go MEM F OUTPUT <- prog L (annot F St Fin Arg Pre Post CS)
+	o- binc MEM SPSTART <- ble 0 MEM
+	o- (maxmem MEM -> sp 1 SPSTART -o fun 1 F -o buildgo MEM St OUTPUT).
+buildgo1 : buildgo 0 L OUTPUT o- run L OUTPUT.
+buildgo2 : buildgo MEM L OUTPUT <- beq 0 MEM 0 <- bdec MEM MEM2
+	o- (mem 1 MEM unk -o buildgo MEM2 L OUTPUT).
+
+setmax : max ~4.
+
+wrap1 : wrapper M F X o-
+	 (depregs 1 (upd ra unk (upd r1 unk (upd r2 unk (upd r3 unk
+	     (upd r4 unk none))))) -o depth 1 -o go M F X).
+
+% Program in state2.llf
+
+term : run L OUTPUT
+	o- depregs 1 RS
+	<- sel r1 RS OUTPUT
+	o- consumemem	% consumes SP and memory
+	o- depth 1 o- fun 1 F
+	<- prog L end.
+%	o- <T>.
+

@@ -1,0 +1,74 @@
+%%% Eta expansion of terms in external representation
+%%% Authors: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+%%% elim M  holds if M is an elimination form.
+%%% This is used to reduce non-determinism during eta-expansion.
+%%% It is dynamically assumed for parameters as they are introduced.
+elim : tm A -> type.
+
+elim_fst : elim (fst ^ M).
+elim_snd : elim (snd ^ M).
+elim_lapp: elim (lapp ^ M1 ^ M2).
+elim_app : elim (app ^ M1 M2).
+
+%%% tcan A M N  holds if M eta-expands to N.
+%%% Defined structurally on A.
+%%% tatm M N  holds if N is the pre-atomic form of M.
+%%% Defined structurally on M.
+tcan : {A:tp} tm A -> can A -> type.
+tatm : tm A -> atm A -> type.
+
+tcan_1 : tcan 1 (unit ^ ()) (unit+ ^ ())
+	  o- <T>.
+tcan_1_expand : tcan 1 M (unit+ ^ ())
+		 o- elim M
+		 o- <T>.
+tcan_* : tcan (A1 * A2) (pair ^ (M1, M2)) (pair+ ^ (N1, N2))
+	  o- tcan A1 M1 N1
+	   & tcan A2 M2 N2.
+tcan_*_expand : tcan (A1 * A2) M (pair+ ^ (N1, N2))
+		 o- elim M
+		 o- tcan A1 (fst ^ M) N1
+		  & tcan A2 (snd ^ M) N2.
+tcan_=o : tcan (A1 =o A2) (llam ^ M2) (llam+ ^ N2)
+	   o- ({x:tm A1} {y:atm A1}
+		 elim x
+		 -> tatm x y
+		 -o tcan A2 (M2 ^ x) (N2 ^ y)).
+tcan_=o_expand : tcan (A1 =o A2) M (llam+ ^ N2)
+		  o- elim M
+		  o- ({x:tm A1} {y:atm A1}
+			elim x
+			-> tatm x y
+			-o tcan A2 (lapp ^ M ^ x) (N2 ^ y)).
+tcan_=> : tcan (A1 => A2) (lam ^ M2) (lam+ ^ N2)
+	   o- ({x:tm A1} {y:atm A1}
+		 elim x
+		 -> tatm x y
+		 -> tcan A2 (M2 x) (N2 y)).
+tcan_=>_expand : tcan (A1 => A2) M (lam+ ^ N2)
+		  o- elim M
+		  o- ({x:tm A1} {y:atm A1}
+			elim x
+			-> tatm x y
+			-> tcan A2 (app ^ M x) (N2 y)).
+tcan_base : tcan (base P) M (ca ^ N)
+	     o- tatm M N.
+
+tatm_pair : tatm (pair ^ (M1, M2)) (ac ^ N)
+	     o- tcan _ (pair ^ (M1, M2)) N.
+tatm_fst : tatm (fst ^ M1) (fst+ ^ N1)
+	    o- tatm M1 N1.
+tatm_snd : tatm (snd ^ M1) (snd+ ^ N1)
+	    o- tatm M1 N1.
+tatm_llam: tatm (llam ^ M1) (ac ^ N)
+	    o- tcan _ (llam ^ M1) N.
+tatm_lapp: tatm (lapp ^ M1 ^ M2) (lapp+ ^ N1 ^ N2)
+	    o- tatm M1 N1
+	    o- tcan _ M2 N2.
+tatm_lam : tatm (lam ^ M1) (ac ^ N)
+	    o- tcan _ (lam ^ M1) N.
+tatm_app : tatm (app ^ M1 M2) (app+ ^ N1 N2)
+	    o- tatm M1 N1
+	    <- tcan _ M2 N2.

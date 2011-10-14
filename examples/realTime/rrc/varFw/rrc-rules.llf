@@ -1,0 +1,121 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic"
+% formalization - rules.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+% Stop
+
+stop : rrc T Tr Sig Gate Td Tg Tl Tb
+	o- train Tr
+	o- signal Sig
+	o- gate Gate
+	o- time T
+	o- ubTimer d Td
+	o- ubTimer g Tg
+	o- ubTimer l Tl
+	o- lbTimer b Tb
+	o- timeOut O.
+
+
+% Transitions of the train
+
+rrc_train_safe-app : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+		      o- train safe
+		      o- ubTimer d off
+		      o- lbTimer b off
+		      o- time T
+		      o- add valD T D
+		      o- add valB T B
+		      o- (     train appr
+			    -o ubTimer d (at D)
+			    -o lbTimer b (at B)
+			    -o time T
+			    -o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+rrc_train_app-cross : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+		       o- train appr
+		       o- lbTimer b (at B)
+		       o- time T
+		       o- leq B T
+		       o- (     train crossing
+			     -o lbTimer b off
+			     -o time T
+			     -o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+rrc_train_cross-safe : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+			o- train crossing
+			o- (     train safe
+			      -o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+
+% Transitions of the signal
+
+rrc_signal_*-lower : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+			  o- ubTimer d (at D)
+			  o- ubTimer g off
+			  o- time T
+			  o- add valG T G
+			  o- signal _
+			  o- (signal lower
+				-o ubTimer d off
+				-o ubTimer g (at G)
+				-o time T
+				-o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+rrc_signal_lower-raise : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+			  o- train safe
+			  o- signal lower
+			  o- (     train safe
+				-o signal raise
+				-o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+
+% Transitions of the gate
+
+rrc_gate_*-mvdown : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+		      o- ubTimer g (at G)
+		      o- ubTimer l off
+		      o- time T
+		      o- add valL T L
+		      o- gate _
+		      o- (     gate movingDown
+			    -o ubTimer g off
+			    -o ubTimer l (at L)
+			    -o time T
+			    -o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+rrc_gate_mvdown-down : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+			o- gate movingDown
+			o- ubTimer l (at L)
+			o- (     gate down
+			      -o ubTimer l off
+			      -o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+rrc_gate_mvdown-mvup : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+			o- signal raise
+			o- gate movingDown
+			o- (     signal raise
+			      -o gate movingUp
+			      -o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+rrc_gate_down-mvup : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+		      o- signal raise
+		      o- gate down
+		      o- (     signal raise
+			    -o gate movingUp
+			    -o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+rrc_gate_mvup-up : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+		    o- gate movingUp
+		    o- (     gate up
+			  -o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').
+
+% Progress of time
+
+rrc_time : rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb'
+	    o- timeOut (s O)
+	    o- time T
+	    o- ubTimer d D
+	    o- ubTimer g G
+	    o- ubTimer l L
+	    o- tLT (at T) D
+	    o- tLT (at T) G
+	    o- tLT (at T) L
+	    o- (     time (s T)
+		  -o timeOut O
+		  -o ubTimer d D
+		  -o ubTimer g G
+		  -o ubTimer l L
+		  -o rrc T' Tr' Sig' Gate' Td' Tg' Tl' Tb').

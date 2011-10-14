@@ -1,0 +1,59 @@
+% Needham-Schroeder Public Key Protocol (short version -- no server)
+% Date: 11 September 1998
+% Author: Nancy Durgin
+% Revised: Iliano Cervesato, Sept. 26
+
+
+%% Needham Schroeder public key authentication (simplified)
+%      A -> B : enc(kb, <Na,A>)
+%      B -> A : enc(ka, <Na, Nb>)
+%      A -> B : enc(kb, Nb)
+
+ns : protocol.
+
+% Alice's role
+
+a0 : key -> type.
+a1 : key -> key -> msg -> type.
+a2 : key -> key -> msg -> msg -> type.
+
+nsA1 : loop
+        o- annKey B
+        o- a0 A
+        o- ({Na:atm}
+	         a1 A B (@ Na)
+	      -o toNet ns 1 (crypt ((@ Na) * (@ (k2m A))) B)
+	      -o loop).
+
+nsA2 : loop
+        o- a1 A B X
+        o- fromNet ns 2 (crypt (X * Y) A)
+        o- (     toNet ns 3 (crypt Y B)
+	      -o a2 A B X Y
+	      -o loop).
+
+% Bob's Role
+
+b0 : key -> type.
+b1 : key -> key -> msg -> msg -> type.
+b2 : key -> key -> msg -> msg -> type.
+
+nsB1 : loop
+        o- b0 B
+        o- fromNet ns 1 (crypt (X * (@ (k2m A))) B)
+        o- annKey A
+        o- (     {Nb:atm} b1 B A X (@ Nb)
+	      -o toNet ns 2 (crypt (X * (@ Nb)) A)
+	      -o loop).
+
+nsB2 : loop
+        o- b1 B A X Y
+        o- fromNet ns 3 (crypt Y B)
+        o- (b2 B A X Y -o loop).
+
+% Termination condition
+
+nsDone: loop
+	 o- b2 B1 A1 X1 Y1
+	 o- a2 A2 B2 X2 Y2
+	 o- <T>.

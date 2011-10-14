@@ -1,0 +1,43 @@
+%%% Compilation of hereditary Harrop formulas, abstract machine
+%%% Author: Iliano Cervesato
+%%% Date: 21 Nov. 1997
+
+cClause : (atm -> cg) -> type.   % Compiled clause (program assumption)
+gRun    : g -> type.             % Goal provability
+cgRun   : cg -> type.            % Compilation goal provability
+%name cClause L
+%name gRun    R
+%name cgRun   S
+
+rg_atom : gRun (gAtom P)
+	   <- cClause C
+	   <- cgRun (C P).
+
+rg_true : gRun gTrue.
+
+rg_and  : gRun (gAnd G1 G2)
+	   <- gRun G1
+	   <- gRun G2.
+
+rg_imp  : gRun (gImp C G)
+	   <- (cClause C -> gRun G).
+
+rg_all  : gRun (gAll G)
+	   <- ({x:i} gRun (G x)).
+
+
+rcg_eq   : cgRun (cgEq P P).
+
+rcg_or1  : cgRun (cgOr C1 C2)
+	    <- cgRun C1.
+
+rcg_or2  : cgRun (cgOr C1 C2)
+	    <- cgRun C2.
+
+rcg_and  : cgRun (cgAnd C G)
+	    <- cgRun C
+	    <- gRun G.
+
+rcg_some : {T:i}
+	   cgRun (cgSome C)
+	    <- cgRun (C T).

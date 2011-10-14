@@ -1,0 +1,3 @@
+The exception occurs upon loading:
+use "config-SAL-notsafe.sml"
+and is in the file safe.llf

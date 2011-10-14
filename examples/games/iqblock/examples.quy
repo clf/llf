@@ -1,0 +1,7 @@
+%%% The IqBlock game
+%%% Author: Frank Pfenning
+
+%% Find the first two solutions
+
+%query * 2
+solve.

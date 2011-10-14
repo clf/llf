@@ -1,0 +1,111 @@
+Fri Apr 25 21:45:45 1997, from whnf.fun, function whnfRedex. -fp
+	  (* because   G |- ([V2''] U1) [s1] : ({V2''} V1'') [s1]
+	     which is  G |- [V2'] U1 [1 . (s1 o ^)] : {V2'' [s1]} V1' [1 . (s1 o ^)]
+	     and       G |- U2 [s2] . S[s2] : ({W2''} W1'')[s2] > P' [s2]
+	     which is  G |- U2 [s2] . S[s2] : ({W2'' [s2]} W1'' [1 . (s2 o ^)]
+	                                                        > P' [s2]
+		 
+	     where     G |- V1[s1] = ({V2''} V1'') [s1] 
+		          = V2[s2] = ({W2''} W1'') [s2] = {V2'} V1' : L
+	     and hence G |- V2''[s1] = W2''[s2] = V2' : L
+       
+	     Hence     G |- [V2'] U1 [1 . (s1 o ^)] : {V2'} V1' 
+	     Inversion G |- U2 [s2] : V2'
+	     App       G |- ([V2'] U1 [1 . (s1 o ^)]  U2 [s2]) : V1'
+	     Rewrite:  G |- ([V2'] U1 [1 . (s1 o ^)]  U2 [s2])
+	                   = U1 [1 . (s1 o ^)] [U2 [s2]. id]
+	                   = U1 [U2 [s2] . (s1 o id)]
+	                   = U1 [U2 [s2] . s1] : V1'
+
+	     By invar  G |- s1 : G1
+	     and also  G |- U2 [s2] : V2' = V2''[s1] 
+	     by Dot    G |- U2 [s2]. s1 : G1, V2''
+
+	     By invar  G1, V2'' |- U1 : V1''
+	  *)
+
+Fri Apr 25 22:28:18 1997 from conv.fun. -fp
+    (* shiftCon (C) = C[^]
+
+       Invariant:
+       If   G |- C : V
+       then G, V' |- C[^] : V[^]
+     *)
+    fun shiftCon (BVar (n)) = BVar (n+1)
+      | shiftCon (U as Const _) = U
+      | shiftCon (U as Defn _) = U
+      | shiftCon (FVar (x, V, s)) = FVar (x, V, comp (s, shift))
+
+    (* convAbs ((U1, s1), U2) = B
+
+       Invariant: 
+       If   G |- s1 : G1    G1 |- [V1'] U1 : V1    (U1,s1) in whnf
+            G |- U2.S2 : V2    
+            G |- V1[s1] = V2  : L
+       then B iff G |- U1 [1.s1 o ^1] = (U2.S2[^] 1) : V2
+    *)
+(*    and convAbs (Us as (Abs (D1, U1), s1), R as Root (C, S)) = 
+          convExp ((U1, dot1 s1), (Redex (EClo (R, shift), App (Root (BVar (1), Nil), Nil)), id))
+*)
+
+Sat Apr 26 08:25:32 1997 -fp List.revAppend now in the standard basis library
+
+  fun revAppend (nil, k) = k
+    | revAppend (x::l, k) = revAppend (l, x::k)
+
+Sat Apr 26 09:09:30 1997 Removing crutch -fp
+(* The ETA table
+     
+             Uni   Pi  Abs Root EVar
+       Uni     1    -    -    -    -
+       Pi      -    4    -    -    0
+       Abs     -    -    5    6    6
+       Root    -    -    7    3    9 
+       EVar    -    9    7    9    8
+     *)
+
+Sun Apr 27 19:48:27 1997 -fp linear search before lookup.
+
+    fun sgnHash name =
+      let fun sgnHash' m  = 
+		if m<0 then NONE
+		else sgnHash'' (m, Array.sub (sgnArray, m))
+	  and sgnHash'' (m, ConstDec (name', _, _, _)) =
+	      if name = name' then SOME(m) else sgnHash' (m-1)
+	    | sgnHash'' (m, ConstDef(name', _, _, _, _)) =
+	      if name = name' then SOME(m) else sgnHash' (m-1)
+      in
+	sgnHash' (!sgnSize - 1)
+      end
+
+Thu Jun  5 09:59:56 1997 -fp from tools.sml
+
+fun whnfSub (s as Shift _) = s
+  | whnfSub (Dot (Con (FVar (x, U, s')), s)) =
+      Dot (Con (FVar (x, whnfTerm (Whnf.whnf (U,id)), whnfSub s')), whnfSub s)
+  | whnfSub (Dot (Con (C), s)) =
+      Dot (Con (C), whnfSub (s))
+  | whnfSub (Dot (Exp (U,V), s)) =
+      Dot (Exp (whnfTerm (Whnf.whnf (U, id)), whnfTerm (Whnf.whnf (V,id))),
+	   whnfSub(s))
+
+and whnfTerm (U, s) 
+  = EClo (U, whnfSub s)
+
+
+fun whnfConstraints nil = nil
+  | whnfConstraints (Eqn(a,b)::t) = 
+      Eqn (whnfTerm (Whnf.whnf (a, id)), whnfTerm (Whnf.whnf (b,id))) ::
+      whnfConstraints t
+
+Thu Jun  5 15:46:10 1997 -fp fron intsyn.fun
+"optimized" version of headSub
+
+  and headSub (Idx (n), s) = bvarSub (n, s)
+(*
+    | headSub (Exp (U, V), Shift (0)) = Exp (U, V)                         (* optimization --cs *)
+    | headSub (Exp (EClo (U, s'), V), s) = Exp (EClo (U, comp (s', s)),V)  (* optimization --cs *) 
+    | headSub (Exp (Root (C, Nil), _), s) = conSub (C, s)                  (* optimization --cs *)
+      (* is it better to treat this case in whnfRedex (Lam, App)? --cs*)
+*)
+    | headSub (Exp (U, V), s) = Exp(EClo (U, s),V)

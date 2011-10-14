@@ -1,0 +1,254 @@
+%%% Linearity check for Classical Linear Sequent Calculus LV
+%%% Author: Frank Pfenning
+
+%% Linear functions in positive formula
+
+linp : (pos A -> #) -> type.
+
+%mode -linp +D
+%lex D
+
+linp_axiom    : linp ([p] axiom N p).
+
+linp_timesr_0 : linp ([p] timesr D1 D2 p).
+
+linp_timesr_1 : linp ([p] timesr (D1 p) D2 P)
+		<- ({p1} linp ([p] D1 p p1)).
+
+linp_timesr_2 : linp ([p] timesr D1 (D2 p) P)
+		<- ({p2} linp ([p] D2 p p2)).
+
+linp_timesl   : linp ([p] timesl (D1 p) N)
+		<- ({n1} {n2} linp ([p] D1 p n1 n2)).
+
+linp_oner_0   : linp ([p] oner p).
+
+linp_onel     : linp ([p] onel (D1 p) N)
+		<- linp ([p] D1 p).
+
+linp_andr_0   : linp ([p] andr D1 D2 p).
+
+linp_andr     : linp ([p] andr (D1 p) (D2 p) P)
+		 <- ({p1} linp ([p] D1 p p1))
+		 <- ({p2} linp ([p] D2 p p2)).
+
+linp_andl1    : linp ([p] andl1 (D1 p) N)
+		 <- ({n1} linp ([p] D1 p n1)).
+
+linp_andl2    : linp ([p] andl2 (D2 p) N)
+		 <- ({n2} linp ([p] D2 p n2)).
+
+linp_topr_0   : linp ([p] topr p).
+
+linp_topr     : linp ([p] topr P).
+
+linp_perpr_0  : linp ([p] perpr D1 p).
+
+linp_perpr    : linp ([p] perpr (D1 p) P)
+		 <- ({n1} linp ([p] D1 p n1)).
+
+linp_perpl    : linp ([p] perpl (D1 p) N)
+		 <- ({p1} linp ([p] D1 p p1)).
+
+linp_forallr_0 : linp ([p] forallr D1 p).
+
+linp_forallr  : linp ([p] forallr (D1 p) P)
+		 <- ({a} {p1} linp ([p] D1 p a p1)).
+
+linp_foralll  : linp ([p] foralll T (D1 p) N)
+		 <- ({n1} linp ([p] D1 p n1)).
+
+linp_!r_0     : linp ([p] !r D1 p).
+
+% no linp_!r: p may not occur in D1.
+
+linp_!l       : linp ([p] !l (D1! p) N)
+		 <- ({n1!} linp ([p] D1! p n1!)).
+
+linp_!d       : linp ([p] !d (D1 p) N!)
+		 <- ({n1} linp ([p] D1 p n1)).
+
+linp_?r_0     : linp ([p] ?r D1 p).
+
+linp_?r       : linp ([p] ?r (D1? p) P)
+		 <- ({p1?} linp ([p] D1? p p1?)).
+
+% no linp_?l_0 : p is positive
+% no linp_?l: p may not occur in D1
+
+linp_?d       : linp ([p] ?d (D1 p) P?)
+		 <- ({p1} linp ([p] D1 p p1)).
+
+%% Linear function in negative formula
+
+linn : (neg A -> #) -> type.
+
+%mode -linn +D
+%lex D
+
+linn_axiom    : linn ([n] axiom n P).
+
+linn_timesr_1 : linn ([n] timesr (D1 n) D2 P)
+		<- ({p1} linn ([n] D1 n p1)).
+
+linn_timesr_2 : linn ([n] timesr D1 (D2 n) P)
+		<- ({p2} linn ([n] D2 n p2)).
+
+linn_timesl_0 : linn ([n] timesl D1 n).
+
+linn_timesl   : linn ([n] timesl (D1 n) N)
+		<- ({n1} {n2} linn ([n] D1 n n1 n2)).
+
+% no linn_oner
+
+linn_onel_0   : linn ([n] onel D1 n).
+
+linn_onel     : linn ([n] onel (D1 n) N)
+		<- linn ([n] D1 n).
+
+linn_andr     : linn ([n] andr (D1 n) (D2 n) P)
+		 <- ({p1} linn ([n] D1 n p1))
+		 <- ({p2} linn ([n] D2 n p2)).
+
+linn_andl1_0  : linn ([n] andl1 D1 n).
+
+linn_andl1    : linn ([n] andl1 (D1 n) N)
+		 <- ({n1} linn ([n] D1 n n1)).
+
+linn_andl2_0  : linn ([n] andl2 D2 n).
+
+linn_andl2    : linn ([n] andl2 (D2 n) N)
+		 <- ({n2} linn ([n] D2 n n2)).
+
+linn_topr     : linn ([n] topr P).
+
+linn_perpr    : linn ([n] perpr (D1 n) P)
+		 <- ({n1} linn ([n] D1 n n1)).
+
+linn_perpl_0  : linn ([n] perpl D1 n).
+
+linn_perpl    : linn ([n] perpl (D1 n) N)
+		 <- ({p1} linn ([n] D1 n p1)).
+
+linn_forallr  : linn ([n] forallr (D1 n) P)
+		 <- ({a} {p1} linn ([n] D1 n a p1)).
+
+linn_foralll_0 : linn ([n] foralll T D1 n).
+
+linn_foralll  : linn ([n] foralll T (D1 n) N)
+		 <- ({n1} linn ([n] D1 n n1)).
+
+% no linn_!r_0: n is negative
+% no linn_!r: n may not occur in D1.
+
+linn_!l_0     : linn ([n] !l D1! n).
+
+linn_!l       : linn ([n] !l (D1! n) N)
+		 <- ({n1!} linn ([n] D1! n n1!)).
+
+linn_!d       : linn ([n] !d (D1 n) N!)
+		 <- ({n1} linn ([n] D1 n n1)).
+
+linn_?r       : linn ([n] ?r (D1? n) P)
+		 <- ({p1?} linn ([n] D1? n p1?)).
+
+linn_?l_0     : linn ([n] ?l D1 n).
+
+% no linn_?l: n may not occur in D1
+
+linn_?d       : linn ([n] ?d (D1 n) P?)
+		 <- ({p1} linn ([n] D1 n p1)).
+
+%% Linear derivations: all subderivations must be
+%% linear as required.
+
+lin  : # -> type.
+
+%mode -lin +D
+%lex D
+
+lin_axiom  : lin (axiom N P).
+
+lin_timesr : lin (timesr D1 D2 P)
+	      <- linp D1
+	      <- linp D2
+	      <- ({p1} lin (D1 p1))
+	      <- ({p2} lin (D2 p2)).
+
+lin_timesl : lin (timesl D1 N)
+	      <- ({n2} linn ([n1] D1 n1 n2))
+	      <- ({n1} linn ([n2] D1 n1 n2))
+	      <- ({n1} {n2} lin (D1 n1 n2)).
+
+lin_oner   : lin (oner P).
+
+lin_onel   : lin (onel D N)
+	      <- lin D.
+
+lin_andr   : lin (andr D1 D2 P)
+	      <- linp D1
+	      <- linp D2
+	      <- ({p1} lin (D1 p1))
+	      <- ({p2} lin (D2 p2)).
+
+lin_andl1  : lin (andl1 D1 N)
+	      <- linn D1
+	      <- ({n1} lin (D1 n1)).
+
+lin_andl2  : lin (andl2 D2 N)
+	      <- linn D2
+	      <- ({n2} lin (D2 n2)).
+
+lin_topr   : lin (topr P).
+
+% no topl
+
+lin_perpr  : lin (perpr D1 P)
+	      <- linn D1
+	      <- ({n1} lin (D1 n1)).
+
+lin_perpl  : lin (perpl D1 N)
+	      <- linp D1
+	      <- ({p1} lin (D1 p1)).
+
+lin_forallr : lin (forallr D1 P)
+	       <- ({a:i} linp (D1 a))
+	       <- ({a} {p1} lin (D1 a p1)).
+
+lin_foralll : lin (foralll T D1 N)
+	       <- linn D1
+	       <- ({n1} lin (D1 n1)).
+
+lin_!r     : lin (!r D1 P)
+	      <- linp D1
+	      <- ({p1} lin (D1 p1)).
+
+lin_!l     : lin (!l D1! N)
+	      <- ({n1!} lin (D1! n1!)).
+
+lin_!d     : lin (!d D1 N!)
+	      <- linn D1
+	      <- ({n1} lin (D1 n1)).
+
+lin_?r     : lin (?r D1? P)
+	      <- ({p1?} lin (D1? p1?)).
+
+lin_?l     : lin (?l D1 N)
+	      <- linn D1
+	      <- ({n1} lin (D1 n1)).
+
+lin_?d     : lin (?d D1 P?)
+	      <- linp D1
+	      <- ({p1} lin (D1 p1)).
+
+%% Linear derivation of  B --> C  (common case).
+
+lin2 : (neg B -> pos C -> #) -> type.
+
+%mode -lin2 +D
+%lex D
+
+lin2_all : lin2 D
+	      <- ({p} linn ([n] D n p))  % linear in n
+	      <- ({n} linp ([p] D n p))  % linear in p
+	      <- ({n} {p} lin (D n p)).  % subderivations are all linear

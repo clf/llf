@@ -1,0 +1,11 @@
+Group is
+  ../lambda/sources.cm
+  ../print/sources.cm
+  ../paths/sources.cm
+  typecheck.sig
+  typecheck.fun 
+  typecheck.sml
+  strict.sig
+  strict.fun
+  lincheck.sig
+  lincheck.fun

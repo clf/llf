@@ -1,0 +1,31 @@
+%%% Operational semantics for subset of x86 assembly
+%%% Example: Recursive coding of factorial
+%%% Author: Mark Plesko <mp5f@cs.cmu.edu>
+
+%% Recursive factorial
+% fact function, uses r1 eax
+prog1: prog 1 (mov* r1 (esp + ~1)).
+prog2: prog 2 (movi eax 0).
+prog3: prog 3 (cmp r1 eax).
+prog4: prog 4 (je 10).
+
+prog5: prog 5 (mov eax r1).
+prog6: prog 6 (dec eax).
+prog7: prog 7 (push eax).
+prog8: prog 8 (call ~7).
+prog9: prog 9 (pop eax).
+prog10: prog 10 (mov* r1 (esp + ~1)).
+prog11: prog 11 (mul r1).
+prog12: prog 12 (mov*r (esp + ~1) eax).
+prog13: prog 13 (ret).
+
+prog14: prog 14 (mov*i (esp + ~1) 1).
+prog15: prog 15 (ret).
+% end fact function
+
+% main
+prog16: prog 16 (movi eax 15).
+prog17: prog 17 (push eax).
+prog18: prog 18 (call ~17).
+prog19: prog 19 (pop eax).
+prog20: prog 20 (end).

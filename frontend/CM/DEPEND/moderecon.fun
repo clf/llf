@@ -1,0 +1,2 @@
+Decl 8
+f%ModeRecon.f-sqsGlobal.v$GLOBAL.;-;sIntSyn.v$INTSYN.;-;sPattern.v$PATTERN.;-;rPattern.IntSyn.;sModes'.v$MODES.;-;rModes'.IntSyn.;sPaths'.v$PATHS.;-;rPaths'.Modes'.;sEModePrint.v$MODEPRINT.;-;rEModePrint.Modes'.;sIModePrint.v$MODEPRINT.;-;rIModePrint.Modes'.;sUnify.v$UNIFY.;-;rUnify.IntSyn.;sTpRecon'.v$TP_RECON.;-;rTpRecon'.IntSyn.;;;sqsModes.vModes'.;-;sExtSyn.vTpRecon'.;-;sPaths.vPaths'.;-;rPaths.Modes.IntSyn.;lqsI.vIntSyn.;-;sM.vModes.;-;sT.vExtSyn.;-;sP.vPaths.;-;rI.M.P.T.Pattern.Paths.Names.Global.EModePrint.IModePrint.TextIO.;;q;;+v$MODE_RECON.;;

@@ -1,0 +1,111 @@
+% Needham-Schroeder Public Key Protocol (short version -- no server)
+% Date: 11 September 1998
+% Author: Nancy Durgin
+% Revised: Iliano Cervesato, Sept. 26
+
+%{
+run1 :     a0 alice
+	-o b0 bob
+	-o loop1
+ = [init-A^a0 alice]
+   [init-B^b0 bob]
+   nsA1   ^ ([Na:atm] [X1^a1 alice bob (@ Na)]
+             [TN1^toNet ns 1 (crypt (@ Na * @ (k2m alice)) bob)]
+   net    ^ ([FN1^fromNet ns 1 (crypt (@ Na * @ (k2m alice)) bob)]
+   nsB1   ^ ([Nb:atm] [X2^b1 bob alice (@ Na) (@ Nb)]
+             [TN2^toNet ns 2 (crypt (@ Na * @ Nb) alice)]
+   net    ^ ([FN2^fromNet ns 2 (crypt (@ Na * @ Nb) alice)]
+   nsA2   ^ ([TN3^toNet ns 3 (crypt (@ Nb) bob)]
+             [X3^a2 alice bob (@ Na) (@ Nb)]
+   net    ^ ([FN3^fromNet ns 3 (crypt (@ Nb) bob)]
+   nsB2   ^ ([X4^b2 bob alice (@ Na) (@ Nb)]
+   nsDone ^ () ^ X3 ^ X4)
+          ^ FN3 ^ X2)
+	  ^ TN3)
+          ^ FN2 ^ X1)
+	  ^ TN2)
+	  ^ ak-A ^ FN1 ^ init-B)
+	  ^ TN1)
+          ^ init-A ^ ak-B.
+
+%{
+run2 :     a0 alice
+	-o b0 bob
+	-o loop1
+ = [init-A^a0 alice]
+   [init-B^b0 bob]
+   nsA1      ^ ([Na:atm] [X5^a1 alice intruder (@ Na)]
+                [TN4^toNet ns 1 (crypt (@ Na * @ (k2m alice)) intruder)]
+   receive1  ^ ([X7^dMsg (crypt (@ Na * @ (k2m alice)) intruder)]
+   decrypt   ^ ([X8^dMsg (@ Na * @ (k2m alice))]
+   decompose ^ ([X9^dMsg (@ Na)]
+                [X10^dMsg (@ (k2m alice))]
+   atomd     ^ ([X11^aMsg (k2m alice)]
+   atomd     ^ ([X12^aMsg Na]
+   alternate ^ (
+   atomc     ^ ([X13^cMsg (@ Na)] [X14^aMsg Na]
+   atomc     ^ ([X15^cMsg (@ (k2m alice))] [X16^aMsg (k2m alice)]
+   compose   ^ ([X17^cMsg (@ Na * @ (k2m alice))]
+   encrypt   ^ ([X19^cMsg (crypt (@ Na * @ (k2m alice)) bob)]
+   send1     ^ ([FN4^fromNet ns 1 (crypt (@ Na * @ (k2m alice)) bob)]
+   nsB1      ^ ([Nb:atm] [X21^b1 bob alice (@ Na) (@ Nb)]
+                [TN5^toNet ns 2 (crypt (@ Na * @ Nb) alice)]
+   net       ^ ([FN5^fromNet ns 2 (crypt (@ Na * @ Nb) alice)]
+   nsA2      ^ ([TN6^toNet ns 3 (crypt (@ Nb) intruder)]
+                [X22^a2 alice intruder (@ Na) (@ Nb)]
+   receive1  ^ ([X24^dMsg (crypt (@ Nb) intruder)]
+   decrypt   ^ ([X25^dMsg (@ Nb)]
+   atomd     ^ ([X26^aMsg Nb]
+
+   alternate ^ (
+   atomc     ^ ([X27^cMsg (@ Nb)]
+   encrypt   ^ ([X29^cMsg (crypt (@ Nb) bob)]
+   send1     ^ ([FN6^fromNet ns 3 (crypt (@ Nb) bob)]
+   nsB2      ^ ([X31^b2 bob alice (@ Na) (@ Nb)]
+   nsDone    ^ () ^ X22 ^ X31)
+	     ^ FN6 ^ X21)
+             ^ X29)
+             ^ ak-B ^ X27)
+             ^ X26))
+
+             ^ X25)
+             ^ X24 ^ inv_I)
+             ^ TN6)
+             ^ FN5 ^ X5)
+             ^ TN5)
+             ^ ak-A ^ FN4 ^ init-B)
+             ^ X19)
+             ^ ak-B ^ X17)
+             ^ X15 ^ X13)
+             ^ X11)
+             ^ X12))
+             ^ X9)
+             ^ X10)
+             ^ X8)
+             ^ X7 ^ inv_I)
+             ^ TN4)
+             ^ init-A ^ ak-I.
+}%
+
+%query 1 1
+{init-A:a0 alice}
+{init-B:b0 bob}
+net2intr (run1 ^ init-A ^ init-B) (R2 ^ init-A ^ init-B).
+
+
+%{
+%query 1 1
+{init-A:a0 alice}
+{init-B:b0 bob}
+net2intr (run2 ^ init-A ^ init-B) (R2 ^ init-A ^ init-B).
+}%
+
+}%
+
+%query 1 1
+ {nA:atm}
+ {A2:a2 alice bob (@ nA) (@ nA)}
+ {B2:b2 bob alice (@ nA) (@ nA)}
+ {TN:toNet ns 1 (@ nA)}
+net2intr (net ^ ([f^fromNet ns 1 (@ nA)] nsDone ^ () ^ A2 ^ B2) ^ TN)
+           (R nA A2 B2 TN).

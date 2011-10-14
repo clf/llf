@@ -1,0 +1,23 @@
+%%% Intuitionistic linear logic
+%%% Connection between natural deduction and sequent calculus
+%%% Propositional fragment without negation, bottom, or why-not.
+%%% Author: Frank Pfenning
+
+%%% Propositions
+o : type.		    %name o A
+
+%%% Multiplicatives
+lolli  : o -> o -> o.       % A -o B
+tensor : o -> o -> o.	    % A * B
+one    : o.		    % 1
+
+%%% Additives
+with : o -> o -> o.	    % A & B
+top : o.		    % T
+plus : o -> o -> o.	    % A + B
+zero : o.		    % 0
+
+%%% Exponentials
+imp : o -> o -> o.	    % A -> B
+bang : o -> o.		    % ! A
+

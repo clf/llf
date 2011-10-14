@@ -1,0 +1,27 @@
+This directory contains an LLF specification of two variants of the
+Turing machine.  The transitions of the first have the form:
+
+	symbol * state --> symbol * state * move
+
+the transitions of the second have the form:
+
+	symbol * state --> (symbol | move) * state
+
+It also contains specification for how to transform computations
+of one into computations of the other, and vice versa.
+
+Contents:
+
+
+README		-- This file
+common.llf	-- Common declarations
+tm1.llf		-- Specifications of the first Turing machine
+tm2.llf		-- Specifications of the second Turing machine
+display.llf	-- Utility to display the final contents of the tape
+1to2.llf	-- Translation of computations of tm1 into tm2
+2to1.llf	-- Translation of computations of tm2 into tm1 --- INCOMPLETE
+
+test-adder.llf		-- Example in tm1: unary adder
+example-adder.quy	-- Example 1 continued
+test-copier.llf		-- Example in tm2: copier
+example-copier.quy	-- Example 2 continued

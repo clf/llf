@@ -1,0 +1,7 @@
+Type and Strictness Checking
+Author: Carsten Schuermann
+
+Type-checking is separate from type reconstruction performed during
+parsing and verifies internal invariants.
+
+It is used as a fail-safe run-time check on internal data structures.

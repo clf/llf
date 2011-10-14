@@ -1,0 +1,43 @@
+% Needham-Schroeder Public Key Protocol (short version -- no server)
+% Date: 11 September 1998
+% Author: Iliano Cervesato
+
+
+% Alice's role
+
+nsA12 : loop2
+	 o- annKey B
+	 o- a0 A
+	 o- ({Na:atm}
+	          a1 A B (@ Na)
+	       -o toNet ns 1 (crypt ((@ Na) * (@ (k2m A))) B)
+	       -o loop2).
+
+nsA22 : loop2
+	 o- a1 A B X
+	 o- fromNet ns 2 (crypt (X * Y) A)
+	 o- (     toNet ns 3 (crypt Y B)
+	       -o a2 A B X Y
+	       -o loop2).
+
+% Bob's Role
+
+nsB12 : loop2
+	 o- b0 B
+	 o- fromNet ns 1 (crypt (X * (@ (k2m A))) B)
+	 o- annKey A
+	 o- (     {Nb:atm} b1 B A X (@ Nb)
+	       -o toNet ns 2 (crypt (X * (@ Nb)) A)
+	       -o loop2).
+
+nsB22 : loop2
+	 o- b1 B A X Y
+	 o- fromNet ns 3 (crypt Y B)
+	 o- (b2 B A X Y -o loop2).
+
+% Termination condition
+
+nsDone2: loop2
+	  o- b2 B1 A1 X1 Y1
+	  o- a2 A2 B2 X2 Y2
+	  o- <T>.

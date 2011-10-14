@@ -1,0 +1,122 @@
+%%% The IqBlock game
+%%% Author: Frank Pfenning
+
+
+%% Natural numbers
+nat : type.
+z : nat.
+s : nat -> nat.
+
+%% Coordinates
+point : type.
+$ : nat -> nat -> point.		%infix none 10 $
+
+%% The 64 squares
+sq : point -> type.
+filled : point -> type.
+
+seven : nat = s (s (s (s (s (s (s z)))))).
+
+%% Directions
+dir : type.
+nn : dir.				% north
+ee : dir.				% each
+ss : dir.				% south
+ww : dir.				% west
+
+ne : dir.				% north east
+sse : dir.				% south south east
+wwn : dir.				% west west north
+
+dirs : type.
+nil : dirs.
+# : dir -> dirs -> dirs.		%infix right 9 #
+
+% Initializing the tiles, pre-rotated.
+% Congruent shapes have been eliminated.
+% These are all linear.
+
+tile : dirs -> type.
+
+
+%% Initializing the squares
+
+init : point -> type.
+next : point -> type.
+fits : dirs -> point -> point -> type.
+findnext : point -> type.
+nextplace : point -> type.
+place : point -> type.
+
+ini : init (X $ Y) o- (sq (X $ Y) -o next (X $ Y)).
+n00 : next (z $ z) o- nextplace (seven $ seven).
+n0Y : next (z $ s Y) o- init (z $ Y).
+nX0 : next (s X $ z) o- init (X $ seven).
+nXY : next (s X $ s Y) o- init (s X $ Y).
+
+
+%% Checks if a tile can be placed in a given position
+
+fn : fits (nn # Ds) (X $ s Y) O
+      o- sq (X $ Y)
+      o- (filled (X $ (s Y)) -> fits Ds (X $ Y) O).
+
+fe : fits (ee # Ds) ((s X) $ Y) O
+      o- sq (X $ Y)
+      o- (filled ((s X) $ Y) -> fits Ds (X $ Y) O).
+
+fs : fits (ss # Ds) (X $ Y) O
+      o- sq (X $ s Y)
+      o- (filled (X $ Y) -> fits Ds (X $ (s Y)) O).
+
+fw : fits (ww # Ds) (X $ Y) O
+      o- sq (s X $ Y)
+      o- (filled (X $ Y) -> fits Ds ((s X) $ Y) O).
+
+fne : fits (ne # Ds) ((s X) $ (s Y)) O
+       o- sq (X $ Y)
+       o- (filled ((s X) $ (s Y)) -> fits Ds (X $ Y) O).
+
+fsse : fits (sse # Ds) ((s X) $ Y) O
+	o- sq (X $ s (s Y))
+	o- (filled ((s X) $ Y) -> fits Ds (X $ (s (s Y))) O).
+
+fwwn : fits (wwn # Ds) (X $ (s Y)) O
+	o- sq (s (s X) $ Y)
+	o- (filled (X $ (s Y)) -> fits Ds ((s (s X)) $ Y) O).
+
+fnil : fits nil (X $ Y) O
+	o- (filled (X $ Y) -> findnext O).
+
+
+%% Next empty square
+
+f00 : findnext (z $ z).
+f0Y : findnext (z $ (s Y))
+       o- nextplace (z $ Y).
+fX0 : findnext ((s X) $ z)
+       o- nextplace (X $ seven).
+fXY : findnext ((s X) $ (s Y))
+       o- nextplace ((s X) $ Y).
+
+npfi : nextplace (X $ Y)
+	<- filled (X $ Y)
+	   o- findnext (X $ Y).
+npsq : nextplace (X $ Y)
+	o- sq (X $ Y)
+	o- place (X $ Y).
+
+
+%% Places a tile at the found position
+
+pXY : place (X $ Y)
+       o- tile Ds
+       o- fits Ds (X $ Y) (X $ Y).
+
+
+%% Top level
+
+solve : type.
+
+sl : solve
+      o- init (seven $ seven).

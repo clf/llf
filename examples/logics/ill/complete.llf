@@ -1,0 +1,112 @@
+%%% Completeness of sequent calculus
+%%% Author: Frank Pfenning, Iliano Cervesto
+
+cp : nd A -> right A -> type.
+
+%%% Multiplicatives
+
+% A -o B
+lolliICP : cp (lolliI ^ D) (lolliR ^ R)
+	    o- ({x:nd A} {l:left A}
+		  cp x (init ^ l) -o cp (D ^ x) (R ^ l)).
+
+lolliECP : cp (lolliE ^ D1 ^ D2) 
+	      (cut ^ R2
+		   ^ ([l^left A] cut ^ R1
+			^ ([k^left (lolli A B)]
+			   lolliL ^ (init ^ l) ^ ([r^left B] init ^ r) ^ k)))
+	    o- cp D1 R1
+	    o- cp D2 R2.
+
+% A * B
+
+tensorICP : cp (tensorI ^ D1 ^ D2) (tensorR ^ R1 ^ R2)
+	     o- cp D1 R1
+	     o- cp D2 R2.
+tensorECP : cp (tensorE ^ D1 ^ D2)
+	       (cut ^ R1 ^ ([l^left (tensor A B)] tensorL ^ R2 ^ l))
+	     o- cp D1 R1
+	     o- ({x1:nd A}{l1:left A}
+		 {x2:nd B}{l2:left B}
+		      cp x1 (init ^ l1) -o cp x2 (init ^ l2)
+		   -o cp (D2 ^ x1 ^ x2) (R2 ^ l1 ^ l2)).
+% 1
+
+oneICP : cp oneI oneR.
+oneECP : cp (oneE ^ D1 ^ D2) (cut ^ R1 ^ ([l^left (one)] oneL ^ R2 ^ l))
+	     o- cp D1 R1
+	     o- cp D2 R2.
+
+
+%%% Additives
+
+% A & B
+
+withICP : cp (withI ^ (D1, D2)) (withR ^ (R1, R2))
+	   o- cp D1 R1
+	    & cp D2 R2.
+withE1CP : cp (withE1 ^ D)
+	      (cut ^ R
+		   ^ ([l^left (with A B)] withL1 ^ ([l1^left A] init ^ l1)
+			                         ^ l))
+	    o- cp D R.
+withE2CP : cp (withE2 ^ D)
+	      (cut ^ R
+		   ^ ([l^left (with A B)] withL2 ^ ([l2^left B] init ^ l2)
+			                         ^ l))
+	    o- cp D R.
+
+% T
+
+topICP : cp (topI ^ ()) (topR ^ ())
+	   o- <T>.
+% no topECP
+
+% A + B
+
+plusI1CP : cp (plusI1 ^ D) (plusR1 ^ R)
+	    o- cp D R.
+plusI2CP : cp (plusI2 ^ D) (plusR2 ^ R)
+	    o- cp D R.
+plusECP : cp (plusE ^ D ^ (D1, D2))
+	     (cut ^ R ^ ([l^left (plus A B)] plusL ^ (R1, R2) ^ l))
+	   o- cp D R
+	   o- ({x1:nd A}{l1:left A} cp x1 (init ^ l1)
+		 -o cp (D1 ^ x1) (R1 ^ l1))
+	    & ({x2:nd B}{l2:left B} cp x2 (init ^ l2)
+		 -o cp (D2 ^ x2) (R2 ^ l2)).
+
+% 0
+
+% No zeroICP
+zeroECP : cp (zeroE ^ D ^ ())
+	     (cut ^ R ^ ([l^left (zero)] zeroL ^ () ^ l))
+	   o- cp D R
+	   o- <T>.
+
+%%% Exponentials
+
+% A -> B
+
+impICP : cp (impI ^ D) (impR ^ R)
+	    o- ({x!:nd A} {l!:left A}
+		  cp x! (init ^ l!) -> cp (D x!) (R l!)).
+
+impECP : cp (impE ^ D D!) 
+	      (cut! R
+		  ^ ([l:left (imp A B)]
+		     impL R! ^ ([k:left B] init ^ k) ^ l))
+	    o- cp D R
+	    <- cp D! R!.
+
+% ! A
+
+bangICP : cp (bangI D) (bangR R)
+	   <- cp D R.
+
+bangECP : {R2:left A -> right B}
+	  cp (bangE ^ D1 ^ D2)
+	     (cut ^ R1
+		  ^ ([l^left (bang A)] BangL ^ R2 ^ l))
+	   o- cp D1 R1
+	   o- ({x!:nd A}{l!:left A} cp x! (init ^ l!) -> cp (D2 x!) (R2 l!)).

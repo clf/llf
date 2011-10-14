@@ -1,0 +1,734 @@
+%%% Some experimentation with display of sequents
+
+nm : type.
+%name nm N
+name : conc A -> nm -> type.
+name' : # -> nm -> type.
+name* : conc* A -> nm -> type.
+
+% Formulas
+
+po : o -> stream -> stream -> type.
+
+po_and : po (A and B) S (S'' ++ $>>$)
+	  <- po A (S ++ $<<$) S'
+	  <- po B (S' ++ $\land$) S''.
+
+% Uniformly introducing an abbreviation
+% Now primitive.
+% po_not : po (A imp false) S (S' ++ $>>$)
+% 	  <- po A (S ++ $\lnot$ ++ $<<$) S'.
+
+po_imp : po (A imp B) S (S'' ++ $>>$)
+	  <- po A (S ++ $<<$) S'
+	  <- po B (S' ++ $\limplies$) S''.
+
+po_or : po (A or B) S (S'' ++ $>>$)
+	  <- po A (S ++ $<<$) S'
+	  <- po B (S' ++ $\lor$) S''.
+
+po_not : po (not A) S (S' ++ $>>$)
+	  <- po A (S ++ $\lnot$ ++ $<<$) S'.
+
+po_true : po true S (S ++ $\top$).
+
+po_false : po false S (S ++ $\bot$).
+
+po_forall : po (forall A) S (S ++ $<<$ ++ $\forall$ ## ([x] S' x ++ $>>$))
+	     <- {x:i} po (A x) (@@ ++ $\ldot$) (S' x).
+
+po_exists : po (exists A) S (S ++ $<<$ ++ $\exists$ ## ([x] S' x ++ $>>$))
+	     <- {x:i} po (A x) (@@ ++ $\ldot$) (S' x).
+
+
+po_other : po A S (S ++ #< A >#).
+
+% Hypotheses
+
+psh : hyps -> stream -> stream -> type.
+
+psh_gamma : psh (gamma) S (S ++ $\Gamma$).
+
+psh_none  : psh (none) S S.
+
+psh_none, : psh (none , (H : hyp A)) S S'
+	    <- po A S S'.
+
+psh_comma : psh (HS , (H : hyp A)) S S''
+	     <- psh HS S S'
+	     <- po A (S' ++ $,$) S''.
+
+
+% Sequents
+
+pss : hyps -> o -> stream -> stream -> type.
+
+pss_seq : pss HS A S S''
+	   <- psh HS S S'
+	   <- po A (S' ++ $\longrightarrow$) S''.
+
+% Derivations
+
+psd : hyps -> conc A -> stream -> stream -> type.
+
+psd_axiom : psd HS (axiom H : conc A) S
+	     (S' ++ $>$ ++ $<$ ++ $I$ ++ $>$)
+	     <- pss HS A (S ++ $\ian$ ++ $<$ ++ $>$ ++ $<$) S'.
+
+psd_andr : psd HS (andr D1 D2 : conc (A and B)) S
+	    (S3' ++ $>$ ++ $<$ ++ $\land$ ++ $R$ ++ $>$)
+	    <- psd HS D1 (S ++ $\ibn$ ++ $<$) S1'
+	    <- psd HS D2 (S1' ++ $>$ ++ $<$) S2'
+	    <- pss HS (A and B) (S2' ++ $>$ ++ $<$) S3'.
+
+psd_andl1 : psd HS (andl1 D1 H : conc C) S
+	     (S1'' ++ $>$ ++ $<$ ++ $\land$ ++ $L$ ++ $_1$ ++ $>$)
+	     <- ({h1:hyp A} psd (HS , h1) (D1 h1) (S ++ $\ian$ ++ $<$) S1')
+	     <- pss HS C (S1' ++ $>$ ++ $<$) S1''.
+
+psd_andl2 : psd HS (andl2 D2 H : conc C) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\land$ ++ $L$ ++ $_2$ ++ $>$)
+	    <- ({h2:hyp B} psd (HS , h2) (D2 h2) (S ++ $\ian$ ++ $<$) S2')
+	    <- pss HS C (S2' ++ $>$ ++ $<$) S2''.
+
+psd_impr : psd HS (impr D1 : conc (A imp B)) S
+	    (S1'' ++ $>$ ++ $<$ ++ $\limplies$ ++ $R$ ++ $>$)
+	    <- ({h1:hyp A} psd (HS , h1) (D1 h1) (S ++ $\ian$ ++ $<$) S1')
+	    <- pss HS (A imp B) (S1' ++ $>$ ++ $<$) S1''.
+
+psd_impl  : psd HS (impl D1 D2 H : conc C) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\limplies$ ++ $L$ ++ $>$)
+	     <- psd HS D1 (S ++ $\ibn$ ++ $<$) S1'
+	     <- ({h2:hyp B} psd (HS , h2) (D2 h2) (S1' ++ $>$ ++ $<$) S2')
+	     <- pss HS C (S2' ++ $>$ ++ $<$) S2''.
+
+psd_orr1  : psd HS (orr1 D1 : conc (A or B)) S
+	     (S1'' ++ $>$ ++ $<$ ++ $\lor$ ++ $R$ ++ $_1$ ++ $>$)
+	     <- psd HS D1 (S ++ $\ian$ ++ $<$) S1'
+	     <- pss HS (A or B) (S1' ++ $>$ ++ $<$) S1''.
+
+psd_orr2  : psd HS (orr2 D2 : conc (A or B)) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\lor$ ++ $R$ ++ $_2$ ++ $>$)
+	     <- psd HS D2 (S ++ $\ian$ ++ $<$) S2'
+	     <- pss HS (A or B) (S2' ++ $>$ ++ $<$) S2''.
+
+psd_orl   : psd HS (orl D1 D2 H : conc C) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\lor$ ++ $L$ ++ $>$)
+	     <- ({h1:hyp A} psd (HS , h1) (D1 h1) (S ++ $\ibn$ ++ $<$) S1')
+	     <- ({h2:hyp B} psd (HS , h2) (D2 h2) (S1' ++ $>$ ++ $<$) S2')
+	     <- pss HS C (S2' ++ $>$ ++ $<$) S2''.
+
+psd_notr  : psd HS (notr D1 : conc (not A)) S
+	     (S +@ ([p:o] @@ ++ $\ian$ ++ $<$ @+ (S1' p) ++ $>$
+		      ++ $<$ @+ S' ++ $>$ ++ $<$ ++ $\lnot$ ++ $R$ ++ $!$
+		      ++ $<$ ++ #< p ># ++ $>$ ++ $>$))
+	     <- ({p:o} {h1:hyp A} psd (HS , h1) (D1 p h1) (@@) (S1' p))
+	     <- pss HS (not A) (@@) S'.
+
+psd_notl  : psd HS (notl D1 H : conc C) S
+	     (S1'' ++ $>$ ++ $<$ ++ $\lnot$ ++ $L$ ++ $>$)
+	     <- psd HS D1 (S ++ $\ian$ ++ $<$) S1'
+	     <- pss HS C (S1' ++ $>$ ++ $<$) S1''.
+
+psd_truer : psd HS (truer : conc true) S
+	     (S' ++ $>$ ++ $<$ ++ $\top$ ++ $R$ ++ $>$)
+	     <- pss HS (true) (S ++ $\ian$ ++ $<$ ++ $>$ ++ $<$) S'.
+
+psd_falsel : psd HS (falsel H : conc C) S
+	      (S' ++ $>$ ++ $<$ ++ $\bot$ ++ $L$ ++ $>$)
+	      <- pss HS C (S ++ $\ian$ ++ $<$ ++ $>$ ++ $<$) S'.
+
+psd_forallr: psd HS (forallr D1 : conc (forall A)) S
+	      (S +@ ([a:i] @@ ++ $\ian$ ++ $<$ @+ (S1' a) ++ $>$
+		       ++ $<$ @+ S' ++ $>$
+		       ++ $<$ ++ $\forall$ ++ $R$ ++ $!$ ++ $<$
+		       ++ #< a ># ++ $>$ ++ $>$))
+	      <- ({a:i} psd HS (D1 a) (@@) (S1' a))
+	      <- pss HS (forall A) (@@) S'.
+
+psd_foralll : psd HS (foralll T D1 H : conc C) S
+	       (S1'' ++ $>$ ++ $<$ ++ $\forall$ ++ $L$ ++ $>$)
+	       <- ({h1} psd (HS , h1) (D1 h1) (S ++ $\ian$ ++ $<$) S1')
+	       <- pss HS C (S1' ++ $>$ ++ $<$) S1''.
+
+psd_existsr : psd HS (existsr T D1 : conc (exists A)) S
+	       (S1'' ++ $>$ ++ $<$ ++ $\exists$ ++ $R$ ++ $>$)
+	       <- psd HS D1 (S ++ $\ian$ ++ $<$) S1'
+	       <- pss HS (exists A) (S1' ++ $>$ ++ $<$) S1''.
+
+psd_existsl: psd HS (existsl D1 H : conc C) S
+	      (S +@ ([a:i] @@ ++ $\ian$ ++ $<$ @+ (S1' a) ++ $>$
+		       ++ $<$ @+ S' ++ $>$
+		       ++ $<$ ++ $\exists$ ++ $L$ ++ $!$
+		       ++ $<$ ++ #< a ># ++ $>$ ++ $>$))
+	      <- ({a:i} {h1:hyp (A a)} psd (HS , h1) (D1 a h1) (@@) (S1' a))
+	      <- pss HS C (@@) S'.
+
+%{
+psd_other : psd HS (D : conc A) S (S' ++ $>$)
+	     <- pss HS A (S ++ $\above$ ++ $<$ ++ #< D ># ++ $>$ ++ $<$) S'.
+}%
+
+psd_named : psd HS (D : conc A) S (S' ++ $>$)
+	     <- name D N
+	     <- pss HS A (S ++ $\above$ ++ $<$ ++ #< N ># ++ $>$ ++ $<$) S'.
+
+psd_other : psd HS (D : conc A) S (S' ++ $>$)
+	     <- pss HS A (S ++ $\above$ ++ $<$ ++ $\vdots$ ++ $>$ ++ $<$) S'.
+
+% Complete Derivations
+
+ps : hyps -> conc A -> stream -> type.
+
+ps_all : ps HS D (S ++ >@)
+	  <- psd HS D (@<) S.
+
+% Pieces of the cut-elimination proof
+
+pca1 : hyps -> {A:o} conc A -> (hyp A -> conc C) -> conc C
+         -> stream -> stream -> type.
+ 
+pca1_all : pca1 HS A D E F S (S' ++ $>$)
+	    <- psd HS D (S ++ $\cut$ ++ $<$) S1
+	    <- ({h:hyp A} psd (HS , h) (E h) (S1 ++ $>$ ++ $<$) S2)
+	    <- psd HS F (S2 ++ $>$ ++ $<$) S'.
+
+% Types, representing cases in the cut-elimination proof
+
+pcx : hyps -> X -> stream -> stream -> type.
+
+% Next few cases for better variable naming.
+pcx_i : pcx HS ({t:i} CA t) S (@@ +@ S')
+	 <- {t:i} pcx HS (CA t) S (S' t).
+
+pcx_o : pcx HS ({A:o} CA A) S (@@ +@ S')
+	 <- {A:o} pcx HS (CA A) S (S' A).
+
+pcx_io : pcx HS ({A:i -> o} CA A) S (@@ +@ S')
+	  <- {A:i -> o} pcx HS (CA A) S (S' A).
+
+pcx_h : pcx HS ({h:hyp A} CA h) S S'
+	 <- {h:hyp A} pcx (HS , h) (CA h) S S'.
+
+pcx_c0 : pcx HS ({D:conc A} CA D) S (@@ +@ S')
+	  <- {D:conc A} {N:nm} name D N
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_c1 : pcx HS ({D:hyp B1 -> conc A} CA D) S (@@ +@ S')
+	  <- {D:hyp B1 -> conc A} {N:nm}
+	     ({h:hyp B1} name (D h) N)
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_c2 : pcx HS ({D:hyp B2 -> hyp B1 -> conc A} CA D) S (@@ +@ S')
+	  <- {D:hyp B2 -> hyp B1 -> conc A} {N:nm}
+	     ({h1:hyp B2}{h2:hyp B1} name (D h1 h2) N)
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_c3 : pcx HS ({D:hyp B1 -> {a:i} hyp (B2 a) -> conc A} CA D) S (@@ +@ S')
+	  <- {D:hyp B1 -> {a:i} hyp (B2 a) -> conc A} {N:i -> nm}
+	     ({h1:hyp B1}{a:i}{h2:hyp (B2 a)} name (D h1 a h2) (N a))
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_c4 : pcx HS ({D:hyp B1 -> {a:i} conc (A a)} CA D) S (@@ +@ S')
+	  <- {D:hyp B1 -> {a:i} conc (A a)} {N:i -> nm}
+	     ({h1:hyp B1}{a:i} name (D h1 a) (N a))
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_c5 : pcx HS ({D:{a:i} conc (A a)} CA D) S (@@ +@ S')
+	  <- {D:{a:i} conc (A a)} {N: i -> nm}
+	     ({a:i} name (D a) (N a))
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_c6 : pcx HS ({D:{a:i} hyp (B a) -> conc A} CA D) S (@@ +@ S')
+	  <- {D:{a:i} hyp (B a) -> conc A} {N:i -> nm}
+	     ({a:i}{h:hyp (B a)} name (D a h) (N a))
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_c7 : pcx HS ({D:{p:o} conc p} CA D) S (@@ +@ S')
+	  <- {D:{p:o} conc p} {N: o -> nm}
+	     ({p:o} name (D p) (N p))
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_c8 : pcx HS ({D:{p:o} hyp B -> conc p} CA D) S (@@ +@ S')
+	  <- {D:{p:o} hyp B -> conc p} {N:o -> nm}
+	     ({p:o}{h:hyp B} name (D p h) (N p))
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_c9 : pcx HS ({D:hyp B1 -> {p:o} hyp B2 -> conc p} CA D) S (@@ +@ S')
+	  <- {D:hyp B1 -> {p:o} hyp B2 -> conc p} {N:o -> nm}
+	     ({h1:hyp B1}{p:o}{h2:hyp B2} name (D h1 p h2) (N p))
+	     -> pcx HS (CA D) S (S' N).
+
+pcx_ca : pcx HS (ca A D E F -> CA) S S''
+	  <- pcx HS CA S S'
+	  <- pca1 HS A D E F (S' ++ $\\$) S''.
+
+pcx_caa : pcx HS (({a:i} ca A (D a) (E a) (E' a)) -> CA) S (@@ +@ S'')
+	   <- pcx HS CA S S'
+	   <- ({a:i} pca1 HS A (D a) (E a) (E' a) (S' ++ $\\$) (S'' a)).
+
+pcx_cap : pcx HS (({p:o} ca A (D p) (E p) (E' p)) -> CA) S (@@ +@ S'')
+	   <- pcx HS CA S S'
+	   <- ({p:o} pca1 HS A (D p) (E p) (E' p) (S' ++ $\\$) (S'' p)).
+
+pcx_cah : pcx HS (({h:hyp B} ca A (D h) (E h) (F h)) -> CA) S S''
+	   <- pcx HS CA S S'
+	   <- ({h:hyp B} pca1 (HS , h) A (D h) (E h) (F h) (S' ++ $\\$) S'').
+
+
+pcx_caah : pcx HS (({a:i} {h:hyp (B a)} ca A (D a h) (E a h) (F a h))
+		     -> CA) S (@@ +@ S'')
+	    <- pcx HS CA S S'
+	    <- ({a:i} {h:hyp (B a)}
+		  pca1 (HS , h) A (D a h) (E a h) (F a h) (S' ++ $\\$) (S'' a)).
+
+pcx_caph : pcx HS (({p:o} {h:hyp (B p)} ca A (D p h) (E p h) (F p h))
+		     -> CA) S (@@ +@ S'')
+	    <- pcx HS CA S S'
+	    <- ({p:o} {h:hyp (B p)}
+		  pca1 (HS , h) A (D p h) (E p h) (F p h) (S' ++ $\\$) (S'' p)).
+
+pcx_ca* : pcx HS (ca A D E F) S S'
+	   <- pca1 HS A D E F S S'.
+
+%{
+pcx_other : pcx HS ({X:Y} Z X) S (@@ +@ S')
+	     <- {X:Y} pcx HS (Z X) S (S' X).
+}%
+
+pctop : X -> stream -> type.
+
+pct : pctop X (S' ++ >@)
+       <- pcx gamma X (@<) S'.
+
+
+%%% Section for sequents in classical logic
+% left and right formula sequences.
+
+psl : left -> stream -> stream -> type.
+
+psl_gamma : psl gamma' S (S ++ $\Gamma$).
+
+psl_none  : psl (none'l) S S.
+
+psl_none, : psl (none'l ,l (N : neg A)) S S'
+	     <- po A S S'.
+
+psl_comma : psl (NS ,l (N : neg A)) S S''
+	     <- psl NS S S'
+	     <- po A (S' ++ $,$) S''.
+
+psr : right -> stream -> stream -> type.
+
+psr_delta : psr delta' S (S ++ $\Delta$).
+
+psr_none  : psr (none'r) S S.
+
+psr_none, : psr ((P : pos A) ,r none'r) S S'
+	     <- po A S S'.
+
+psr_comma : psr ((P : pos A) ,r PS) S S''
+	     <- po A S S'
+             <- psr PS (S' ++ $,$) S''.
+
+% Classical sequents
+
+pss' : left -> right -> stream -> stream -> type.
+
+pss'_seq : pss' NS PS S S''
+	    <- psl NS S S'
+	    <- psr PS (S' ++ $\longrightarrow$) S''.
+
+% Derivations
+
+psd' : left -> right -> # -> stream -> stream -> type.
+
+psd'_axiom : psd' NS PS (axiom' N P) S
+	     (S' ++ $>$ ++ $<$ ++ $I$ ++ $>$)
+	     <- pss' NS PS (S ++ $\ian$ ++ $<$ ++ $>$ ++ $<$) S'.
+
+psd'_andr : psd' NS PS (andr' D1 D2 P) S
+	    (S3' ++ $>$ ++ $<$ ++ $\land$ ++ $R$ ++ $>$)
+	    <- ({p1:pos A1} psd' NS (p1 ,r PS) (D1 p1) (S ++ $\ibn$ ++ $<$) S1')
+	    <- ({p2:pos A2} psd' NS (p2 ,r PS) (D2 p2) (S1' ++ $>$ ++ $<$) S2')
+	    <- pss' NS PS (S2' ++ $>$ ++ $<$) S3'.
+
+psd'_andl1 : psd' NS PS (andl1' D1 N) S
+	     (S1'' ++ $>$ ++ $<$ ++ $\land$ ++ $L$ ++ $_1$ ++ $>$)
+	     <- ({n1:neg A1} psd' (NS ,l n1) PS (D1 n1) (S ++ $\ian$ ++ $<$) S1')
+	     <- pss' NS PS (S1' ++ $>$ ++ $<$) S1''.
+
+psd'_andl2 : psd' NS PS (andl2' D2 N) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\land$ ++ $L$ ++ $_2$ ++ $>$)
+	    <- ({n2:neg A2} psd' (NS ,l n2) PS (D2 n2) (S ++ $\ian$ ++ $<$) S2')
+	    <- pss' NS PS (S2' ++ $>$ ++ $<$) S2''.
+
+psd'_impr : psd' NS PS (impr' D1 P) S
+	    (S1'' ++ $>$ ++ $<$ ++ $\limplies$ ++ $R$ ++ $>$)
+	    <- ({n1:neg A1} {p2:pos A2}
+		  psd' (NS ,l n1) (p2 ,r PS) (D1 n1 p2) (S ++ $\ian$ ++ $<$) S1')
+	    <- pss' NS PS (S1' ++ $>$ ++ $<$) S1''.
+
+psd'_impl  : psd' NS PS (impl' D1 D2 N) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\limplies$ ++ $L$ ++ $>$)
+	     <- ({p1:pos A1} psd' NS (p1 ,r PS) (D1 p1) (S ++ $\ibn$ ++ $<$) S1')
+	     <- ({n2:neg A2} psd' (NS ,l n2) PS (D2 n2) (S1' ++ $>$ ++ $<$) S2')
+	     <- pss' NS PS (S2' ++ $>$ ++ $<$) S2''.
+
+psd'_orr1  : psd' NS PS (orr1' D1 P) S
+	     (S1'' ++ $>$ ++ $<$ ++ $\lor$ ++ $R$ ++ $_1$ ++ $>$)
+	     <- ({p1:pos A1} psd' NS (p1 ,r PS) (D1 p1) (S ++ $\ian$ ++ $<$) S1')
+	     <- pss' NS PS (S1' ++ $>$ ++ $<$) S1''.
+
+psd'_orr2  : psd' NS PS (orr2' D2 P) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\lor$ ++ $R$ ++ $_2$ ++ $>$)
+	     <- ({p2:pos A2} psd' NS (p2 ,r PS) (D2 p2) (S ++ $\ian$ ++ $<$) S2')
+	     <- pss' NS PS (S2' ++ $>$ ++ $<$) S2''.
+
+psd'_orl   : psd' NS PS (orl' D1 D2 N) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\lor$ ++ $L$ ++ $>$)
+	     <- ({n1:neg A} psd' (NS ,l n1) PS (D1 n1) (S ++ $\ibn$ ++ $<$) S1')
+	     <- ({n2:neg B} psd' (NS ,l n2) PS (D2 n2) (S1' ++ $>$ ++ $<$) S2')
+	     <- pss' NS PS (S2' ++ $>$ ++ $<$) S2''.
+
+psd'_notr  : psd' NS PS (notr' D1 P) S
+	     (S' ++ $>$ ++ $<$ ++ $\lnot$ ++ $R$ ++ $>$)
+	     <- ({n1:neg A1} psd' (NS ,l n1) PS (D1 n1) (S ++ $\ian$ ++ $<$) S1')
+	     <- pss' NS PS (S1' ++ $>$ ++ $<$) S'.
+
+psd'_notl  : psd' NS PS (notl' D1 N) S
+	     (S1'' ++ $>$ ++ $<$ ++ $\lnot$ ++ $L$ ++ $>$)
+	     <- ({p1:pos A1} psd' NS (p1 ,r PS) (D1 p1) (S ++ $\ian$ ++ $<$) S1')
+	     <- pss' NS PS (S1' ++ $>$ ++ $<$) S1''.
+
+psd'_truer : psd' NS PS (truer' P) S
+	     (S' ++ $>$ ++ $<$ ++ $\top$ ++ $R$ ++ $>$)
+	     <- pss' NS PS (S ++ $\ian$ ++ $<$ ++ $>$ ++ $<$) S'.
+
+psd'_falsel : psd' NS PS (falsel' N) S
+	      (S' ++ $>$ ++ $<$ ++ $\bot$ ++ $L$ ++ $>$)
+	      <- pss' NS PS (S ++ $\ian$ ++ $<$ ++ $>$ ++ $<$) S'.
+
+psd'_forallr: psd' NS PS (forallr' D1 P) S
+	      (S +@ ([a:i] @@ ++ $\ian$ ++ $<$ @+ (S1' a) ++ $>$
+		       ++ $<$ @+ S' ++ $>$
+		       ++ $<$ ++ $\forall$ ++ $R$ ++ $!$ ++ $<$
+		       ++ #< a ># ++ $>$ ++ $>$))
+	      <- ({a:i} {p1:pos (A1 a)}
+		    psd' NS (p1 ,r PS) (D1 a p1) (@@) (S1' a))
+	      <- pss' NS PS (@@) S'.
+
+psd'_foralll : psd' NS PS (foralll' T D1 N) S
+	       (S1'' ++ $>$ ++ $<$ ++ $\forall$ ++ $L$ ++ $>$)
+	       <- ({n1} psd' (NS ,l n1) PS (D1 n1) (S ++ $\ian$ ++ $<$) S1')
+	       <- pss' NS PS (S1' ++ $>$ ++ $<$) S1''.
+
+psd'_existsr : psd' NS PS (existsr' T D1 P) S
+	       (S1'' ++ $>$ ++ $<$ ++ $\exists$ ++ $R$ ++ $>$)
+	       <- ({p1} psd' NS (p1 ,r PS) (D1 p1) (S ++ $\ian$ ++ $<$) S1')
+	       <- pss' NS PS (S1' ++ $>$ ++ $<$) S1''.
+
+psd'_existsl: psd' NS PS (existsl' D1 N) S
+	      (S +@ ([a:i] @@ ++ $\ian$ ++ $<$ @+ (S1' a) ++ $>$
+		       ++ $<$ @+ S' ++ $>$
+		       ++ $<$ ++ $\exists$ ++ $L$ ++ $!$
+		       ++ $<$ ++ #< a ># ++ $>$ ++ $>$))
+	      <- ({a:i} {n1:neg (A a)}
+		    psd' (NS ,l n1) PS (D1 a n1) (@@) (S1' a))
+	      <- pss' NS PS (@@) S'.
+
+%{
+psd'_other : psd' NS PS (D : conc A) S (S' ++ $>$)
+	     <- pss' NS PS A (S ++ $\above$ ++ $<$ ++ #< D ># ++ $>$ ++ $<$) S'.
+}%
+
+psd'_named : psd' NS PS D S (S' ++ $>$)
+	       <- name' D N
+	       <- pss' NS PS (S ++ $\above$ ++ $<$ ++ #< N ># ++ $>$ ++ $<$) S'.
+
+psd'_other : psd' NS PS D S (S' ++ $>$)
+	     <- pss' NS PS (S ++ $\above$ ++ $<$ ++ $\vdots$ ++ $>$ ++ $<$) S'.
+
+% Complete Derivations
+
+ps' : left -> right -> # -> stream -> type.
+
+ps'_all : ps' NS PS D (S ++ >@)
+	  <- psd' NS PS D (@<) S.
+
+
+% Cases in Classical Cut-Elimination Proof
+
+pca1' : left -> right -> {A:o} (pos A -> #) -> (neg A -> #) -> #
+          -> stream -> stream -> type.
+
+pca1'_all : pca1' NS PS A D E F S (S' ++ $>$)
+	     <- ({p:pos A} psd' NS (p ,r PS) (D p) (S ++ $\cut$ ++ $<$) S1)
+	     <- ({n:neg A} psd' (NS ,l n) PS (E n) (S1 ++ $>$ ++ $<$) S2)
+	     <- psd' NS PS F (S2 ++ $>$ ++ $<$) S'.
+
+% Types, representing cases in the cut-elimination proof.
+
+pcx' : left -> right -> X -> stream -> stream -> type.
+
+% Next few cases for better variable naming.
+pcx'_i : pcx' NS PS ({t:i} CA t) S (@@ +@ S')
+	 <- {t:i} pcx' NS PS (CA t) S (S' t).
+
+pcx'_o : pcx' NS PS ({A:o} CA A) S (@@ +@ S')
+	 <- {A:o} pcx' NS PS (CA A) S (S' A).
+
+pcx'_io : pcx' NS PS ({A:i -> o} CA A) S (@@ +@ S')
+	  <- {A:i -> o} pcx' NS PS (CA A) S (S' A).
+
+pcx'_n : pcx' NS PS ({n:neg A} CA n) S S'
+	 <- {n:neg A} pcx' (NS ,l n) PS (CA n) S S'.
+
+pcx'_p : pcx' NS PS ({p:pos A} CA p) S S'
+	 <- {p:pos A} pcx' NS (p ,r PS) (CA p) S S'.
+
+pcx'_c0 : pcx' NS PS ({D:#} CA D) S (@@ +@ S')
+	  <- {D:#} {N:nm} name' D N
+	     -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c1 : pcx' NS PS ({D:neg A -> #} CA D) S (@@ +@ S')
+	  <- {D:neg A -> #} {N:nm}
+	     ({n:neg A} name' (D n) N)
+	     -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c2 : pcx' NS PS ({D:pos A -> #} CA D) S (@@ +@ S')
+	  <- {D:pos A -> #} {N:nm}
+	     ({p:pos A} name' (D p) N)
+	     -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c3 : pcx' NS PS ({D:pos A -> pos B -> #} CA D) S (@@ +@ S')
+	   <- {D:pos A -> pos B -> #} {N:nm}
+	      ({p1:pos A}{p2:pos B} name' (D p1 p2) N)
+	      -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c4 : pcx' NS PS ({D:pos A -> neg B -> #} CA D) S (@@ +@ S')
+	   <- {D:pos A -> neg B -> #} {N:nm}
+	      ({p1:pos A}{n2:neg B} name' (D p1 n2) N)
+	      -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c5 : pcx' NS PS ({D:neg A -> pos B -> #} CA D) S (@@ +@ S')
+	   <- {D:neg A -> pos B -> #} {N:nm}
+	      ({n1:neg A}{p2:pos B} name' (D n1 p2) N)
+	      -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c6 : pcx' NS PS ({D:neg A -> neg B -> #} CA D) S (@@ +@ S')
+	   <- {D:neg A -> neg B -> #} {N:nm}
+	      ({n1:neg A}{n2:neg B} name' (D n1 n2) N)
+	      -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c7 : pcx' NS PS ({D:pos A -> neg B -> pos C -> #} CA D) S (@@ +@ S')
+	   <- {D:pos A -> neg B -> pos C -> #} {N:nm}
+	      ({p1:pos A}{n2:neg B}{p3:pos C} name' (D p1 n2 p3) N)
+	      -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c7a : pcx' NS PS ({D:neg A -> neg B -> pos C -> #} CA D) S (@@ +@ S')
+	   <- {D:neg A -> neg B -> pos C -> #} {N:nm}
+	      ({n1:neg A}{n2:neg B}{p3:pos C} name' (D n1 n2 p3) N)
+	      -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c8 : pcx' NS PS ({D:pos A -> {a:i} pos (B a) -> #} CA D) S (@@ +@ S')
+	  <- {D:pos A -> {a:i} pos (B a) -> #} {N:i -> nm}
+	     ({p1:pos A}{a:i}{p2:pos (B a)} name' (D p1 a p2) (N a))
+	     -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c9 : pcx' NS PS ({D:neg A -> {a:i} pos (B a) -> #} CA D) S (@@ +@ S')
+	  <- {D:neg A -> {a:i} pos (B a) -> #} {N:i -> nm}
+	     ({n1:neg A}{a:i}{p2:pos (B a)} name' (D n1 a p2) (N a))
+	     -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c10 : pcx' NS PS ({D:pos A -> {a:i} neg (B a) -> #} CA D) S (@@ +@ S')
+	  <- {D:pos A -> {a:i} neg (B a) -> #} {N:i -> nm}
+	     ({p1:pos A}{a:i}{n2:neg (B a)} name' (D p1 a n2) (N a))
+	     -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c11 : pcx' NS PS ({D:neg A -> {a:i} neg (B a) -> #} CA D) S (@@ +@ S')
+	  <- {D:neg A -> {a:i} neg (B a) -> #} {N:i -> nm}
+	     ({n1:neg A}{a:i}{n2:neg (B a)} name' (D n1 a n2) (N a))
+	     -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c12 : pcx' NS PS ({D:{a:i} pos (A a) -> #} CA D) S (@@ +@ S')
+	  <- {D:{a:i} pos (A a) -> #} {N: i -> nm}
+	     ({a:i}{p:pos (A a)} name' (D a p) (N a))
+	     -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_c13 : pcx' NS PS ({D:{a:i} neg (A a) -> #} CA D) S (@@ +@ S')
+	  <- {D:{a:i} neg (A a) -> #} {N: i -> nm}
+	     ({a:i}{n:neg (A a)} name' (D a n) (N a))
+	     -> pcx' NS PS (CA D) S (S' N).
+
+pcx'_ca : pcx' NS PS (ca' A D E F -> CA) S S''
+	  <- pcx' NS PS CA S S'
+	  <- pca1' NS PS A D E F (S' ++ $\\$) S''.
+
+pcx'_can : pcx' NS PS (({n:neg B} ca' A (D n) (E n) (F n)) -> CA) S S''
+	   <- pcx' NS PS CA S S'
+	   <- ({n:neg B} pca1' (NS ,l n) PS A (D n) (E n) (F n) (S' ++ $\\$) S'').
+
+pcx'_cap : pcx' NS PS (({p:pos B} ca' A (D p) (E p) (F p)) -> CA) S S''
+	   <- pcx' NS PS CA S S'
+	   <- ({p:pos B} pca1' NS (p ,r PS) A (D p) (E p) (F p) (S' ++ $\\$) S'').
+
+pcx'_canp : pcx' NS PS (({n:neg B} {p:pos C} ca' A (D n p) (E n p) (F n p)) -> CA) S S''
+	   <- pcx' NS PS CA S S'
+	   <- ({n:neg B} {p:pos C} pca1' (NS ,l n) (p ,r PS) A (D n p) (E n p) (F n p) (S' ++ $\\$) S'').
+
+pcx'_caan : pcx' NS PS (({a:i} {n:neg (B a)} ca' A (D a n) (E a n) (E' a n)) -> CA) S (@@ +@ S'')
+	   <- pcx' NS PS CA S S'
+	   <- ({a:i} {n:neg (B a)} pca1' (NS ,l n) PS A (D a n) (E a n) (E' a n) (S' ++ $\\$) (S'' a)).
+
+pcx'_caap : pcx' NS PS (({a:i} {p:pos (B a)} ca' A (D a p) (E a p) (E' a p)) -> CA) S (@@ +@ S'')
+	   <- pcx' NS PS CA S S'
+	   <- ({a:i} {p:pos (B a)} pca1' NS (p ,r PS) A (D a p) (E a p) (E' a p) (S' ++ $\\$) (S'' a)).
+
+pcx'_ca* : pcx' NS PS (ca' A D E F) S S'
+	   <- pca1' NS PS A D E F S S'.
+
+%{
+pcx'_other : pcx' NS PS ({X:Y} Z X) S (@@ +@ S')
+	     <- {X:Y} pcx' NS PS (Z X) S (S' X).
+}%
+
+pctop' : X -> stream -> type.
+
+pct' : pctop' X (S' ++ >@)
+       <- pcx' gamma' delta' X (@<) S'.
+
+
+
+% Now proofs, possibly with cut
+% Hypotheses
+
+% Sequents
+
+pss* : hyps -> o -> stream -> stream -> type.
+
+pss*_seq : pss* HS A S S''
+	   <- psh HS S S'
+	   <- po A (S' ++ $\longrightarrow$) S''.
+
+% Derivations
+
+psd* : hyps -> conc* A -> stream -> stream -> type.
+
+psd*_axiom : psd* HS (axiom* H : conc* A) S
+	     (S' ++ $>$ ++ $<$ ++ $I$ ++ $>$)
+	     <- pss* HS A (S ++ $\ian$ ++ $<$ ++ $>$ ++ $<$) S'.
+
+psd*_andr : psd* HS (andr* D1 D2 : conc* (A and B)) S
+	    (S3' ++ $>$ ++ $<$ ++ $\land$ ++ $R$ ++ $>$)
+	    <- psd* HS D1 (S ++ $\ibn$ ++ $<$) S1'
+	    <- psd* HS D2 (S1' ++ $>$ ++ $<$) S2'
+	    <- pss* HS (A and B) (S2' ++ $>$ ++ $<$) S3'.
+
+psd*_andl1 : psd* HS (andl1* D1 H : conc* C) S
+	     (S1'' ++ $>$ ++ $<$ ++ $\land$ ++ $L$ ++ $_1$ ++ $>$)
+	     <- ({h1:hyp A} psd* (HS , h1) (D1 h1) (S ++ $\ian$ ++ $<$) S1')
+	     <- pss* HS C (S1' ++ $>$ ++ $<$) S1''.
+
+psd*_andl2 : psd* HS (andl2* D2 H : conc* C) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\land$ ++ $L$ ++ $_2$ ++ $>$)
+	    <- ({h2:hyp B} psd* (HS , h2) (D2 h2) (S ++ $\ian$ ++ $<$) S2')
+	    <- pss* HS C (S2' ++ $>$ ++ $<$) S2''.
+
+psd*_impr : psd* HS (impr* D1 : conc* (A imp B)) S
+	    (S1'' ++ $>$ ++ $<$ ++ $\limplies$ ++ $R$ ++ $>$)
+	    <- ({h1:hyp A} psd* (HS , h1) (D1 h1) (S ++ $\ian$ ++ $<$) S1')
+	    <- pss* HS (A imp B) (S1' ++ $>$ ++ $<$) S1''.
+
+psd*_impl  : psd* HS (impl* D1 D2 H : conc* C) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\limplies$ ++ $L$ ++ $>$)
+	     <- psd* HS D1 (S ++ $\ibn$ ++ $<$) S1'
+	     <- ({h2:hyp B} psd* (HS , h2) (D2 h2) (S1' ++ $>$ ++ $<$) S2')
+	     <- pss* HS C (S2' ++ $>$ ++ $<$) S2''.
+
+psd*_orr1  : psd* HS (orr1* D1 : conc* (A or B)) S
+	     (S1'' ++ $>$ ++ $<$ ++ $\lor$ ++ $R$ ++ $_1$ ++ $>$)
+	     <- psd* HS D1 (S ++ $\ian$ ++ $<$) S1'
+	     <- pss* HS (A or B) (S1' ++ $>$ ++ $<$) S1''.
+
+psd*_orr2  : psd* HS (orr2* D2 : conc* (A or B)) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\lor$ ++ $R$ ++ $_2$ ++ $>$)
+	     <- psd* HS D2 (S ++ $\ian$ ++ $<$) S2'
+	     <- pss* HS (A or B) (S2' ++ $>$ ++ $<$) S2''.
+
+psd*_orl   : psd* HS (orl* D1 D2 H : conc* C) S
+	     (S2'' ++ $>$ ++ $<$ ++ $\lor$ ++ $L$ ++ $>$)
+	     <- ({h1:hyp A} psd* (HS , h1) (D1 h1) (S ++ $\ibn$ ++ $<$) S1')
+	     <- ({h2:hyp B} psd* (HS , h2) (D2 h2) (S1' ++ $>$ ++ $<$) S2')
+	     <- pss* HS C (S2' ++ $>$ ++ $<$) S2''.
+
+psd*_notr  : psd* HS (notr* D1 : conc* (not A)) S
+	     (S +@ ([p:o] @@ ++ $\ian$ ++ $<$ @+ (S1' p) ++ $>$
+		      ++ $<$ @+ S' ++ $>$ ++ $<$ ++ $\lnot$ ++ $R$ ++ $!$
+		      ++ $<$ ++ #< p ># ++ $>$ ++ $>$))
+	     <- ({p:o} {h1:hyp A} psd* (HS , h1) (D1 p h1) (@@) (S1' p))
+	     <- pss* HS (not A) (@@) S'.
+
+psd*_notl  : psd* HS (notl* D1 H : conc* C) S
+	     (S1'' ++ $>$ ++ $<$ ++ $\lnot$ ++ $L$ ++ $>$)
+	     <- psd* HS D1 (S ++ $\ian$ ++ $<$) S1'
+	     <- pss* HS C (S1' ++ $>$ ++ $<$) S1''.
+
+psd*_truer : psd* HS (truer* : conc* true) S
+	     (S' ++ $>$ ++ $<$ ++ $\top$ ++ $R$ ++ $>$)
+	     <- pss* HS (true) (S ++ $\ian$ ++ $<$ ++ $>$ ++ $<$) S'.
+
+psd*_falsel : psd* HS (falsel* H : conc* C) S
+	      (S' ++ $>$ ++ $<$ ++ $\bot$ ++ $L$ ++ $>$)
+	      <- pss* HS C (S ++ $\ian$ ++ $<$ ++ $>$ ++ $<$) S'.
+
+psd*_forallr: psd* HS (forallr* D1 : conc* (forall A)) S
+	      (S +@ ([a:i] @@ ++ $\ian$ ++ $<$ @+ (S1' a) ++ $>$
+		       ++ $<$ @+ S' ++ $>$
+		       ++ $<$ ++ $\forall$ ++ $R$ ++ $!$ ++ $<$
+		       ++ #< a ># ++ $>$ ++ $>$))
+	      <- ({a:i} psd* HS (D1 a) (@@) (S1' a))
+	      <- pss* HS (forall A) (@@) S'.
+
+psd*_foralll : psd* HS (foralll* T D1 H : conc* C) S
+	       (S1'' ++ $>$ ++ $<$ ++ $\forall$ ++ $L$ ++ $>$)
+	       <- ({h1} psd* (HS , h1) (D1 h1) (S ++ $\ian$ ++ $<$) S1')
+	       <- pss* HS C (S1' ++ $>$ ++ $<$) S1''.
+
+psd*_existsr : psd* HS (existsr* T D1 : conc* (exists A)) S
+	       (S1'' ++ $>$ ++ $<$ ++ $\exists$ ++ $R$ ++ $>$)
+	       <- psd* HS D1 (S ++ $\ian$ ++ $<$) S1'
+	       <- pss* HS (exists A) (S1' ++ $>$ ++ $<$) S1''.
+
+psd*_existsl: psd* HS (existsl* D1 H : conc* C) S
+	      (S +@ ([a:i] @@ ++ $\ian$ ++ $<$ @+ (S1' a) ++ $>$
+		       ++ $<$ @+ S' ++ $>$
+		       ++ $<$ ++ $\exists$ ++ $L$ ++ $!$
+		       ++ $<$ ++ #< a ># ++ $>$ ++ $>$))
+	      <- ({a:i} {h1:hyp (A a)} psd* (HS , h1) (D1 a h1) (@@) (S1' a))
+	      <- pss* HS C (@@) S'.
+
+psd*_cut : psd* HS (cut* A D (E : hyp A -> conc* C)) S
+	    (S2'' ++ $>$ ++ $<$ ++ $\cutrule$ ++ $>$)
+	    <- psd* HS D (S ++ $\ibn$ ++ $<$) S1'
+	    <- ({h1:hyp A} psd* (HS , h1) (E h1) (S1' ++ $>$ ++ $<$) S2')
+	    <- pss* HS C (S2' ++ $>$ ++ $<$) S2''.
+
+%{
+psd*_other : psd* HS (D : conc* A) S (S' ++ $>$)
+	     <- pss* HS A (S ++ $\above$ ++ $<$ ++ #< D ># ++ $>$ ++ $<$) S'.
+}%
+
+psd*_named : psd* HS (D : conc* A) S (S' ++ $>$)
+	     <- name* D N
+	     <- pss* HS A (S ++ $\above$ ++ $<$ ++ #< N ># ++ $>$ ++ $<$) S'.
+
+psd*_other : psd* HS (D : conc* A) S (S' ++ $>$)
+	     <- pss* HS A (S ++ $\above$ ++ $<$ ++ $\vdots$ ++ $>$ ++ $<$) S'.
+
+% Complete Derivations
+
+ps* : hyps -> conc* A -> stream -> type.
+
+ps*_all : ps* HS D (S ++ >@)
+	  <- psd* HS D (@<) S.

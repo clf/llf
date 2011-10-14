@@ -1,0 +1,52 @@
+%%% Turing Machine
+%%% Transitions of the form (s,q) -> (s',q',M)
+%%% Author: Iliano Cervesato
+%%% October 1996, revised December 1998
+
+trans1 :  symbol -> state -> symbol -> state -> move -> type.
+
+head1 : cell -> state -> type.
+
+tm1_lcell : head1 C Q
+	     o- contains C S
+	     o- trans1 S Q S' Q' left
+	     o- adjacent C' C
+	     o- (     contains C S'
+		   -o adjacent C' C
+		   -o head1 C' Q').
+
+tm1_rcell : head1 C Q
+	     o- contains C S
+	     o- trans1 S Q S' Q' right
+	     o- adjacent C C'
+	     o- (     contains C S'
+		   -o adjacent C C'
+		   -o head1 C' Q').
+
+tm1_leot : head1 C Q
+	    o- contains C S
+	    o- trans1 S Q S' Q' left
+	    o- adjacent eot C
+	    o- ({c:cell} 
+		     contains C S'
+		  -o contains c blank
+		  -o adjacent eot c
+		  -o adjacent c C
+		  -o head1 c Q').
+
+tm1_reot : head1 C Q
+	    o- contains C S
+	    o- trans1 S Q S' Q' right
+	    o- adjacent C eot
+	    o- ({c:cell}
+		     contains C S'
+		  -o contains c blank
+		  -o adjacent c eot
+		  -o adjacent C c
+		  -o head1 c Q').
+
+tm1_stop : head1 C Q
+	    o- contains C S
+	    o- notrans S Q
+	    o- (     contains C S
+		  -o collect eoc eot C Q).

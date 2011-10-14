@@ -1,0 +1,758 @@
+okwrap : wrapper M F X -> type.
+okgo : go M F X -> type.
+okbuildgo : buildgo M L X -> type.
+
+okupr1 : upr1 R V X X2 -> type.
+okupm1 : upm1 M V X X2 -> type.
+okmemcopy : memcopy D D2 I X X2 -> type.
+okmemrep : memrep D D2 I X X2 -> type.
+
+okrun : run L X -> type.
+okrunnext : runnext L X -> type.
+okexec : exec I X X2 -> type.
+
+okexecEOP : execEOP R V1 V2 X X2 -> type.
+okexecjmp : execjmp V X X2 -> type.
+okexecstr : execstr R M V X X2 -> type.
+okexecstw : execstw M V VR X X2 -> type.
+okexeccondCOP : execcondCOP Vr V X X2 -> type.
+okexeccall : execcall M MAX X F X2 -> type.
+okexeccall* : execcall* F ST X2 -> type.
+okexecret : execret D D2 X2 -> type.
+
+% "Configurable part"
+check : exp -> exp -> type.
+nocheck : exp -> exp -> type.
+
+checkBackJmps : check 0 0.
+checkFnCalls: check 1 0.
+checkMaxValue : check 2 0.
+
+nocheckall : nocheck V 1 <- check V 0.
+
+% % %
+
+okwrap1 : okwrap (wrap1 ^ W)
+	o- (reg 1 ra unk -o reg 1 r1 unk -o reg 1 r2 unk
+		-o reg 1 r3 unk -o reg 1 r4 unk -o depth 1 -o
+	({RA:reg 1 ra unk} {R1:reg 1 r1 unk} {R2:reg 1 r2 unk}
+	{R3:reg 1 r3 unk} {R4:reg 1 r4 unk} {D:depth 1}
+	okgo (W ^ RA ^ R1 ^ R2 ^ R3 ^ R4 ^ D))).
+okgo1 : okgo (go1 ^ LAM B ^ B2 PR)
+	 o- ({M:maxmem MAX} {S:sp 1 SPS} {FN:fun 1 F}
+	       maxmem MAX -> fun 1 F -o sp 1 SPS -o okbuildgo (LAM M ^ S ^ FN)).
+okbuildgo1 : okbuildgo (buildgo1 ^ R)
+	o- okrun R.
+okbuildgo2 : {BD:bdec MEM _} okbuildgo (buildgo2 ^ LAM BD BQ)
+	      o- (mem 1 MEM unk -o
+		    ({M:mem 1 MEM unk} okbuildgo (LAM ^ M))).
+
+okupr1aCheck : {LAM:depth D -o reg D R V -o runnext _ _}
+	{REG:reg D R V2} okupr1 (upr1a ^ LAM ^ REG ^ _)
+	<- check 2 1
+	<- ble V 32
+	o- reg D R V2
+	o- (reg D R V -o ({REG2:reg D R V} okrunnext (LAM ^ D2 ^ REG2))).
+okupr1aNoCheck : {LAM:depth D -o reg D R V -o runnext _ _}
+	{REG:reg D R V2} okupr1 (upr1a ^ LAM ^ REG ^ _)
+	<- nocheck 2 1
+	o- reg D R V2
+	o- (reg D R V -o ({REG2:reg D R V} okrunnext (LAM ^ D2 ^ REG2))).
+okupm1a : {LAM:depth D -o mem D M V -o runnext _ _}
+	   {M2:mem D M V2} okupm1 (upm1a ^ LAM ^ M2 ^ D2)
+	   o- mem D M V2
+	   o- (mem D M V -o ({MEM:mem D M V} okrunnext (LAM ^ D2 ^ MEM))).
+okmemcopy1 : okmemcopy (memcopy1 ^ R B)
+	      o- okrun R.
+okmemcopy2 : {LAM:mem D2 I _ -o memcopy D D2 _ _ _}
+	      okmemcopy (memcopy2 ^ (MD, LAM) BD BL)
+	      o- mdlook D I V
+	      & (mem D2 I V -o 
+		   ({M:mem D2 I V} okmemcopy (LAM ^ M))). 
+okmemrep1 : okmemrep (memrep1 ^ R B)
+	     o- okrun R.
+okmemrep2 : {LAM:mem D2 I _ -o memrep D D2 _ _ _}
+	     okmemrep (memrep2 ^ LAM ^ M2 ^ M BD BL)
+	     o- mem D I V o- mem D2 I _
+	     o- (mem D2 I V -o ({MNEW:mem D2 I V} okmemrep (LAM ^ MNEW))).
+
+okrun2 : okrun (run2 ^ E P)
+	  o- okexec E.
+okrunterm : okrun (term P ^ F ^ D ^ C ^ R4 ^ R3 ^ R2 ^ R1 ^ RA)
+	     o- reg 1 ra _ o- reg 1 r1 _ o- reg 1 r2 _ o- reg 1 r3 _
+	     o- reg 1 r4 _ o- depth 1 o- fun 1 _
+	     o- consumemem o- <T>.
+okrunnext1 : okrunnext (runnext1 ^ R B)
+	      o- okrun R.
+
+okexdebugtiming : okexec E o- <T>.
+okexannot : okexec (exannot ^ R)
+	       o- okrunnext R.
+okexmov : okexec (exmov ^ (R, U))
+	   o- okupr1 U.
+okexinit : okexec (exinit ^ R)
+	    o- okupr1 R.
+okexarith : {R1:rlook _ V1} {R2:rlook _ V2} okexec (exarith ^ (R1, R2, E))
+	   o- safeEOP V1 V2   % safety: safeEOP check  
+	   & okexecEOP E.
+okexjmp : okexec (exjmp ^ E)
+	o- okexecjmp E.
+okexcondCOP : {R:rlook _ VR} okexec (excondCOP ^ (R, E))
+	       o- safeCOP VR     % safety: safeCOP check
+	       & okexeccondCOP E.
+okexcompRA : {F:fun _ FN} {B:bplus _ _ X2} okexec (excompRA ^ LAM B ^ F ^ D)
+	      <- prog _ (annot FN ST FIN _ _ _ _)   % safety: FN exists
+%	      <- bplus X V X2
+	      <- ble ST X2 <- ble X2 FIN   % safety
+	      o- okupr1 (LAM ^ D ^ F).
+okexmemr : {M:mlook MEM _} okexec (exmemr ^ (R, M, U))
+	    o- safeRd MEM      % safety: safeRd check
+	    & okupr1 U.
+okexmemw : {U:upm1 M V _ _} okexec (exmemw ^ (R1, R2, U))
+	    o- safeWr M V      % safety: safeWr check
+	    & okupm1 U.
+okexadvsp : {B:bplus _ SPOLD SPNEW} okexec (exadvsp ^ LAM B ^ SP ^ D)
+	     o- sp DNEW SPOLD
+	     o- stack V 1   % safety: stack check
+	     & ({SPP:sp DNEW SPNEW} sp DNEW SPNEW -o
+		   okrunnext (LAM ^ D ^ SPP)).
+okexstr : okexec (exstr ^ (S, E))
+	o- okexecstr E.
+okexstw : okexec (exstw ^ (R, S, E))
+	o- okexecstw E.
+okexcall : okexec (excall ^ (S, E) M)
+            <- nocheck 1 1
+	    o- okexeccall E.
+okexret : {BD:bdec DP DP2} okexec (exret ^ (SD1, SD2, E) P ^ F BD ^ D)
+	   o- fun DP FUN
+	   <- prog X2 (annot FUN _ _ ARG _ POST CS)
+	   o- satspec POST
+	      & sdlook DP SP
+	      & sdlook DP2 SP
+	      & cscheck DP DP2 (ra ; CS)
+	      & memcheck DP DP2 SP ARG
+	      & okexecret E.
+
+okexecEOP1 : okexecEOP (execEOP1 ^ U E)
+	o- okupr1 U.
+okexecjmp1nocheck : okexecjmp (execjmp1 ^ R B)
+	<- nocheck 0 1
+	o- okrun R.
+okexecjmp1check : {B:bplus V _ _} okexecjmp (execjmp1 ^ R B)
+	<- check 0 1
+	<- ble 1 V
+	o- okrun R.
+okexecstr1 : {B:bplus _ _ MEM} okexecstr (execstr1 ^ (M, U) B)
+	      o- stack MEM 1     % safety: stack check
+	      & okupr1 U.
+okexecstw1 : {B:bplus _ _ MEM} okexecstw (execstw1 ^ U B)
+	      o- stack MEM 1    % safety: stack check
+	      & okupm1 U.
+okexeccondCOP1 : okexeccondCOP (execcondCOP1 ^ E C)
+	o- okexecjmp E.
+okexecconfCOP2 : okexeccondCOP (execcondCOP2 ^ R C)
+	o- okrunnext R.
+% no okexeccall1 in unsafe version
+okexeccall2 : {P:prog _ (annot F _ _ _ _ _ _)}
+	       {B:bplus _ _ Mnew} okexeccall (execcall2 ^ E P B)
+	       <- prog _ (annot F _ _ _ PRE _ _)
+	       o- (stack Mnew 1 & satspec PRE
+	       & okexeccall* E).
+okexeccall*1 : {LAM:reg _ _ _ -o reg _ _ _ -o reg _ _ _ -o reg _ _ _
+		      -o reg _ _ _ -o sp _ _ -o fun _ FUN -o depth _
+		      -o memcopy _ _ _ _ _}
+		okexeccall* (execcall*1 ^ (RAO, R1O, R2O, R3O, R4O, SO, LAM)
+			      B ^ DEP M)
+		o- depth D <- binc D D2
+		o- rdlook D ra RA & rdlook D r1 R1 & rdlook D r2 R2
+		      & rdlook D r3 R3 & rdlook D r4 R4 & sdlook D SP &
+
+		({RRA:reg D2 ra RA} {RR1:reg D2 r1 R1} {RR2:reg D2 r2 R2}
+		      {RR3:reg D2 r3 R3} {RR4:reg D2 r4 R4} {S:sp D2 SP}
+		      {F:fun D2 FUN} {DP:depth D2}
+		reg D2 ra RA -o reg D2 r1 R1 -o reg D2 r2 R2 -o
+		      reg D2 r3 R3 -o reg D2 r4 R4 -o sp D2 SP
+		      -o depth D2 -o fun D2 FUN -o
+		      okmemcopy (LAM ^ RRA ^ RR1 ^ RR2 ^ RR3 ^ RR4
+				   ^ S ^ F ^ DP)).
+okexecret1 : okexecret (execret1 ^ LAM ^ _ ^ _ ^ _ ^ _ ^ _ ^ _ ^ _ ^ _
+			  ^ _ ^ _ ^ _ ^ _ _)
+	o- depth D
+	<- bdec D D2
+	o- reg D ra RA o- reg D2 ra RA2 o- reg D r1 R1 o- reg D2 r1 R12
+	o- reg D r2 R2 o- reg D2 r2 R22 o- reg D r3 R3 o- reg D2 r3 R32
+	o- reg D r4 R4 o- reg D2 r4 R42 o- sp D SP o- sp D2 SP
+	o- (reg D2 ra RA -o reg D2 r1 R1 -o reg D2 r2 R2 -o reg D2 r3 R3
+	      -o reg D2 r4 R4 -o sp D2 SP -o depth D2
+	      -o ({RRA:reg D2 ra RA} {RR1:reg D2 r1 R1} {RR2:reg D2 r2 R2}
+		    {RR3:reg D2 r3 R3} {RR4:reg D2 r4 R4} {S:sp D2 SP}
+		    {DP:depth D2} okmemrep (LAM ^ RRA ^ RR1 ^ RR2 ^ RR3 ^
+					      RR4 ^ S ^ DP))).
+
+satspec1 : satspec nospec o- <T>.
+satspec2 : satspec (S1 ? S2) o- satspec S1 & satspec S2.
+satspec3 : satspec (add M) o- safeRd M.
+satspec4 : satspec (arr M V) <- bplus M V M2* <- bdec M2* M2
+	o- safeRd M & safeRd M2.
+	%% >= looks at top of stack
+satspec5 : satspec (>= V) o- slook M & mlook M VS <- ble V VS o- <T>.
+
+cscheck1 : cscheck _ _ noregs o- <T>.
+cscheck2 : cscheck D D2 (R ; RLIST)
+	o- rdlook D R V & rdlook D2 R V2 & beqeat V V2 1
+		& cscheck D D2 RLIST.
+memcheck1 : memcheck D D2 SP ARG <- bplus SP ARG Startpt
+	o- memcheck* D D2 Startpt.
+memcheck*1 : memcheck* _ _ I <- maxmem MAXMEM <- binc MAXMEM P1
+	<- ble P1 I o- <T>.
+memcheck*2 : memcheck* D D2 I <- maxmem MAXMEM <- ble I MAXMEM <- binc I I2
+	o- mdlook D I V & mdlook D2 I V2 & beqeat V V2 1
+		& memcheck* D D2 I2.
+
+ex1 : wrapper 5 5 10 =
+   wrap1 ^
+      ([X1^reg 1 ra unk] [X2^reg 1 r1 unk] [X3^reg 1 r2 unk] [X4^reg 1 r3 unk]
+          [X5^reg 1 r4 unk] [X6^depth 1]
+          go1 ^
+             ([X7:maxmem 5] [S1^sp 1 (bzero (bone (bone e)))] [F1^fun 1 5]
+                 buildgo2 ^
+                    ([M1^mem 1 5 unk]
+                        buildgo2 ^
+                           ([M2^mem 1 (bzero (bzero (bone e))) unk]
+                               buildgo2 ^
+                                  ([M3^mem 1 (bone (bone e)) unk]
+                                      buildgo2 ^
+                                         
+([M4^mem 1 (bzero (bone e)) unk]
+    buildgo2 ^
+       ([M5^mem 1 (bone e) unk]
+           buildgo1 ^
+              (run2 ^
+                  (exannot ^
+                      (runnext1 ^
+                          (run2 ^
+                              (exinit ^
+                                  (upr1a ^
+                                      ([X8^depth 1] [X9^reg 1 r1 4]
+                                          
+runnext1 ^
+   (run2 ^
+       (exinit ^
+           (upr1a ^
+               ([X10^depth 1] [X11^reg 1 r2 ~5]
+                   runnext1 ^
+                      (run2 ^
+                          (exinit ^
+                              (upr1a ^
+                                  ([X12^depth 1] [X13^reg 1 r3 ~5]
+                                      runnext1 ^
+                                         
+(run2 ^
+    (exinit ^
+        (upr1a ^
+            ([X14^depth 1] [X15^reg 1 r4 ~5]
+                runnext1 ^
+                   (run2 ^
+                       (exadvsp ^
+                           ([X16^depth 1] [S2^sp 1 (bone (bzero (bone e)))]
+                               runnext1 ^
+                                  (run2 ^
+                                      (exstw ^
+                                          
+(rlook1 ^ () ^ X9 ^ X16 , slook1 ^ () ^ S2 ^ X16 ,
+    execstw1 ^
+       (upm1a ^
+           ([X17^depth 1] [M6^mem 1 (bone (bzero (bone e))) 4]
+               runnext1 ^
+                  (run2 ^
+                      (excompRA ^
+                          ([X18^depth 1] [F2^fun 1 5]
+                              upr1a ^
+                                 ([X19^depth 1]
+                                     [X20^
+reg 1 ra (bzero (bone (bzero (bone (bzero (bzero (bone e)))))))]
+                                     runnext1 ^
+                                        
+(run2 ^
+    (excall ^
+        (slook1 ^ () ^ S2 ^ X19 ,
+            execcall2 ^
+               (execcall*1 ^
+                   (rdlook1 ^ () ^ X20 , rdlook1 ^ () ^ X9 ,
+                       rdlook1 ^ () ^ X11 , rdlook1 ^ () ^ X13 ,
+                       rdlook1 ^ () ^ X15 , sdlook1 ^ () ^ S2 ,
+                       ([X21^reg (bzero (bone e)) ra
+                                (bzero
+                                    (bone
+                                        (bzero (bone (bzero (bzero (bone e)))))))]
+                           [X22^reg (bzero (bone e)) r1 4]
+                           [X23^reg (bzero (bone e)) r2 ~5]
+                           [X24^reg (bzero (bone e)) r3 ~5]
+                           [X25^reg (bzero (bone e)) r4 ~5]
+                           [S3^sp (bzero (bone e)) (bone (bzero (bone e)))]
+                           [F3^fun (bzero (bone e)) 1]
+                           [X26^depth (bzero (bone e))]
+                           memcopy2 ^
+                              (mdlook1 ^ () ^ M6 ,
+                                  ([M7^mem (bzero (bone e)) 5 4]
+                                      memcopy2 ^
+                                         
+(mdlook1 ^ () ^ M2 ,
+    ([M8^mem (bzero (bone e)) (bzero (bzero (bone e))) unk]
+        memcopy2 ^
+           (mdlook1 ^ () ^ M3 ,
+               ([M9^mem (bzero (bone e)) (bone (bone e)) unk]
+                   memcopy2 ^
+                      (mdlook1 ^ () ^ M4 ,
+                          ([M10^mem (bzero (bone e)) (bzero (bone e)) unk]
+                              memcopy2 ^
+                                 (mdlook1 ^ () ^ M5 ,
+                                     ([M11^mem (bzero (bone e)) (bone e) unk]
+                                         
+memcopy1 ^
+   (run2 ^
+       (exannot ^
+           (runnext1 ^
+               (run2 ^
+                   (exinit ^
+                       (upr1a ^
+                           ([X27^depth (bzero (bone e))]
+                               [X28^reg (bzero (bone e)) r1 0]
+                               runnext1 ^
+                                  (run2 ^
+                                      (exinit ^
+                                          
+(upr1a ^
+    ([X29^depth (bzero (bone e))] [X30^reg (bzero (bone e)) r2 ~1]
+        runnext1 ^
+           (run2 ^
+               (exstr ^
+                   (slook1 ^ () ^ S3 ^ X29 ,
+                       execstr1 ^
+                          (mlook1 ^ () ^ M7 ^ X29 ,
+                              upr1a ^
+                                 ([X31^depth (bzero (bone e))]
+                                     [X32^reg (bzero (bone e)) r3 4]
+                                     runnext1 ^
+                                        
+(run2 ^
+    (exarith ^
+        (rlook1 ^ () ^ X28 ^ X31 , rlook1 ^ () ^ X32 ^ X31 ,
+            execEOP1 ^
+               (upr1a ^
+                   ([X33^depth (bzero (bone e))]
+                       [X34^reg (bzero (bone e)) r1 (bzero (bzero (bone e)))]
+                       runnext1 ^
+                          (run2 ^
+                              (exarith ^
+                                  (rlook1 ^ () ^ X32 ^ X33 ,
+                                      rlook1 ^ () ^ X30 ^ X33 ,
+                                      execEOP1 ^
+                                         
+(upr1a ^
+    ([X35^depth (bzero (bone e))] [X36^reg (bzero (bone e)) r3 (bone (bone e))]
+        runnext1 ^
+           (run2 ^
+               (excondCOP ^
+                   (rlook1 ^ () ^ X36 ^ X35 ,
+                       execcondCOP2 ^
+                          (runnext1 ^
+                              (run2 ^
+                                  (exjmp ^
+                                      (execjmp1 ^
+                                          
+(run2 ^
+    (exarith ^
+        (rlook1 ^ () ^ X34 ^ X35 , rlook1 ^ () ^ X36 ^ X35 ,
+            execEOP1 ^
+               (upr1a ^
+                   ([X37^depth (bzero (bone e))]
+                       [X38^reg (bzero (bone e)) r1 (bone (bone (bone e)))]
+                       runnext1 ^
+                          (run2 ^
+                              (exarith ^
+                                  (rlook1 ^ () ^ X36 ^ X37 ,
+                                      rlook1 ^ () ^ X30 ^ X37 ,
+                                      execEOP1 ^
+                                         
+(upr1a ^
+    ([X39^depth (bzero (bone e))] [X40^reg (bzero (bone e)) r3 (bzero (bone e))]
+        runnext1 ^
+           (run2 ^
+               (excondCOP ^
+                   (rlook1 ^ () ^ X40 ^ X39 ,
+                       execcondCOP2 ^
+                          (runnext1 ^
+                              (run2 ^
+                                  (exjmp ^
+                                      (execjmp1 ^
+                                          
+(run2 ^
+    (exarith ^
+        (rlook1 ^ () ^ X38 ^ X39 , rlook1 ^ () ^ X40 ^ X39 ,
+            execEOP1 ^
+               (upr1a ^
+                   ([X41^depth (bzero (bone e))]
+                       [X42^reg (bzero (bone e)) r1
+                               (bone (bzero (bzero (bone e))))]
+                       runnext1 ^
+                          (run2 ^
+                              (exarith ^
+                                  (rlook1 ^ () ^ X40 ^ X41 ,
+                                      rlook1 ^ () ^ X30 ^ X41 ,
+                                      execEOP1 ^
+                                         
+(upr1a ^
+    ([X43^depth (bzero (bone e))] [X44^reg (bzero (bone e)) r3 (bone e)]
+        runnext1 ^
+           (run2 ^
+               (excondCOP ^
+                   (rlook1 ^ () ^ X44 ^ X43 ,
+                       execcondCOP2 ^
+                          (runnext1 ^
+                              (run2 ^
+                                  (exjmp ^
+                                      (execjmp1 ^
+                                          
+(run2 ^
+    (exarith ^
+        (rlook1 ^ () ^ X42 ^ X43 , rlook1 ^ () ^ X44 ^ X43 ,
+            execEOP1 ^
+               (upr1a ^
+                   ([X45^depth (bzero (bone e))]
+                       [X46^reg (bzero (bone e)) r1
+                               (bzero (bone (bzero (bone e))))]
+                       runnext1 ^
+                          (run2 ^
+                              (exarith ^
+                                  (rlook1 ^ () ^ X44 ^ X45 ,
+                                      rlook1 ^ () ^ X30 ^ X45 ,
+                                      execEOP1 ^
+                                         
+(upr1a ^
+    ([X47^depth (bzero (bone e))] [X48^reg (bzero (bone e)) r3 0]
+        runnext1 ^
+           (run2 ^
+               (excondCOP ^
+                   (rlook1 ^ () ^ X48 ^ X47 ,
+                       execcondCOP1 ^
+                          (execjmp1 ^
+                              (run2 ^
+                                  (exstw ^
+                                      (rlook1 ^ () ^ X46 ^ X47 ,
+                                          slook1 ^ () ^ S3 ^ X47 ,
+                                          
+execstw1 ^
+   (upm1a ^
+       ([X49^depth (bzero (bone e))]
+           [M12^mem (bzero (bone e)) (bone (bzero (bone e)))
+                   (bzero (bone (bzero (bone e))))]
+           runnext1 ^
+              (run2 ^
+                  (exret ^
+                      (sdlook1 ^ () ^ S3 , sdlook1 ^ () ^ S2 ,
+                          execret1 ^
+                             ([X50^reg (bone e) ra
+                                      (bzero
+                                          (bone
+                                              (bzero
+                                                  (bone (bzero (bzero (bone e)))))))]
+                                 [X51^reg (bone e) r1
+                                         (bzero (bone (bzero (bone e))))]
+                                 [X52^reg (bone e) r2 ~1]
+                                 [X53^reg (bone e) r3 0]
+                                 [X54^reg (bone e) r4 ~5]
+                                 [S4^sp (bone e) (bone (bzero (bone e)))]
+                                 [X55^depth (bone e)]
+                                 memrep2 ^
+                                    ([M13^mem (bone e) 5
+                                             (bzero (bone (bzero (bone e))))]
+                                        
+memrep2 ^
+   ([M14^mem (bone e) (bzero (bzero (bone e))) unk]
+       memrep2 ^
+          ([M15^mem (bone e) (bone (bone e)) unk]
+              memrep2 ^
+                 ([M16^mem (bone e) (bzero (bone e)) unk]
+                     memrep2 ^
+                        ([M17^mem (bone e) (bone e) unk]
+                            memrep1 ^
+                               (run2 ^
+                                   (exstr ^
+                                       (
+slook1 ^ () ^ S4 ^ X55 ,
+   execstr1 ^
+      (mlook1 ^ () ^ M13 ^ X55 ,
+          upr1a ^
+             ([X56^depth (bone e)]
+                 [X57^reg (bone e) r1 (bzero (bone (bzero (bone e))))]
+                 runnext1 ^
+                    (run2 ^
+                        (exadvsp ^
+                            ([X58^depth (bone e)]
+                                [S5^sp (bone e) (bzero (bone (bone e)))]
+                                runnext1 ^
+                                   (term prog-76 ^ F2 ^ X58 ^
+                                       (
+consumemem1 ^
+   (cons2 ^
+       (cons2 ^
+           (cons2 ^
+               (cons2 ^ (cons2 ^ cons1 ^ M17 bdec1 beq15) ^ M16 (bdec4 bdec1)
+                   beq17) ^
+               M15 bdec3 beq15) ^
+           M14 (bdec4 (bdec4 bdec1)) beq16) ^
+       M13 bdec2 beq15)
+   (ble1 bgeq0d
+       (bsub4
+           (bsub*2
+               (bsub*h1
+                   (bsub**7 , bsub***3 (bsub***3 (bsub***5 (bsub***4 bsub***1)))))
+               beq18))) ^
+   S5 (binc2 binc1) X7) ^
+                                       X54 ^ X53 ^ X52 ^ X57 ^ X50)
+                                   (binc2 (binc2 binc1)))
+                            (bplus4 (bplus*9 bplus*c3)) ^ S4 ^ X56)
+                        prog-75)
+                    binc1) ^
+             X51 ^ X55)
+      (bplus4 bplus*4)))
+                                   prog-74)
+                               beq1) ^
+                        M5 ^ M11 bdec1
+                        (ble1 bgeq0b (bsub4 (bsub*1 (beq25 beq1))))) ^
+                 M4 ^ M10 (bdec4 bdec1)
+                 (ble1 bgeq0d
+                     (bsub4
+                         (bsub*2
+                             (bsub*h1
+                                 (bsub**4 bsub**b6 ,
+                                     bsub***3 (bsub***4 (bsub***2 bsub***1))))
+                             beq22)))) ^
+          M3 ^ M9 bdec3
+          (ble1 bgeq0c
+              (bsub4
+                  (bsub*2
+                      (bsub*h1
+                          (bsub**1 bsub**7 ,
+                              bsub***3 (bsub***5 (bsub***4 bsub***1))))
+                      (beq25 beq18))))) ^
+   M2 ^ M8 (bdec4 (bdec4 bdec1))
+   (ble1 bgeq0d
+       (bsub4
+           (bsub*2
+               (bsub*h1
+                   (bsub**4 (bsub**b5 bsub**b6) ,
+                       bsub***3 (bsub***3 (bsub***4 (bsub***2 bsub***1)))))
+               beq22)))) ^
+                                    M6 ^ M12 bdec2
+                                    (ble1 bgeq0c
+                                        
+(bsub4
+    (bsub*2
+        (bsub*h1
+            (bsub**1 bsub**6 ,
+                bsub***3 (bsub***5 (bsub***5 (bsub***4 bsub***1)))))
+        (beq25 beq20))))) ^
+                             S2 ^ S3 ^ X15 ^ X25 ^ X13 ^ X48 ^ X11 ^ X30 ^ X9 ^
+                             X46 ^ X20 ^ X21 X7)
+                      prog-1 ^ F3 (bdec4 bdec1) ^ X49)
+                  prog-10)
+              (binc2 binc1)) ^
+       M7 ^ X47)
+   (bplus4 bplus*4)))
+                                  prog-9)
+                              (bplus4 (bplus*7 (bplus*9 (bplus*c4 bplus*4)))))
+                          (cop1 beq1)))
+               prog-7)
+           binc1) ^
+    X44 ^ X45)
+                                         (eop1 (bplus2 (bsub*1 (beq25 beq1))))))
+                              prog-6)
+                          (binc2 binc1)) ^
+                   X42 ^ X43)
+               (eop1 (bplus4 (bplus*9 bplus*c1)))))
+    prog-5)
+                                          
+(bplus3
+    (bsub*2
+        (bsub*h1
+            (bsub**4 (bsub**b2 (bsub**b5 bsub**b6)) ,
+                bsub***3 (bsub***3 (bsub***5 (bsub***4 (bsub***2 bsub***1))))))
+        beq22))))
+                                  prog-8)
+                              (binc2 (binc2 (binc2 binc3))))
+                          (cop1 beq18)))
+               prog-7)
+           binc1) ^
+    X40 ^ X41)
+                                         
+(eop1
+    (bplus2
+        (bsub*2
+            (bsub*h1
+                (bsub**4 bsub**b6 , bsub***3 (bsub***4 (bsub***2 bsub***1))))
+            beq22)))))
+                              prog-6)
+                          (binc2 binc1)) ^
+                   X38 ^ X39)
+               (eop1 (bplus4 (bplus*8 (bplus*9 (bplus*c2 bplus*2)))))))
+    prog-5)
+                                          
+(bplus3
+    (bsub*2
+        (bsub*h1
+            (bsub**4 (bsub**b2 (bsub**b5 bsub**b6)) ,
+                bsub***3 (bsub***3 (bsub***5 (bsub***4 (bsub***2 bsub***1))))))
+        beq22))))
+                                  prog-8)
+                              (binc2 (binc2 (binc2 binc3))))
+                          (cop1 beq20)))
+               prog-7)
+           binc1) ^
+    X36 ^ X37)
+                                         
+(eop1
+    (bplus2
+        (bsub*2
+            (bsub*h1 (bsub**1 bsub**7 , bsub***3 (bsub***5 (bsub***4 bsub***1))))
+            (beq25 beq18))))))
+                              prog-6)
+                          (binc2 binc1)) ^
+                   X34 ^ X35)
+               (eop1 (bplus4 (bplus*7 (bplus*7 bplus*4))))))
+    prog-5)
+                                          
+(bplus3
+    (bsub*2
+        (bsub*h1
+            (bsub**4 (bsub**b2 (bsub**b5 bsub**b6)) ,
+                bsub***3 (bsub***3 (bsub***5 (bsub***4 (bsub***2 bsub***1))))))
+        beq22))))
+                                  prog-8)
+                              (binc2 (binc2 (binc2 binc3))))
+                          (cop1 beq18)))
+               prog-7)
+           binc1) ^
+    X32 ^ X33)
+                                         
+(eop1
+    (bplus2
+        (bsub*2
+            (bsub*h1
+                (bsub**4 (bsub**b5 bsub**b6) ,
+                    bsub***3 (bsub***3 (bsub***4 (bsub***2 bsub***1))))) beq22)))))
+                              prog-6)
+                          (binc2 binc1)) ^
+                   X28 ^ X31)
+               (eop1 (bplus4 bplus*3))))
+    prog-5)
+                                        binc1) ^
+                                 X24 ^ X29)
+                          (bplus4 bplus*4)))
+               prog-4)
+           (binc2 (binc2 binc3))) ^
+    X23 ^ X27))
+                                      prog-3)
+                                  binc1) ^
+                           X22 ^ X26))
+                   prog-2)
+               (binc2 binc3)))
+       prog-1)
+   beq1))
+                                 bdec1
+                                 (ble1 bgeq0b (bsub4 (bsub*1 (beq25 beq1))))))
+                      (bdec4 bdec1)
+                      (ble1 bgeq0d
+                          (bsub4
+                              (bsub*2
+                                  (bsub*h1
+                                      (bsub**4 bsub**b6 ,
+                                          bsub***3
+                                             (bsub***4 (bsub***2 bsub***1))))
+                                  beq22)))))
+           bdec3
+           (ble1 bgeq0c
+               (bsub4
+                   (bsub*2
+                       (bsub*h1
+                           (bsub**1 bsub**7 ,
+                               bsub***3 (bsub***5 (bsub***4 bsub***1))))
+                       (beq25 beq18))))))
+                                         (bdec4 (bdec4 bdec1))
+                                         
+(ble1 bgeq0d
+    (bsub4
+        (bsub*2
+            (bsub*h1
+                (bsub**4 (bsub**b5 bsub**b6) ,
+                    bsub***3 (bsub***3 (bsub***4 (bsub***2 bsub***1))))) beq22)))))
+                              bdec2
+                              (ble1 bgeq0c
+                                  (bsub4
+                                      (bsub*2
+                                          (bsub*h1
+                                              (bsub**1 bsub**6 ,
+                                                  bsub***3
+                                                     (bsub***5
+                                                         (bsub***5
+                                                             (bsub***4 bsub***1)))))
+                                          (beq25 beq20))))))
+                   (binc2 binc3) ^ X19 X7)
+               prog-1
+               (bplus2
+                   (bsub*2
+                       (bsub*h1
+                           (bsub**3 (bsub**2 (bsub**1 bsub**5)) ,
+                               bsub***3
+                                  (bsub***4 (bsub***2 (bsub***2 bsub***1)))))
+                       beq21)))
+        setmax)
+    prog-73)
+                                        binc1) ^
+                                 X1 ^ X18)
+                          (bplus4 (bplus*6 (bplus*7 bplus*5))) ^ F1 ^ X17)
+                      prog-72)
+                  (binc2 (binc2 (binc2 binc1)))) ^
+           M1 ^ X16)
+       (bplus4 bplus*4)))
+                                      prog-71)
+                                  binc1)
+                           (bplus3
+                               (bsub*2
+                                   (bsub*h1
+                                       (bsub**4 bsub**b6 ,
+                                           bsub***3
+                                              (bsub***3
+                                                  (bsub***5 (bsub***4 bsub***1)))))
+                                   beq22)) ^
+                           S1 ^ X14)
+                       prog-70)
+                   (binc2 binc1)) ^
+            X5 ^ X12))
+    prog-69)
+                                         binc1) ^
+                                  X4 ^ X10))
+                          prog-68)
+                      (binc2 (binc2 binc1))) ^
+               X3 ^ X8))
+       prog-67)
+   binc1) ^
+                                      X2 ^ X6))
+                              prog-66)
+                          (binc2 binc1)))
+                  prog-65))
+       bdec1 beq15)
+                                         (bdec4 bdec1) beq17)
+                                  bdec3 beq15)
+                           (bdec4 (bdec4 bdec1)) beq16)
+                    bdec2 beq15)
+             (ble1 bgeq0d
+                 (bsub4
+                     (bsub*2
+                         (bsub*h1
+                             (bsub**7 ,
+                                 bsub***3
+                                    (bsub***3 (bsub***5 (bsub***4 bsub***1)))))
+                         beq18))) ^
+             (binc2 binc1) prog-65).

@@ -1,0 +1,13 @@
+This code provides an adequate representation of linear sequent calculus in
+LLF and an implementation of cut elimination for this calculs.  The
+subdirectory "cll-in-Elf" shows how (laboriously) this problem is tackeled in
+Elf.  The language and its representation are described in the following
+technical report:
+
+Frank Pfenning.
+Structural cut elimination in linear logic.
+Technical Report CMU-CS-94-222, Department of Computer Science,
+Carnegie Mellon University, December 1994.
+
+Available from ftp.cs.cmu.edu in
+/afs/cs/user/fp/public/elf-papers/cutlin94.ps.Z

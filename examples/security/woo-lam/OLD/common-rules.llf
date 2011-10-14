@@ -1,0 +1,21 @@
+comp : build (M1 * M2)
+	o- count (s N)
+	o- (count N -o build M1)
+	o- (count N -o build M2).
+encrypt : build (crypt M K)
+	   o- count (s N)
+	   o- (count N -o build M)
+	   o- (count N -o knowsKey K).
+bridge : build (@ M)
+	  o- given (@ M).
+dec1 : given M1
+	o- count (s N)
+	o- (count N -o given (M1 * M2)).
+dec2 : given M2
+	o- count (s N)
+	o- (count N -o given (M1 * M2)).
+decrypt : given M
+	   o- count (s N)
+	   o- (count N -o given (crypt M K))
+	   o- (count N -o knowsKey K).
+

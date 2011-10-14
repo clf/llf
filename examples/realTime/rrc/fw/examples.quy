@@ -1,0 +1,8 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic",
+% test data.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+%query 1 1                        %% More solutions exist
+rrc.

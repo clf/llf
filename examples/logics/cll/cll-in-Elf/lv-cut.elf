@@ -1,0 +1,87 @@
+%%% Classical Linear Sequent Calculus LV with Cuts
+%%% Author: Frank Pfenning
+
+@ : type.         % Token (for derivations with Cuts)
+
+%% Axioms
+
+axiom^ : (neg A -> pos A -> @).
+
+%% Multiplicative Connectives
+
+timesr^ : (pos A -> @)
+	  -> (pos B -> @)
+	  -> (pos (A times B) -> @).
+
+timesl^ : (neg A -> neg B -> @)
+	  -> (neg (A times B) -> @).
+
+oner^ : (pos one -> @).
+
+onel^ : @
+	-> (neg one -> @).
+
+%% Additive Connectives
+
+andr^ : (pos A -> @) -> (pos B -> @)
+        -> (pos (A and B) -> @).
+
+andl1^ : (neg A -> @)
+	 -> (neg (A and B) -> @).
+
+andl2^ : (neg B -> @)
+	 -> (neg (A and B) -> @).
+
+topr^ : (pos (top) -> @).
+
+% no topl
+
+%% Involution
+
+perpr^ : (neg A -> @)
+	 -> (pos (perp A) -> @).
+
+perpl^ : (pos A -> @)
+	 -> (neg (perp A) -> @).
+
+% Quantifier
+
+forallr^ : ({a:i} pos (A a) -> @)
+	   -> (pos (forall A) -> @).
+
+foralll^ : {T:i} (neg (A T) -> @)
+	   -> (neg (forall A) -> @).
+
+%% Exponentials
+
+!r^ : (pos A -> @)
+      -> (pos (! A) -> @).
+
+!l^ : (neg! A -> @)
+      -> (neg (! A) -> @).
+
+!d^ : (neg A -> @)
+      -> (neg! A -> @).
+
+?r^ : (pos? A -> @)
+      -> (pos (? A) -> @).
+
+?l^ : (neg A -> @)
+      -> (neg (? A) -> @).
+
+?d^ : (pos A -> @)
+      -> (pos? A -> @).
+
+%% Cuts
+
+cut^ : (pos A -> @)
+       -> (neg A -> @)
+       -> @.
+
+cut!^ : (pos A -> @)
+	-> (neg! A -> @)
+	-> @.
+
+cut?^ : (pos? A -> @)
+	-> (neg A -> @)
+	-> @.

@@ -1,0 +1,25 @@
+atmMsg : type.
+msg : type.
+key : type.
+
+@ : atmMsg -> msg.
+
+% Note: for
+%       getMsg 10 (crypt ((crypt (@ m2) k1) * (@ m1)) k2).
+% it takes 16 GC to terminate with @, and 107 without!!!
+
+* : msg -> msg -> msg.			%infix left 10 *
+
+crypt : msg -> key -> msg.
+
+knowsKey : key -> type.
+given : msg -> type.
+build : msg -> type.
+
+count : nat -> type.
+
+
+getMsg : nat -> msg -> type.
+
+getM : getMsg N M
+	o- (count N -o build M).

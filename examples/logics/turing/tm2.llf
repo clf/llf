@@ -1,0 +1,62 @@
+%%% Turing Machine
+%%% Transitions of the form (s,q) -> (s',q') or (s,q) -> (M,q')
+%%% Author: Iliano Cervesato
+%%% October 1996, revised December 1998
+
+symbolORmove : type.
+
+sy : symbol -> symbolORmove.
+mv : move   -> symbolORmove.
+
+trans2 :  symbol -> state -> symbolORmove -> state -> type.
+head2 : cell -> state -> type.
+
+
+tm2_state : head2 C Q
+		o- contains C S
+		o- trans2 S Q (sy S') Q'
+		o- (     contains C S'
+		      -o head2 C Q').
+
+tm2_lcell : head2 C Q
+	     o- contains C S
+	     o- trans2 S Q (mv left) Q'
+	     o- adjacent C' C
+	     o- (     contains C S
+		   -o adjacent C' C
+		   -o head2 C' Q').
+
+tm2_rcell : head2 C Q
+	     o- contains C S
+	     o- trans2 S Q (mv right) Q'
+	     o- adjacent C C'
+	     o- (     contains C S
+		   -o adjacent C C'
+		   -o head2 C' Q').
+
+tm2_leot : head2 C Q
+	    o- contains C S
+	    o- trans2 S Q (mv left) Q'
+	    o- adjacent eot C
+	    o- ({c:cell}
+		     contains C S
+		  -o contains c blank
+		  -o adjacent eot c
+		  -o adjacent c C
+		  -o head2 c Q').
+
+tm2_reot : head2 C Q
+	    o- contains C S
+	    o- trans2 S Q (mv right) Q'
+	    o- adjacent C eot
+	    o- ({c:cell} 
+		     contains C S
+		  -o contains c blank
+		  -o adjacent c eot
+		  -o adjacent C c
+		  -o head2 c Q').
+tm2_stop : head2 C Q
+	   o- contains C S
+	   o- notrans S Q
+	   o- (     contains C S
+		 -o collect eoc eot C Q).

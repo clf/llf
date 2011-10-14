@@ -1,0 +1,2 @@
+%query 6 *
+permute (cons a (cons b (cons c nil))) K.

@@ -1,0 +1,24 @@
+% Testing the compiler's printer.
+
+item : type.
+
+nil  : item.
+cons : item -> item -> item.
+
+
+append : item -> item -> item -> type.
+
+a_nil  : append nil L L.
+
+a_cons : append (cons X K) L (cons X M)
+            <- append K L M.
+
+
+reverse : item -> item -> type.
+rev     : item -> item -> type.
+
+rv : reverse L K
+       <- (rev nil K
+           -> ({X}{L'}{K'} rev (cons X L') K'
+                             <- rev L' (cons X K'))
+           -> rev L nil).

@@ -1,0 +1,16 @@
+%%% Language of terms over types 1, *, =>
+%%% Authors: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+%%% External representation
+
+tm : tp -> type.
+
+unit : <T> -o tm 1.
+pair : tm A & tm B -o tm (A * B).
+fst  : tm (A * B) -o tm A.
+snd  : tm (A * B) -o tm B.
+llam : (tm A -o tm B) -o tm (A =o B).
+lapp  : tm (A =o B) -o tm A -o tm B.
+lam  : (tm A -> tm B) -o tm (A => B).
+app  : tm (A => B) -o tm A -> tm B.

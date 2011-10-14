@@ -1,0 +1,50 @@
+%%% Turing Machine
+%%% Example: unary adder (stops positioned on the leftmost digit)
+%%% Author: Iliano Cervesato
+%%% October 1996, revised December 1998
+
+%% Symbols
+
+1 : symbol.
+
+
+%% States
+
+q1 : state.
+q2 : state.
+
+
+%% Transitions
+
+d10 : trans1 1 q0 1 q0 right.
+db0 : trans1 blank q0 1 q1 left.
+d11 : trans1 1 q1 1 q1 left.
+db1 : trans1 blank q1 blank q2 right.
+n_2 : notrans S q2.
+
+
+
+%% Initial configuration
+
+c0 : cell.
+c1 : cell.
+c2 : cell.
+c3 : cell.
+
+
+
+
+%% Temporary
+
+q'4 : state.
+
+tr : trans2 1 q0 (mv right) q0.
+nt : notrans blank q0.
+
+%{
+tr2 : trans2 1 q0 (mv right) q0.
+tr3 : trans2 blank q0 (sy 1) q'4.
+tr4 : trans2 1 q'4 (mv left) q1.
+tr6 : trans2 1 q1 (mv left) q1.
+tr8 : trans2 blank q1 (mv right) q2.
+}%

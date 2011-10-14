@@ -1,0 +1,17 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic".
+% Forward chaining.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+Forward chaining:
+
++ direct transcription of the specifications
++ efficient (the given rules favors forward chaining) (11 GC in the example)
+
+- final values are hidden (unless we instrument the main routine with
+  variables to get them; this can however be done systematically)
+
+Performance (measured in number of calls to the GC)
+* success (1,2,3,4) : 7 (avg)
+* failure (1,1,1,4) : 5 (avg)

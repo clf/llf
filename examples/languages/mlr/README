@@ -1,0 +1,16 @@
+This directory contains the LLF source which formalizes the syntax,
+static and dynamic semantics, and a proof of type preservation for
+Mini-ML with references (functional core of ML + references).  See
+either of the following documents for detailed explanations:
+
+* Iliano Cervesato: "A Linear Logical Framework", Ph. D. thesis,
+  Department of Computer Science, University of Turin, Italy.
+  English version to appear shortly.
+
+* Iliano Cervesato and Frank Pfenning: "A Linear Logical Framework",
+  to appear in Information & Computation.
+
+* Iliano Cervesato and Frank Pfenning: "A Linear Logical Framework",
+  Proceedings of the Eleventh Annual Symposium on Logic in Computer
+  Science - LICS'96 (E. Clarke editor), pp. 264-275, IEEE Computer
+  Society Press, New Brunswick, NJ, 27-30 July 1996.

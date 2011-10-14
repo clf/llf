@@ -1,0 +1,9 @@
+% Needham-Schroeder Public Key Protocol -- networks's behavior
+% Date: 5 October 1998
+% Author: Nancy Durgin, Iliano Cervesato
+
+%{
+net : transit N
+       o- toNet X
+       o- (fromNet X -o loop N).
+}%

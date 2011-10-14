@@ -1,0 +1,127 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic"
+% General rules.
+% Meta-interpreted version
+% Date: 29 July  1998
+% Author: Iliano Cervesato
+
+preCon : type.
+postCon = preCon.
+
+==> : preCon -> postCon -> type.	%infix none 10 ==>
+
+* : preCon -> preCon -> preCon.		%infix right 11 *
+@ : preCon.
+
+plus : nat -> nat -> nat -> preCon.
+<= : nat -> nat -> preCon.		%infix none 12 <=
+
+
+% Time
+
+time  : nat -> preCon.			%prefix 12 time
+time' : nat -> type.			%name time' T
+
+
+% Timers
+
+timerValue : type.
+at : nat -> timerValue.
+off : timerValue.
+
+tLT : timerValue -> timerValue -> type.
+tLT_off : tLT (at N) off.
+tLT_at : tLT (at N) (at M)
+	  <- lt N M.
+
+< : timerValue -> timerValue -> preCon. %infix none 12 <
+
+timerName : type.
+ubTimer  : timerName -> timerValue -> preCon.
+ubTimer' : timerName -> timerValue -> type.    %name ubTimer' Ub
+lbTimer  : timerName -> timerValue -> preCon.
+lbTimer' : timerName -> timerValue -> type.    %name lbTimer' Lb
+
+
+% Application dependent predicates.
+
+userSpec : type.
+
+usr  : userSpec -> preCon.		%prefix 12 usr
+usr' : userSpec -> type.		%name usr' U
+
+
+% Misc.
+
+timeOut  : nat -> preCon.
+timeOut' : nat -> type.			%name timeOut' O
+
+
+%%% Meta-interpreter
+
+solve : postCon -> type.
+pre   : preCon -> type.
+post  : postCon -> preCon -> type.
+
+
+% Main loop
+
+slv_stop : solve G
+	    o- pre G.
+
+slv_rule : solve G
+	    o- (Pre ==> Post)
+	    o- pre Pre
+	    o- post Post G.
+
+
+% Reading-off pre-conditions
+
+pre_@ :       pre @.
+pre_* :       pre (P1 * P2)
+	       o- pre P1
+	       o- pre P2.
+pre_time :    pre (time T)
+	       o- time' T.
+pre_<= :      pre (N <= M)
+	       <- leq N M.
+pre_+ :       pre (plus N M R)
+	       <- add N M R.
+pre_< :       pre (V1 < V2)
+	       <- tLT V1 V2.
+pre_ub :      pre (ubTimer T V)
+	       o- ubTimer' T V.
+pre_lb :      pre (lbTimer T V)
+	       o- lbTimer' T V.
+pre_usr :     pre (usr U)
+	       o- usr' U.
+pre_timeout : pre (timeOut T)
+	       o- timeOut' T.
+
+
+% Asserting post-conditions
+
+post_@ : post @ G
+	    o- solve G.
+
+post_*-time :    post ((time T) * P) G
+		  o- (time' T -o post P G).
+post_*-ub :      post ((ubTimer T V) * P) G
+	          o- (ubTimer' T V -o post P G).
+post_*-lb :      post ((lbTimer T V) * P) G
+	          o- (lbTimer' T V -o post P G).
+post_*-usr :     post ((usr U) * P) G
+		  o- (usr' U -o post P G).
+post_*-timeout : post ((timeOut T) * P) G
+		  o- (timeOut' T -o post P G).
+
+post_time :    post (time T) G
+		  o- (time' T -o solve G).
+post_ub :      post (ubTimer T V) G
+	          o- (ubTimer' T V -o solve G).
+post_lb :      post (lbTimer T V) G
+	          o- (lbTimer' T V -o solve G).
+post_usr :     post (usr U) G
+		  o- (usr' U -o solve G).
+post_timeout : post (timeOut T) G
+		  o- (timeOut' T -o solve G).

@@ -1,0 +1,22 @@
+% Generic protocols (well, for now)
+% Date: 27 September 1998
+% Author: Iliano Cervesato
+
+atm : type.				%name atm A
+msg : type.                             %name msg M
+key : type.                             %name key K
+
+@     : atm -> msg.
+*     : msg -> msg -> msg.              %infix left 5 *
+crypt : msg -> key -> msg.
+inv   : key -> key.
+k2m   : key -> atm.
+
+protocol : type.
+
+toNet   : protocol -> nat -> msg -> type. %name toNet TN
+fromNet : protocol -> nat -> msg -> type. %name fromNet FN
+annKey : key -> type.
+
+loop1 : type.
+loop2 : type.

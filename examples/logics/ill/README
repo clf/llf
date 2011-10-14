@@ -1,0 +1,16 @@
+Some linear Twelf code on the connection between sequent calculus
+and linear natural deduction.
+
+ill.llf  ---  Propositions of intuitionistic linear logic
+nd.llf   ---  Natural deduction for ILL
+seq.llf  ---  Sequent calculus for ILL
+local.llf --- Local reductions and expansion for natural deductions
+ie.llf   ---  Annotation of natural deductions in introduction and
+              eliminations
+sound.llf  ---  Translation of sequent derivations to natural deductions
+complete.lff ---  Translation of natural deductions to sequent derivations
+
+The translations in the last two do not take advantage of normal
+forms.  Therefore, they do not exhibit the connection between normal
+natural deductions and cut-free sequent derivations (which is left
+as an exercise).

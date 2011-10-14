@@ -1,0 +1,46 @@
+%%% Curry-style linear lambda-calculus
+%%% Linear higher-order abstract syntax
+%%% Author: Iliano Cervesato
+
+
+%%% Syntax
+
+% Linear types
+
+tp2 : type.
+
+arrow2 : tp2 -> tp2 -> tp2.
+%infix right 100 arrow2
+
+
+
+% Linear terms
+
+tm2 : type.
+
+lam2 : (tm2 -o tm2) -o tm2.
+app2 : tm2 -o tm2 -o tm2.
+
+
+%%% Typing
+
+of2 : tm2 -> tp2 -> type.
+
+of_lam2 : of2 (lam2 ^ M) (T1 arrow2 T2)
+           <- ({x} of2 x T1
+               -> of2 (M ^ x) T2).
+of_app2 : of2 (app2 ^ M ^ N) T2
+           <- of2 M (T1 arrow2 T2)
+           <- of2 N T1.
+
+
+
+%%% Evaluation
+
+eval2 : tm2 -> tm2 -> type.
+
+ev_lam2 : eval2 (lam2 ^ M) (lam2 ^ M).
+ev_app2 : eval2 (app2 ^ M ^ N) M''
+            <- eval2 M (lam2 ^ M')
+            <- eval2 N N'
+            <- eval2 (M' ^ N') M''.

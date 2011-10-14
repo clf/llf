@@ -1,0 +1,11 @@
+Group is
+  ../lambda/sources.cm
+  ../formatter/sources.cm
+  ../order/sources.cm
+  lexsyn.sig
+  lexsyn.fun
+  lexprint.sig
+  lexprint.fun
+  lex.sig	 
+  lex.fun
+  lex.sml

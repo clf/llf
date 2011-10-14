@@ -1,0 +1,66 @@
+%%% Equality Testing over internal terms
+%%% Author: Iliano Cervesato and Frank Pfenning
+%%% April 1996, revised December 1998
+
+%%% Weak head-reduction
+
+%%% whr U S R holds if R is the result of cancelling the
+%%% whole spine S with the preatomic U.  This would correspond
+%%% to several successive head reduction in ordinary lambda-calculus.
+%%% Note that the result may not be in weak atomic form, since the
+%%% reductions could uncover a new head redex.
+
+whr : pc A -> spine A C -> pa C -> type.
+
+whr_*1 : whr (pair' ^ (U1, U2)) (pi1 ^ S) R
+	  <- whr U1 S R.
+whr_*2 : whr (pair' ^ (U1, U2)) (pi2 ^ S) R
+	  <- whr U2 S R.
+whr_=o : whr (llam' ^ U) (l; ^ U' ^ S) R
+	  <- whr (U ^ (pcan ^ U')) S R.
+whr_=> : whr (lam' ^ U) (; U' ^ S) R
+	  <- whr (U (pcan ^ U')) S R.
+whr_nil: whr (patom ^ R) nil R.
+
+%%% Equality
+
+peq : pc A -> pc A -> type.
+heq : hd A -> hd A -> type.      % assumed for variables
+seq : spine A C -> spine A C -> type.
+
+% Pre-canonical object equality
+
+peq_unit : peq (unit' ^ ()) (unit' ^ ())
+	    o- <T>.
+peq_pair : peq (pair' ^ (U1, U1')) (pair' ^ (U2, U2'))
+	    o- peq U1 U2
+	     & peq U1' U2'.
+peq_llam : peq (llam' ^ U1) (llam' ^ U2)
+	    o- ({x1:hd A} {x2:hd A}
+		  heq x1 x2 -o peq (U1 ^ x1) (U2 ^ x2)).
+peq_lam  : peq (lam' ^ U1) (lam' ^ U2)
+	    o- ({x1:hd A} {x2:hd A}
+		  heq x1 x2 -> peq (U1 x1) (U2 x2)).
+peq_root : peq (patom ^ (root ^ H1 ^ S1)) (patom ^ (root ^ H2 ^ S2))
+	    o- heq H1 H2
+	    o- seq S1 S2.
+peq_whr1 : peq (patom ^ (root ^ (pcan ^ U) ^ S)) U2
+	    o- whr U S R
+	    o- peq (patom ^ R) U2.
+peq_whr2 : peq U1 (patom ^ (root ^ (pcan ^ U) ^ S))
+	    o- whr U S R
+	    o- peq U1 (patom ^ R).
+
+% Spine equality
+
+seq_nil : seq nil nil.
+seq_pi1 : seq (pi1 ^ S1) (pi1 ^ S2)
+	   o- seq S1 S2.
+seq_pi2 : seq (pi2 ^ S1) (pi2 ^ S2)
+	   o- seq S1 S2.
+seq_l;  : seq (l; ^ U1 ^ S1) (l; ^ U2 ^ S2)
+	   o- peq U1 U2
+	   o- seq S1 S2.
+seq_;   : seq (; U1 ^ S1) (; U2 ^ S2)
+	   o- peq U1 U2
+	   <- seq S1 S2.

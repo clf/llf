@@ -1,0 +1,38 @@
+%%% Intuitionistic linear logic
+%%% Connection between natural deduction and sequent calculus
+%%% Propositional fragment without negation, bottom, or why-not.
+%%% Author: Frank Pfenning, Iliano Cervesato
+
+%  C = (!A -o B) -o (A -> B)
+C : {A:o}{B:o}o
+ = [A:o][B:o](lolli (lolli (bang A) B) (imp A B)).
+
+
+% Canonical natural deduction for C
+
+D : {A:o}{B:o} nd (C A B)
+ = [A:o][B:o]
+   lolliI ^ ([n_!a-*b^nd (lolli (bang A) B)]
+             impI ^ ([n_a:nd A]
+                     lolliE ^ n_!a-*b
+                            ^ (bangI n_a))).
+
+
+% Cut-free sequent calculus proof for C
+
+E : {A:o}{B:o} right (C A B)
+ = [A:o][B:o]
+   lolliR ^ ([l_!a-*b^left (lolli (bang A) B)]
+             impR ^ ([l_a:left A]
+                     lolliL ^ (bangR (init ^ l_a))
+                            ^ ([l_b^left B] init ^ l_b)
+                            ^ l_!a-*b)).
+
+% Translation of D in the sequent calculus (with cuts)
+%query 1 1
+{A:o}{B:o} cp (D A B) (E' A B).
+
+
+% Translation of E in natural deduction (NB: D' = D)
+%query 1 1
+{A:o}{B:o} sd (E A B) (D' A B).

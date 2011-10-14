@@ -1,0 +1,113 @@
+%%% Soundness of sequent calculus
+%%% Author: Frank Pfenning
+
+sd : right A -> nd A -> type.
+sd' : left A -> nd A -> type.
+
+%%% Initial sequents
+initSD : sd (init ^ L) D
+	  o- sd' L D.
+
+%%% Cuts
+cutSD : sd (cut ^ R1 ^ R2) (D2 ^ D1)
+	 o- sd R1 D1
+	 o- ({l:left A} {x:nd A}
+	       sd' l x -o sd (R2 ^ l) (D2 ^ x)).
+
+cut!SD : sd (cut! R1 ^ R2) (D2 D1)
+	  <- sd R1 D1
+	  o- ({l:left A} {u:nd A}
+		sd' l u -> sd (R2 l) (D2 u)).
+
+%%% Multiplicatives
+
+% A -o B
+lolliRSD : sd (lolliR ^ R1) (lolliI ^ D1)
+	    o- ({l:left A} {x:nd A}
+		  sd' l x -o sd (R1 ^ l) (D1 ^ x)).
+
+lolliLSD : sd (lolliL ^ R1 ^ R2 ^ L) (D2 ^ (lolliE ^ X ^ D1))
+	    o- sd R1 D1
+	    o- ({l:left B} {x:nd B}
+		  sd' l x -o sd (R2 ^ l) (D2 ^ x))
+	    o- sd' L X.
+
+% A * B
+tensorRSD : sd (tensorR ^ R1 ^ R2) (tensorI ^ D1 ^ D2)
+	     o- sd R1 D1
+	     o- sd R2 D2.
+
+tensorLSD : sd (tensorL ^ R1 ^ L) (tensorE ^ X ^ D1)
+	     o- ({l1:left A} {l2:left B} {x1:nd A} {x2:nd B}
+		   sd' l1 x1 -o sd' l2 x2 -o sd (R1 ^ l1 ^ l2) (D1 ^ x1 ^ x2))
+	     o- sd' L X.
+
+% 1
+oneRSD : sd (oneR) (oneI).
+oneLSD : sd (oneL ^ R1 ^ L) (oneE ^ X ^ D1)
+	  o- sd R1 D1
+	  o- sd' L X.
+
+%%% Additives
+
+% A & B
+withRSD : sd (withR ^ (R1, R2)) (withI ^ (D1, D2))
+	   o- sd R1 D1 & sd R2 D2.
+
+withL1SD : sd (withL1 ^ R1 ^ L) (D1 ^ (withE1 ^ X))
+	    o- ({l:left A} {x:nd A}
+		  sd' l x -o sd (R1 ^ l) (D1 ^ x))
+	    o- sd' L X.
+
+withL2SD : sd (withL2 ^ R2 ^ L) (D2 ^ (withE2 ^ X))
+	    o- ({l:left B} {x:nd B}
+		  sd' l x -o sd (R2 ^ l) (D2 ^ x))
+	    o- sd' L X.
+
+% T
+topRSD : sd (topR ^ ()) (topI ^ ())
+	  o- <T>.
+% no topL
+
+% A + B
+plusR1SD : sd (plusR1 ^ R1) (plusI1 ^ D1)
+	    o- sd R1 D1.
+
+plusR2SD : sd (plusR2 ^ R2) (plusI2 ^ D2)
+	    o- sd R2 D2.
+
+plusLSD : sd (plusL ^ (R1, R2) ^ L) (plusE ^ X ^ (D1, D2))
+	   o- (({l1:left A} {x1:nd A}
+		  sd' l1 x1 -o sd (R1 ^ l1) (D1 ^ x1))
+		 & ({l2:left B} {x2:nd B}
+		      sd' l2 x2 -o sd (R2 ^ l2) (D2 ^ x2)))
+	   o- sd' L X.
+
+% 0
+% no zeroR
+zeroLSD : sd (zeroL ^ () ^ L) (zeroE ^ X ^ ())
+	   o- <T>
+	   o- sd' L X.
+
+%%% Exponentials
+
+% A -> B
+impRSD : sd (impR ^ R1) (impI ^ D1)
+	  o- ({l:left A} {u:nd A}
+		sd' l u -> sd (R1 l) (D1 u)).
+
+impLSD : sd (impL R1 ^ R2 ^ L) (D2 (impE ^ X D1))
+	  <- sd R1 D1
+	  o- ({l:left B} {u:nd B}
+		sd' l u -> sd (R2 l) (D2 u))
+	  o- sd' L X.
+
+% ! A
+bangRSD : sd (bangR R1) (bangI D1)
+	   <- sd R1 D1.
+
+bangLSD : sd (bangL ^ R1 ^ L) (bangE ^ X ^ D2)
+	   o- ({l:left A} {u:nd A}
+		 sd' l u -> sd (R1 l) (D2 u))
+	   o- sd' L X.
+

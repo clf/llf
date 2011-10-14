@@ -1,0 +1,7 @@
+Group is
+  paths.sig
+  paths.fun
+  ../lambda/sources.cm
+  origins.sig
+  origins.fun
+  paths.sml

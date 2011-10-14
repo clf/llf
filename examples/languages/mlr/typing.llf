@@ -1,0 +1,134 @@
+%%% Mini-ML with References, typing
+%%% Author: Iliano Cervesato
+
+
+tpc : cell -> tp -> type.        %name tpc Tc
+tpe : exp -> tp -> type.         %name tpe Te
+tpi : instr -> tp -> type.       %name tpi Ti
+tpK : cont -> tp -> tp -> type.  %name tpK TK
+tpS : store -> type.             %name tpS TS
+tpa : answer -> tp -> type.      %name tpa Ta
+
+%{
+%mode -tpc +C *Tc
+
+%mode -tpe +E *Te
+%lex E
+
+%mode -tpi +I *Ti
+%lex I
+
+%mode -tpK +K *T1 *T2
+%lex K
+
+%mode -tpS +S
+%lex S
+
+%mode -tpa +A *Ta
+%lex A
+}%
+
+% Expressions
+
+tpe_z       : tpe z nat.
+tpe_s       : tpe (s E) nat
+               <- tpe E nat.
+tpe_case    : tpe (case E E1 E2) T
+               <- tpe E nat
+               <- tpe E1 T
+               <- ({x:exp} tpe x nat -> tpe (E2 x) T).
+tpe_pair    : tpe (pair E1 E2) (T1 cross T2)
+               <- tpe E1 T1
+               <- tpe E2 T2.
+tpe_fst     : tpe (fst E) T1
+               <- tpe E (T1 cross T2).
+tpe_snd     : tpe (snd E) T2
+               <- tpe E (T1 cross T2).
+tpe_lam     : tpe (lam E) (T1 arrow T2)
+               <- ({x:exp} tpe x T1 -> tpe (E x) T2).
+tpe_app     : tpe (app E1 E2) T1
+               <- tpe E1 (T2 arrow T1)
+               <- tpe E2 T2.
+tpe_letval  : tpe (letval E1 E2) T2
+               <- tpe E1 T1
+               <- ({x:exp} tpe x T1 -> tpe (E2 x) T2).
+tpe_letname : tpe (letname E1 E2) T
+               <- tpe (E2 E1) T.
+tpe_fix     : tpe (fix E) T
+               <- ({x:exp} tpe x T -> tpe (E x) T).
+
+tpe_cell    : tpe (rf C) (T tref)
+               <- tpc C T.
+tpe_ref     : tpe (ref E) (T tref)
+               <- tpe E T.
+tpe_deref   : tpe (! E) T
+               <- tpe E (T tref).
+tpe_noop    : tpe noop cmd.
+tpe_seq     : tpe (E1 ; E2) T2
+               <- tpe E1 T1
+               <- tpe E2 T2.
+tpe_assign  : tpe (E1 is E2) cmd
+               <- tpe E1 (T tref)
+               <- tpe E2 T.
+tpe_while   : tpe (while E1 E2) cmd
+	       <- tpe E1 nat
+	       <- tpe E2 cmd.
+
+
+% Instructions
+
+tpi_eval    : tpi (eval E) T
+               <- tpe E T.
+tpi_return  : tpi (return V) T
+               <- tpe V T.
+tpi_case*   : tpi (case* V E1 E2) T
+               <- tpe V nat
+               <- tpe E1 T
+               <- ({x:exp} tpe x nat -> tpe (E2 x) T).
+tpi_pair*   : tpi (pair* V E) (T1 cross T2)
+               <- tpe V T1
+               <- tpe E T2.
+tpi_fst*    : tpi (fst* V) T1
+               <- tpe V (T1 cross T2).
+tpi_snd*    : tpi (snd* V) T2
+               <- tpe V (T1 cross T2).
+tpi_app*    : tpi (app* V E) T1
+               <- tpe V (T2 arrow T1)
+               <- tpe E T2.
+
+tpi_ref*    : tpi (ref* V) (T tref)
+               <- tpe V T.
+tpi_deref*  : tpi (deref* V) T
+               <- tpe V (T tref).
+tpi_assign*1: tpi (V is*1 E) cmd
+               <- tpe V (T tref)
+               <- tpe E T.
+tpi_assign*2: tpi (V1 is*2 V2) cmd
+               <- tpe V1 (T tref)
+               <- tpe V2 T.
+
+
+% Continuations
+
+tpK_init : tpK init T T.
+tpK_lam  : tpK (K - I) T1 T2
+            <- ({x:exp} tpe x T1 -> tpi (I x) T)
+            <- tpK K T T2.
+
+
+% Store
+
+tpS_empty : tpS estore.
+tpS_item  : tpS (S and (C == V))
+             <- tpS S
+             <- tpc C T
+             <- tpe V T.
+
+
+% Answers
+
+tpa_close : tpa (close S V) T
+             <- tpS S
+             <- tpe V T.
+tpa_new   : tpa (new A) T
+             <- ({c: cell} tpc c T' -> tpa (A c) T).

@@ -1,0 +1,61 @@
+%%% The result of admissibility of cut is linear if arguments
+%%% are linear.  This doesn't work---too many cases, and too many missing
+%%% lemmas.
+
+%{ Problem above: it appears we need
+   If   Q1    : ({n2} ad A D ([n1] E1 n1 n2) (E1' n2))
+   and  LNE12 : ({n1} linn ([n2] E1 n1 n2))
+   then _?    : linn ([n2] E1' n2)
+}%
+
+lm1 : ({n1} ad A D (E n1) (F n1))
+       -> ({n} linn ([n1] E n1 n))
+       -> linn F
+       -> type.
+
+cl : ad A D E F
+      -> linp D
+      -> linn E
+      -> ({p} lin (D p))
+      -> ({n} lin (E n))
+      -> lin F
+      -> type.
+
+cl! : ad! A D E! F
+       -> linp D
+       -> ({p} lin (D p))
+       -> ({n!} lin (E! n!))
+       -> lin F
+       -> type.
+
+cl? : ad? A D? E F
+       -> linn E
+       -> ({p?} lin (D? p?))
+       -> ({n} lin (E n))
+       -> lin F
+       -> type.
+
+% Axiom conversions
+
+cl_axiom_l : cl (ad_axiom_l : ad A ([p] axiom N p) E (E N))
+	      LPD LNE LD LE (LE N).
+
+cl_axiom_r : cl (ad_axiom_r : ad A D ([n] axiom n P) (D P))
+	      LPD LNE LD LE (LD P).
+
+% Essential conversions, multiplicative
+
+% type checker does not terminate on next example??
+
+%{
+
+cl_times : cl (ad_times Q2 Q1) LPD LNE
+	    ([p] lin_timesr (LD2 p) (LD1 p) (LPD2 p) (LPD1 p))
+	    ([n] lin_timesl (LE1 n) (LNE12 n) (LNE11 n))
+	    LF
+	    <- ({n2:neg B} cl (Q1 n2) (LPD1 _) (LNE11 _ n2) (LD1 _)
+		  ([n1] LE1 _ n1 n2) (LE1' n2))
+	    <- lm1 Q1 LNE12 LNE1'
+	    <- cl Q2 (LPD2 _) (LNE1' : linn E1') (LD2 _) LE1' LF.
+
+}%

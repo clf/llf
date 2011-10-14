@@ -1,0 +1,87 @@
+%%% The IqBlock game
+%%% Author: Frank Pfenning
+
+
+%% Initial set of tiles.
+
+blue ^
+  tile (nn # nn # nn # ee # ee # ss # ww # nil)
+& tile (ee # ee # ee # ss # ss # ww # nn # nil)
+& tile (nn # ee # ss # ee # nn # nn # nn # nil)
+& tile (nn # nn # ee # ss # ss # ee # ee # nil)
+& tile (nn # ee # ss # ne # ss # ss # ss # nil)
+& tile (ee # ee # ee # nn # nn # ww # ss # nil)
+& tile (ee # ee # nn # ww # ww # nn # nn # nil)
+& tile (ee # nn # ww # nn # ee # ee # ee # nil).
+
+forest ^
+  tile (nn # nn # nn # ee # ee # nil)
+& tile (ee # ee # ee # ss # ss # nil)
+& tile (ee # ee # nn # nn # nn # nil)
+& tile (nn # nn # sse # ee # ee # nil)
+& tile (ee # ee # ss # ss # ss # nil)
+& tile (ee # ee # ee # nn # nn # nil)
+& tile (ee # ee # wwn # nn # nn # nil)
+& tile (nn # nn # ee # ee # ee # nil).
+
+tan ^
+  tile (nn # ee # ee # ee # ss # ww # ww # nil)
+& tile (nn # nn # nn # ee # ss # ss # ss # nil).
+
+green ^
+  tile (ee # ee # ss # ss # ee # ee # nil)
+& tile (nn # nn # ee # ee # nn # nn # nil)
+& tile (ee # ee # nn # nn # ee # ee # nil)
+& tile (nn # nn # sse # ee # ss # ss # nil).
+
+purple ^
+  tile (nn # ee # ss # ee # ee # nil)
+& tile (nn # nn # nn # ee # ss # nil)
+& tile (ee # ee # ee # ss # ww # nil)
+& tile (ee # nn # ww # ne # nn # nil)
+& tile (ee # ee # ee # nn # ww # nil)
+& tile (ee # nn # ww # nn # nn # nil)
+& tile (nn # ee # ss # ne # ee # nil)
+& tile (nn # ee # ss # ss # ss # nil).
+
+yellow ^ 
+  tile (nn # ee # ss # ne # nil)
+& tile (nn # ee # ss # ss # nil)
+& tile (ee # ee # nn # ww # nil)
+& tile (ee # nn # ww # nn # nil)
+& tile (ee # ee # ss # ww # nil)
+& tile (ee # nn # ww # ne # nil)
+& tile (nn # ee # ss # ee # nil)
+& tile (nn # nn # ee # ss # nil).
+
+pink ^
+  tile (ee # ee # nn # nn # nil)
+& tile (nn # nn # sse # ee # nil)
+& tile (nn # nn # ee # ee # nil)
+& tile (ee # ee # ss # ss # nil).
+
+orange ^ 
+  tile (ee # nn # nn # nil)
+& tile (ee # ee # wwn # nil)
+& tile (nn # nn # ee # nil)
+& tile (ee # ee # ss # nil)
+& tile (nn # ee # ee # nil)
+& tile (ee # ss # ss # nil)
+& tile (ee # ee # nn # nil)
+& tile (nn # nn # sse # nil).
+
+grass ^
+  tile (nn # ee # nn # ee # ss # ss # ww # nil)
+& tile (nn # nn # ee # ss # ee # ss # ww # nil)
+& tile (nn # nn # ee # ee # ss # ww # ss # nil)
+& tile (nn # ee # ee # ss # ss # ww # nn # nil).
+
+brown ^ 
+  tile (nn # ee # ss # ss # ss # ss # nil)
+& tile (ee # ee # ee # ee # nn # ww # nil)
+& tile (ee # nn # ww # nn # nn # nn # nil)
+& tile (nn # ee # ss # ne # ee # ee # nil)
+& tile (ee # ee # ee # ee # ss # ww # nil)
+& tile (ee # nn # ww # ne # nn # nn # nil)
+& tile (nn # ee # ss # ee # ee # ee # nil)
+& tile (nn # nn # nn # nn # ee # ss # nil).

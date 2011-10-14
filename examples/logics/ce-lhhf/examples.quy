@@ -1,0 +1,31 @@
+%%% Linear hereditary Harrop formulas
+%%% Author: Iliano Cervesato
+
+a : o.
+b : o.
+c : o.
+
+formula : o
+ = (a lolli b with c) lolli (a lolli c with b).
+
+proof : pf+ formula
+ = lolli_r+ ^ [p_a-b*c ^ lin (a lolli b with c)]
+     lolli_r+ ^ [p_a ^ lin a]
+       cut ^
+	 (lolli_r+ ^ [p_b*c ^ lin (b with c)]
+	    with_r+ ^
+	      (with_l2+ ^ ([p_c ^ lin c] id+ ^ p_c) ^ p_b*c,
+	       with_l1+ ^ ([p_b ^ lin b] id+ ^ p_b) ^ p_b*c)) ^
+	 ([p_b*c-c*b ^ lin (b with c lolli c with b)]
+	    lolli_l+ ^
+	      (lolli_l+ ^
+		 (id+ ^ p_a) ^
+		 ([p_b*c ^ lin (b with c)] id+ ^ p_b*c) ^
+		 p_a-b*c) ^
+	      ([p_c*b ^ lin (c with b)] id+ ^ p_c*b) ^
+	      p_b*c-c*b).
+
+
+
+%query 1 1
+ce proof CF-proof.

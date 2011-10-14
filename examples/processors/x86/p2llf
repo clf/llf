@@ -1,0 +1,11 @@
+#!/usr/local/bin/perl5
+
+$num=1;
+while(chop($line = <STDIN>)) {
+	if ($line =~ /^%/) { print "$line\n"; }
+	elsif ($line eq "") { print "\n"; }
+	else {
+		print "prog-$num: prog $num ($line).\n";
+		$num++;
+	}
+}

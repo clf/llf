@@ -1,0 +1,99 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic"
+% formalization - rules.
+% Date: 7 July  1998
+% Author: Iliano Cervesato
+
+% Transitions of the train
+
+rrc_train_safe-app : rrc
+		      o- train safe
+		      o- ubTimer d off
+		      o- lbTimer b off
+		      o- time T
+		      o- add valD T D
+		      o- add valB T B
+		      o- (     train appr
+			    -o ubTimer d (at D)
+			    -o lbTimer b (at B)
+			    -o time T
+			    -o rrc).
+rrc_train_app-cross : rrc
+		       o- train appr
+		       o- lbTimer b (at B)
+		       o- time T
+		       o- leq B T
+		       o- (     train crossing
+			     -o lbTimer b off
+			     -o time T
+			     -o rrc).
+rrc_train_cross-safe : rrc
+			o- train crossing
+			o- (train safe -o rrc).
+
+% Transitions of the signal
+
+rrc_signal_*-lower : rrc
+			  o- ubTimer d (at D)
+			  o- ubTimer g off
+			  o- time T
+			  o- add valG T G
+			  o- signal _
+			  o- (signal lower
+				-o ubTimer d off
+				-o ubTimer g (at G)
+				-o time T
+				-o rrc).
+rrc_signal_lower-raise : rrc
+			  o- train safe
+			  o- signal lower
+			  o- (train safe -o signal raise -o rrc).
+
+% Transitions of the gate
+
+rrc_gate_*-mvdown : rrc
+		      o- ubTimer g (at G)
+		      o- ubTimer l off
+		      o- time T
+		      o- add valL T L
+		      o- gate _
+		      o- (     gate movingDown
+			    -o ubTimer g off
+			    -o ubTimer l (at L)
+			    -o time T
+			    -o rrc).
+rrc_gate_mvdown-down : rrc
+			o- gate movingDown
+			o- ubTimer l (at L)
+			o- (     gate down
+			      -o ubTimer l off
+			      -o rrc).
+rrc_gate_mvdown-mvup : rrc
+			o- signal raise
+			o- gate movingDown
+			o- (signal raise -o gate movingUp -o rrc).
+rrc_gate_down-mvup : rrc
+		      o- signal raise
+		      o- gate down
+		      o- (signal raise -o gate movingUp -o rrc).
+rrc_gate_mvup-up : rrc
+		    o- gate movingUp
+		    o- (gate up -o rrc).
+
+% Progress of time
+
+rrc_time : rrc
+	    o- timeOut (s O)
+	    o- time T
+	    o- ubTimer d D
+	    o- ubTimer g G
+	    o- ubTimer l L
+	    o- tLT (at T) D
+	    o- tLT (at T) G
+	    o- tLT (at T) L
+	    o- (     time (s T)
+		  -o timeOut O
+		  -o ubTimer d D
+		  -o ubTimer g G
+		  -o ubTimer l L
+		  -o rrc).

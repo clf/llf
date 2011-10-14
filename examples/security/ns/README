@@ -1,0 +1,19 @@
+This directory contains an LLF formalization of a simplified instance of
+the Needham-Schroeder authentication protocol (no server).
+
+Files:
+
+README		-- This file
+examples.quy	-- Example query
+intruder.llf	-- Intruder's behavior
+nat.llf		-- Natural numbers
+net.llf		-- Network behavior
+ns.llf		-- Specification of the Needham-Schroeder auth. protocol
+param.llf	-- Values of the parameters of the test
+protocols.llf	-- Generic protocol declarations
+test.llf	-- Initial state of the test
+
+demo		-- This directory contains a copy of this representation
+		   tailored for easy interfacing with a Java animation.
+		   Some declarations have been augmented with a redundant
+		   arguments to simplify the task of Java.

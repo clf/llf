@@ -1,0 +1,112 @@
+% Needham-Schroeder Public Key Protocol -- Intruder's behavior
+% Date: 11 September 1998
+% Author: Iliano Cervesato
+
+intruder : key.
+
+dMsg : msg -> type.
+cMsg : msg -> type.
+aMsg : atm -> nat -> type.
+memKey : key -> type.
+
+maxComp = 0.
+maxEncr = 1.
+maxNonc = 0.
+maxAtom = 2.
+
+numComp : nat -> type.
+numEncr : nat -> type.
+numNonc : nat -> type.
+
+nComp ^ numComp maxComp.
+nEncr ^ numEncr maxEncr.
+nNonc ^ numNonc maxNonc.
+
+peepD : type.
+peepC : type.
+mesNum : nat -> type.
+
+% Send/Receive message
+
+receive : transit N
+	   o- toNet X
+	   o- (     mesNum N
+	         -o dMsg X
+		 -o peepD).
+
+send : peepC
+	o- mesNum N
+	o- cMsg X
+	o- (fromNet X -o loop N).
+
+
+% Composition and decompostion
+
+decompose : peepD
+	     o- dMsg (X * Y)
+	     o- (     dMsg X
+		   -o dMsg Y
+		   -o peepD).
+
+compose : peepC
+	   o- cMsg X
+	   o- cMsg Y
+	   o- numComp (s M)
+	   o- (     cMsg (X * Y)
+		 -o numComp M
+		 -o peepC).
+
+
+% Encryption and decryption
+
+decrypt : peepD
+	   o- memKey (inv K)
+	   o- dMsg (crypt X K)
+	   o- (     dMsg X
+		 -o peepD).
+
+encrypt : peepC
+	   o- cMsg X
+	   o- annKey K
+	   o- other intruder K
+	   o- numEncr (s M)
+	   o- (     cMsg (crypt X K)
+		 -o numEncr M
+		 -o peepC).
+
+
+% Atomic information
+
+atomd : peepD
+	 o- dMsg (@ X)
+	 o- (aMsg X maxAtom -o peepD).
+
+atomc : peepC
+	 o- aMsg X (s N)
+	 o- (cMsg (@ X) -o aMsg X N -o peepC).
+
+
+% New nonces
+
+nonce : peepC
+	 o- numNonc (s M)
+         o- ({n:atm}
+	          aMsg n maxAtom
+	       -o numNonc M
+	       -o peepC).
+
+
+% Unknown keys
+
+forward : peepD
+	   o- dMsg (crypt X K)
+	   o- other intruder K
+	   o- numEncr M
+	   o- (     cMsg (crypt X K)
+		 -o numEncr z
+		 -o peepD).
+
+
+% Phase alternance
+
+alternate : peepD o- peepC.

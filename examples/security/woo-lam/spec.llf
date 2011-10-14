@@ -1,0 +1,37 @@
+woo-lam =
+  (agent [A]
+  (agent [B]
+  (agent [S]
+  (initKey (symKey A S) [k_as]
+  (initKey (symKey B S) [k_bs]
+  (security-protocol
+     (  role A
+	 (receiver [B]
+	 (knowsKey k_as
+	 (     anytime
+           ==> send (@ (name A)) B ;
+	       on Xa B
+	   ==> send (crypt Xa k_as) B ;
+	   stop)))
+      andAlso
+        role B
+	 (receiver [A]
+	 (receiver [S]
+	 (knowsKey k_bs
+	 (fresh [Nb]
+	 (    on (@ (name A)) A
+	  ==> send ($ Nb) A ;
+	      on Xb A
+          ==> send (crypt (@ (name A) * Xb) k_bs) S ;
+	      on (crypt ($ Nb) k_bs) S
+          ==> check ;
+	  stop)))))
+      andAlso
+        role S
+	 (receiver [A]
+	 (receiver [S]
+	 (knowsKey k_as
+	 (knowsKey k_bs
+         (    on (crypt (@ (name A) * (crypt Xs k_as)) k_bs) B
+          ==> send (crypt Xs k_bs) B ;
+	  stop)))))))))))).

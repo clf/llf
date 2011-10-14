@@ -1,0 +1,120 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic"
+% formalization - rules.
+% Date: 21 July  1998
+% Preconditions factored out
+% Author: Iliano Cervesato
+
+% Transitions of the train
+
+rrcTrainSafeApp : nat -> type.
+rrc_train_safe-app :  rrc
+		       o- readTime T
+		       &  rrcTrainSafeApp T.
+rrc_train_safe_app' : rrcTrainSafeApp T
+		       o- train safe
+		       o- ubTimer d off
+		       o- lbTimer b off
+		       o- add valD T D
+		       o- add valB T B
+		       o- (     train appr
+			     -o ubTimer d (at D)
+			     -o lbTimer b (at B)
+			     -o rrc).
+
+rrcTrainAppCross : nat -> type.
+rcc_train_app-cross :  rrc
+		        o- readTime T
+		        &  rrcTrainAppCross T.
+rcc_train_app-cross' : rrcTrainAppCross T
+			o- train appr
+			o- lbTimer b (at B)
+			o- leq B T
+			o- (     train crossing
+			      -o lbTimer b off
+			      -o rrc).
+
+rcc_train_cross-safe : rrc
+			o- train crossing
+			o- (train safe -o rrc).
+
+% Transitions of the signal
+
+rrcSignal*Lower : nat -> type.
+rrc_signal_*-lower :  rrc
+			  o- readTime T
+			  &  rrcSignal*Lower T.
+rrc_signal_*-lower : rrcSignal*Lower T
+			  o- ubTimer d (at D)
+			  o- ubTimer g off
+			  o- signal _
+			  o- add valG T G
+			  o- (     signal lower
+				-o ubTimer d off
+				-o ubTimer g (at G)
+				-o rrc).
+rrcSignalLowerRaise : type.
+rrc_signal_lower-raise :  rrc
+			   o- readTrain safe
+			   &  rrcSignalLowerRaise.
+rrc_signal_lower-raise' : rrcSignalLowerRaise
+			   o- signal lower
+			   o- (signal raise -o rrc).
+
+% Transitions of the gate
+
+rrcGate*Mvdown : nat -> type.
+rrc_gate_*-mvdown :  rrc
+		      o- readTime T
+		      &  rrcGate*Mvdown T.
+rrc_gate_*-mvdown' : rrcGate*Mvdown T
+		      o- ubTimer g (at G)
+		      o- ubTimer l off
+		      o- gate _
+		      o- add valL T L
+		      o- (     gate movingDown
+			    -o ubTimer g off
+			    -o ubTimer l (at L)
+			    -o rrc).
+rrc_gate_mvdown-down : rrc
+			o- gate movingDown
+			o- ubTimer l (at L)
+			o- (     gate down
+			      -o ubTimer l off
+			      -o rrc).
+rrcGateMvdownMvup : type.
+rrc_gate_mvdown-mvup :  rrc
+			 o- readSignal raise
+			 &  rrcGateMvdownMvup.
+rrc_gate_mvdown-mvup' : rrcGateMvdownMvup
+			 o- gate movingDown
+			 o- (gate movingUp -o rrc).
+
+rrcGateDownMvup : type.
+rrc_gate_down-mvup :  rrc
+		       o- readSignal raise
+		       &  rrcGateDownMvup.
+rrc_gate_down-mvup : rrcGateDownMvup
+		      o- gate down
+		      o- (gate movingUp -o rrc).
+rrc_gate_mvup-up : rrc
+		    o- gate movingUp
+		    o- (gate up -o rrc).
+
+% Progress of time
+
+rrcTime : timerValue -> timerValue -> timerValue -> type.
+rrc_time :  rrc
+	     o- readUB d D
+	     &  readUB g G
+	     &  readUB l L
+	     &  rrcTime D G L.
+rrc_time' : rrcTime D G L
+	     o- timeOut (s O)
+	     o- tLT (at T) D
+	     o- tLT (at T) G
+	     o- tLT (at T) L
+	     o- time T
+	     o- (     time (s T)
+		   -o timeOut O
+		   -o rrc).

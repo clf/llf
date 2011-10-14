@@ -1,0 +1,25 @@
+Group is
+  ../global/sources.cm
+  intsyn.sig
+  intsyn.fun
+  trail.sig
+  trail.fun
+  notrail.fun
+  whnf.sig
+  whnf.fun
+  normalize.sig
+  normalize.fun
+(*  whnf-lazy.fun *)
+  conv.sig
+  conv.fun 
+  pattern.sig
+  pattern.fun
+  constraints.sig
+  constraints.fun
+  unify.sig
+  unify.fun 
+  abstract.sig	
+  abstract.fun
+  tools.sig
+  tools.fun
+  lambda.sml

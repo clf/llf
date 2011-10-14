@@ -1,0 +1,17 @@
+% Specification of the railroad crossing example from M. Kanovich, M. Okada,
+% and A. Scedrov, "Specifying Real-Time Finite-State Systems in Linear Logic".
+% Forward chaining.
+% Date: 29 July  1998
+% Author: Iliano Cervesato
+
+Meta-interpreted forward chaining:
+
++ most direct transcription of the specifications
++ final values are available
+
+- inefficent (5-10 times slower than direct LLF representation)
+
+
+Performance (measured in number of calls to the GC)
+* success (1,2,3,4) : 85 (avg)
+* failure (1,1,1,4) : 25 (avg)

@@ -1,0 +1,5 @@
+A program to generate the permutations of a list.  First described in
+
+  Joshua Hodas and Dale Miller: "Logic Programming in a Fragment of
+  Intuitionistic Linear Logic".  Information and Computation
+  110(2):327-355, 1994.

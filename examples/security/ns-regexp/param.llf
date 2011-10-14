@@ -1,0 +1,7 @@
+% Needham-Schroeder Public Key Protocol -- parameters
+% Date: 11 September 1998
+% Author: Nancy Durgin, Iliano Cervesato
+
+maxAtom = 1.
+maxComp = 2.
+maxCrypt = 2.

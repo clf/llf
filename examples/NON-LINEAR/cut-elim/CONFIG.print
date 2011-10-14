@@ -1,0 +1,11 @@
+-static formulas.elf
+-static int.elf
+-static cl.elf
+-dynamic int-admit.elf
+-dynamic cl-admit.elf
+-static int-cut.elf
+-static cl-cut.elf
+-dynamic int-elim.elf
+-dynamic cl-elim.elf
+-static tokens.elf
+-dynamic print.elf

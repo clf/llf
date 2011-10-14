@@ -1,0 +1,150 @@
+% Needham-Schroeder Public Key Protocol -- test, part II
+% Date: 11 September 1998
+% Author: Iliano Cervesato
+
+net2intr : loop1 -> loop2 -> type.
+
+
+%% Network
+
+expand : peepD -> peepC -> type.
+mapMsg : {M:msg}dMsg M -> cMsg M -> type.
+
+
+n2i_net : net2intr (net ^ ([f^fromNet P N M] L1 ^ f) ^ T)
+	           (receive2 ^ ([d^dMsg M] PD ^ d) ^ T)
+	   o- ({f:fromNet P N M} net2intr (L1 ^ f) (L2 ^ f))
+	   o- ({d:dMsg M}{c:cMsg M}
+		    mapMsg M d c
+		 -o expand (PD ^ d) (send2 ^ ([f^fromNet P N M] L2 ^ f) ^ c)).
+
+
+exp_* : expand (decompose ^ ([d1^dMsg M1][d2^dMsg M2] PD ^ d1 ^ d2) ^ D)
+	       (PC ^ C)
+	 o- mapMsg (M1 * M2) D C
+	 o- ({d1:dMsg M1}{c1:cMsg M1}
+	     {d2:dMsg M2}{c2:cMsg M2}
+	          mapMsg M1 d1 c1
+	       -o mapMsg M2 d2 c2
+	       -o expand (PD ^ d1 ^ d2)
+	                 (compose ^ ([c^cMsg (M1 * M2)] PC ^ c) ^ c2 ^ c1)).
+
+exp_k! : expand (decrypt ^ ([d^dMsg M] PD ^ d) ^ D ^ MK) (PC ^ C)
+	  o- mapMsg (crypt M K) D C
+	  o- ({d:dMsg M}{c:cMsg M}
+		expand (PD ^ d)
+	               (encrypt ^ ([c'^cMsg (crypt M K)] PC ^ c') ^ A ^ c)).
+
+exp_@ : expand (atomd ^ ([a:aMsg M] PD a) ^ D) (PC ^ C)
+	 o- mapMsg (@ M) D C
+	 o- ({a:aMsg M}
+	     expand (PD a) (atomc ^ ([c'^cMsg (@ M)] PC ^ c') ^ a)).
+
+exp_k? : expand (forward ^ ([c^cMsg (crypt M K)] PD ^ c) ^ D) PC
+	  o- mapMsg (crypt M K) D C
+	  o- expand (PD ^ C) PC.
+
+exp_A : expand (alternate ^ PC) PC.
+
+
+%%% Intruder
+
+peepDcopy : peepD -> peepD -> type.
+peepCcopy : peepC -> peepC -> type.
+
+n2i_receive : net2intr (receive1 ^ ([M^dMsg X] PD1 ^ M) ^ TN)
+	               (receive2 ^ ([M^dMsg X] PD2 ^ M) ^ TN)
+	       o- ({M:dMsg X} peepDcopy (PD1 ^ M) (PD2 ^ M)).
+
+n2i_send : peepCcopy (send1 ^ ([M^fromNet P N X] (L1 ^ M)) ^ CM)
+	             (send2 ^ ([M^fromNet P N X] (L2 ^ M)) ^ CM)
+	    o- ({M:fromNet P N X} net2intr (L1 ^ M) (L2 ^ M)).
+
+pp_decompose : peepDcopy
+		(decompose ^ ([d1^dMsg X1][d2^dMsg X2] PD1 ^ d1 ^ d2) ^ D)
+		(decompose ^ ([d1^dMsg X1][d2^dMsg X2] PD2 ^ d1 ^ d2) ^ D)
+		o- ({d1:dMsg X1}
+		    {d2:dMsg X2}
+		      peepDcopy (PD1 ^ d1 ^ d2) (PD2 ^ d1 ^ d2)).
+
+pp_compose : peepCcopy (compose ^ ([c^cMsg (X1 * X2)] PC1 ^ c) ^ C1 ^ C2)
+                       (compose ^ ([c^cMsg (X1 * X2)] PC2 ^ c) ^ C1 ^ C2)
+	      o- ({c:cMsg (X1 * X2)} peepCcopy (PC1 ^ c) (PC2 ^ c)).
+
+pp_decrypt : peepDcopy (decrypt ^ ([d^dMsg X] PD1 ^ d) ^ D ^ MK)
+		       (decrypt ^ ([d^dMsg X] PD2 ^ d) ^ D ^ MK)
+		o- ({d:dMsg X} peepDcopy (PD1 ^ d) (PD2 ^ d)).
+
+pp_encrypt : peepCcopy (encrypt ^ ([c^cMsg (crypt X K)] PC1 ^ c) ^ C ^ AK)
+                       (encrypt ^ ([c^cMsg (crypt X K)] PC2 ^ c) ^ C ^ AK)
+	      o- ({c:cMsg (crypt X K)} peepCcopy (PC1 ^ c) (PC2 ^ c)).
+
+pp_atomd : peepDcopy
+		(atomd ^ ([a:aMsg X] PD1 a) ^ D)
+		(atomd ^ ([a:aMsg X] PD2 a) ^ D)
+		o- ({a:aMsg X} peepDcopy (PD1 a) (PD2 a)).
+
+pp_atomc : peepCcopy (atomc ^ ([c^cMsg (@ X)] PC1 ^ c) ^ A)
+                     (atomc ^ ([c^cMsg (@ X)] PC2 ^ c) ^ A)
+	      o- ({c:cMsg (@ X)} peepCcopy (PC1 ^ c) (PC2 ^ c)).
+
+pp_nonce : peepCcopy (nonce ^ ([n:atm][a:aMsg n] PC1 n a))
+                     (nonce ^ ([n:atm][a:aMsg n] PC2 n a))
+	      o- ({n:atm}{a:aMsg n} peepCcopy (PC1 n a) (PC2 n a)).
+
+pp_forward : peepDcopy (forward ^ ([c^cMsg (crypt X K)] PD1 ^ c) ^ D)
+		       (forward ^ ([c^cMsg (crypt X K)] PD2 ^ c) ^ D)
+		o- ({c:cMsg (crypt X K)} peepDcopy (PD1 ^ c) (PD2 ^ c)).
+
+pp_alternate : peepDcopy (alternate ^ PC1) (alternate ^ PC2)
+		o- peepCcopy PC1 PC2.
+
+
+%%% Needham-Schroeder
+
+n2i_nsA1 : net2intr (nsA1 ^ ([Na:atm]
+			     [A1^a1 A B (@ Na)]
+			     [TN^toNet ns 1 (crypt ((@ Na) * (@ (k2m A))) B)]
+			       L1 Na ^ A1 ^ TN)
+		          ^ A0 ^ AK)
+	            (nsA12 ^ ([Na:atm]
+			      [A1^a1 A B (@ Na)]
+			      [TN^toNet ns 1 (crypt ((@ Na) * (@ (k2m A))) B)]
+			        L2 Na ^ A1 ^ TN)
+		           ^ A0 ^ AK)
+	    o- ({Na:atm}
+		{A1:a1 A B (@ Na)}
+		{TN:toNet ns 1 (crypt ((@ Na) * (@ (k2m A))) B)}
+		  net2intr (L1 Na ^ A1 ^ TN) (L2 Na ^ A1 ^ TN)).
+
+n2i_nsA2 : net2intr (nsA2 ^ ([TN^toNet ns 3 (crypt Y B)]
+			     [A2^a2 A B X Y] L1 ^ TN ^ A2)
+		          ^ FN ^ A1)
+	            (nsA22 ^ ([TN^toNet ns 3 (crypt Y B)]
+			      [A2^a2 A B X Y] L2 ^ TN ^ A2)
+		           ^ FN ^ A1)
+	    o- ({TN:toNet ns 3 (crypt Y B)}
+		{A2:a2 A B X Y}
+		  net2intr (L1 ^ TN ^ A2) (L2 ^ TN ^ A2)).
+
+n2i_nsB1 : net2intr (nsB1 ^ ([Nb:atm]
+			     [B1^b1 B A X (@ Nb)]
+			     [TN^toNet ns 2 (crypt (X * (@ Nb)) A)]
+			       L1 Nb ^ B1 ^ TN)
+		          ^ AK ^ FN ^ B0)
+	            (nsB12 ^ ([Nb:atm]
+			      [B1^b1 B A X (@ Nb)]
+			      [TN^toNet ns 2 (crypt (X * (@ Nb)) A)]
+			        L2 Nb ^ B1 ^ TN)
+		           ^ AK ^ FN ^ B0)
+	    o- ({Nb:atm}
+		{B1:b1 B A X (@ Nb)}
+		{TN:toNet ns 2 (crypt (X * (@ Nb)) A)}
+		  net2intr (L1 Nb ^ B1 ^ TN) (L2 Nb ^ B1 ^ TN)).
+
+n2i_nsB2 : net2intr (nsB2 ^ ([B2^b2 B A X Y] L1 ^ B2) ^ FN ^ B1)
+	            (nsB22 ^ ([B2^b2 B A X Y] L2 ^ B2) ^ FN ^ B1)
+	    o- ({B2:b2 B A X Y} net2intr (L1 ^ B2) (L2 ^ B2)).
+
+n2i_done : net2intr (nsDone ^ () ^ A2 ^ B2) (nsDone2 ^ () ^ A2 ^ B2)
+	    o- <T>.
